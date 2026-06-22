@@ -1,0 +1,9 @@
+site_name: ChatShare 文档
+site_url: https://ChatArch.github.io/ChatShare
+repo_url: https://github.com/ChatArch/ChatShare
+theme:
+  name: material
+  language: zh
+nav:
+  - 首页: index.md
+  - English: index.en.md
