@@ -45,7 +45,7 @@ Linux 的激活 unit 位于 `~/.config/systemd/user/chatshare-dufs.service`。�
 
 ## 配置
 
-默认配置只监听 loopback，并使用共享 HTTP Digest Auth：
+默认配置只监听 loopback，并使用“匿名只读 + 鉴权可写”的 Dufs HTTP Digest Auth 规则：
 
 ```yaml
 serve-path: '<managed-data-root>'
@@ -53,6 +53,7 @@ bind: 127.0.0.1
 port: 5000
 auth:
   - '<username>:<password>@/:rw'
+  - '@/'
 allow-upload: true
 allow-delete: false
 allow-search: true
@@ -63,7 +64,7 @@ enable-cors: false
 log-file: '<managed-access-log>'
 ```
 
-这里的占位符不是可复制凭据。真实密码只从 `--password-env` 指定的环境变量读取；生成的 `config.yaml` 和 `instance.json` 权限为 `0600`，目录为 `0700`。`status` 和 JSON 输出不读取或显示密码。
+这里的占位符不是可复制凭据。真实密码优先从 ChatEnv active `chatshare` profile 读取，也可由 `--password-env` 指定的进程环境变量覆盖；生成的 `config.yaml` 和 `instance.json` 权限为 `0600`，目录为 `0700`。`status` 和 JSON 输出不读取或显示密码。
 
 ## 生命周期
 

@@ -146,14 +146,16 @@ def _default_base_url(bind: str, port: int) -> str:
 
 
 def _render_config(state: InstanceState, password: str) -> str:
-    auth_rule = f"{state.username}:{password}@/:rw"
+    writer_auth_rule = f"{state.username}:{password}@/:rw"
+    anonymous_read_rule = "@/"
     return "\n".join(
         [
             f"serve-path: {_yaml_quote(str(state.root))}",
             f"bind: {_yaml_quote(state.bind)}",
             f"port: {state.port}",
             "auth:",
-            f"  - {_yaml_quote(auth_rule)}",
+            f"  - {_yaml_quote(writer_auth_rule)}",
+            f"  - {_yaml_quote(anonymous_read_rule)}",
             "allow-upload: true",
             "allow-delete: false",
             "allow-search: true",

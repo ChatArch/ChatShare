@@ -53,6 +53,7 @@ bind: 127.0.0.1
 port: 5000
 auth:
   - '<username>:<password>@/:rw'
+  - '@/'
 allow-upload: true
 allow-delete: false
 allow-search: true

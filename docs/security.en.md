@@ -37,7 +37,6 @@ The first version uses one shared credential for reads and writes rather than an
 
 ## Explicitly unsupported
 
-- Anonymous links or URL bearer tokens
 - Share expiry, download limits, or per-file revocation
 - Multi-user ownership and audit
 - Browser sessions or OAuth/OIDC

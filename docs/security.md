@@ -6,17 +6,17 @@
 |---|---|
 | 安装、初始化、服务管理 | 登录到主机的 ChatArch 用户 |
 | 本机 `put` 与 `url` | 同一 ChatArch 用户；不经过 HTTP |
-| 浏览、下载、内联查看 | 持有共享 Dufs HTTP Digest Auth 的客户端 |
-| HTTP/WebDAV 上传 | 持有共享 Dufs HTTP Digest Auth 的客户端 |
+| 浏览、下载、内联查看 | 匿名客户端；持有 URL 即可读取公开数据 |
+| HTTP/WebDAV 上传/PUT | 持有共享 Dufs HTTP Digest Auth 的客户端 |
 | HTTP 删除 | 默认不可用 |
 | 清理、过期、逐文件撤销 | 当前未实现 |
 
-第一版选择“读写共用一个凭据”，而不是匿名能力链接。URL 本身不是授权凭据；泄露 URL 不足以访问文件，但共享密码泄露会授予整个部署的读写权。
+第一版选择“匿名读 + 共享写入凭据”，而不是逐文件能力链接。URL 本身不是密钥；放到分享根的数据按设计可被匿名下载，写入密码泄露会授予整个部署的上传/覆盖能力。
 
 ## 凭据
 
-- 默认密码变量名：`CHATSHARE_DUFS_PASSWORD`。
-- CLI 接收变量名，不接收密码值参数。
+- 默认 ChatEnv type：`chatshare`，关键字段：`CHATSHARE_DUFS_USERNAME`、`CHATSHARE_DUFS_PASSWORD`、`CHATSHARE_DUFS_BASE_URL`。
+- 默认密码变量名：`CHATSHARE_DUFS_PASSWORD`；CLI 接收变量名，不接收密码值参数。
 - Dufs 需要在启动时读取账号规则，因此密码会存在于 `config.yaml`；该文件以 `0600` 写入。
 - 密码不得出现在 argv、URL、stdout、JSON、access log、unit 文件、README 或测试 fixture。
 - 用户名和密码拒绝 Dufs auth 语法分隔符以及换行，防止规则注入。
@@ -37,7 +37,6 @@
 
 ## 明确不提供
 
-- 匿名链接或 URL bearer token
 - 分享到期、下载次数和逐文件撤销
 - 多用户/账号所有权和审计
 - 浏览器会话、OAuth/OIDC

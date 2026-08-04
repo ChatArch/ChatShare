@@ -37,6 +37,8 @@ def test_init_instance_writes_secure_config_and_non_secret_state(tmp_path):
     }
     config_text = paths.config_file.read_text()
     assert f"auth:\n  - 'chatshare:{auth_value}@/:rw'" in config_text
+    assert "  - '@/'" in config_text
+    assert config_text.index("'chatshare:") < config_text.index("'@/'")
     assert "bind: '127.0.0.1'" in config_text
     assert "allow-upload: true" in config_text
     assert "allow-delete: false" in config_text

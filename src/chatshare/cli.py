@@ -123,8 +123,14 @@ def install_command(
     "--bind", default="127.0.0.1", show_default=True, help="Loopback bind host."
 )
 @click.option("--port", type=click.IntRange(1, 65535), default=5000, show_default=True)
-@click.option("--base-url", help="Base URL used for generated file URLs.")
-@click.option("--username", default="chatshare", show_default=True)
+@click.option(
+    "--base-url",
+    help="Base URL used for generated file URLs (default: ChatEnv profile or loopback).",
+)
+@click.option(
+    "--username",
+    help="Dufs writer username (default: ChatEnv profile or chatshare).",
+)
 @click.option(
     "--password-env",
     default="CHATSHARE_DUFS_PASSWORD",
@@ -141,24 +147,31 @@ def init_command(
     bind: str,
     port: int,
     base_url: str | None,
-    username: str,
+    username: str | None,
     password_env: str,
     force: bool,
 ) -> None:
     """Initialize the secure default Dufs instance."""
 
-    from chatshare.dufs.config import init_instance
+    from chatshare.config import merged_chatshare_environ
+    from chatshare.dufs.config import DEFAULT_USERNAME, init_instance
 
+    environ = merged_chatshare_environ(context.paths.chatarch_home)
+    resolved_username = (
+        username or environ.get("CHATSHARE_DUFS_USERNAME") or DEFAULT_USERNAME
+    )
+    resolved_base_url = base_url or environ.get("CHATSHARE_DUFS_BASE_URL") or None
     result = _execute(
         lambda: init_instance(
             context.paths,
             root=root,
             bind=bind,
             port=port,
-            base_url=base_url,
-            username=username,
+            base_url=resolved_base_url,
+            username=resolved_username,
             password_env=password_env,
             force=force,
+            environ=environ,
         )
     )
     _emit(context, result)

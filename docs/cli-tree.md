@@ -24,7 +24,7 @@ chatshare dufs
 │   ├── --bind HOST          # 仅接受 loopback
 │   ├── --port PORT          # 默认 5000
 │   ├── --base-url URL       # 生成分享 URL 的公开基址
-│   ├── --username NAME      # 默认 chatshare
+│   ├── --username NAME      # 写入账号；可来自 ChatEnv，默认 chatshare
 │   ├── --password-env NAME  # 默认 CHATSHARE_DUFS_PASSWORD
 │   └── --force              # 覆盖现有配置
 ├── service

@@ -45,13 +45,16 @@ chatshare dufs install
 
 ## Initialize
 
-Do not pass the password as a CLI argument. The default source is `CHATSHARE_DUFS_PASSWORD`:
+Do not pass the password as a CLI argument. Service deployments should store the writer credential in the active ChatEnv `chatshare` profile. ChatShare reads `CHATSHARE_DUFS_USERNAME`, `CHATSHARE_DUFS_PASSWORD`, and `CHATSHARE_DUFS_BASE_URL` from ChatEnv:
 
 ```bash
-read -rsp "Dufs password: " CHATSHARE_DUFS_PASSWORD && echo
-export CHATSHARE_DUFS_PASSWORD
-chatshare dufs init
+chatenv init -t chatshare -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
+read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
+printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
+chatshare dufs init
 ```
 
 Defaults:
@@ -59,9 +62,10 @@ Defaults:
 - Root: `~/.chatarch/chatshare/instances/default/data/`
 - Config: `~/.chatarch/chatshare/instances/default/config.yaml`
 - Listener: `127.0.0.1:5000`
-- Username: `chatshare`
-- Read, upload, search, archive, and hash enabled
-- Delete, CORS, external symlinks, and anonymous read disabled
+- Writer username: `CHATSHARE_DUFS_USERNAME` from ChatEnv, defaulting to `chatshare`
+- Anonymous browse, download, inline view, search, archive, and hash enabled
+- HTTP/WebDAV upload/PUT requires Dufs HTTP Digest Auth
+- Delete, CORS, and external symlinks disabled
 
 ## Install and start the user service
 
@@ -86,7 +90,7 @@ chatshare put ./report.pdf reports/2026/report.pdf
 chatshare url reports/2026/report.pdf
 ```
 
-The destination must be a relative path below the managed root. Absolute paths and `..` are rejected. Returned URLs contain no username or password; Dufs HTTP Digest Auth handles access.
+The destination must be a relative path below the managed root. Absolute paths and `..` are rejected. Returned URLs contain no username or password. Data reads are anonymous; HTTP/WebDAV `PUT` uses Dufs HTTP Digest Auth.
 
 ## Automation output
 

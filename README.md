@@ -14,7 +14,7 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 
 - Dufs 固定安装到 `~/.chatarch/chatshare/runtimes/dufs/`，不写系统目录。
 - 服务只绑定 `127.0.0.1`；公网入口应由独立反向代理任务配置。
-- 读写均要求 Dufs HTTP Digest Auth，共享密码只从环境变量读取并写入 `0600` 配置文件。
+- 浏览、下载和内联查看默认匿名可访问；HTTP/WebDAV `PUT` 等写入操作需要 Dufs HTTP Digest Auth。
 - 删除和符号链接访问默认关闭。
 - Linux 生命周期使用 `systemd --user`，不使用 `kill`、`pkill` 或不受控后台进程。
 
@@ -23,10 +23,13 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 ```bash
 uv tool install ChatShare
 chatshare dufs install
-read -rsp "Dufs password: " CHATSHARE_DUFS_PASSWORD && echo
-export CHATSHARE_DUFS_PASSWORD
-chatshare dufs init
+chatenv init -t chatshare -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
+read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
+printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
+chatshare dufs init --base-url https://share.public.wzhecnu.cn
 chatshare dufs service install
 chatshare dufs start
 chatshare put ./report.pdf reports/report.pdf

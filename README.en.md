@@ -23,10 +23,13 @@ ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs
 ```bash
 uv tool install ChatShare
 chatshare dufs install
-read -rsp "Dufs password: " CHATSHARE_DUFS_PASSWORD && echo
-export CHATSHARE_DUFS_PASSWORD
-chatshare dufs init
+chatenv init -t chatshare -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
+read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
+printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
+chatshare dufs init --base-url https://share.public.wzhecnu.cn
 chatshare dufs service install
 chatshare dufs start
 chatshare put ./report.pdf reports/report.pdf

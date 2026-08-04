@@ -10,7 +10,7 @@
 
 -   **初始化安全配置**
 
-    通过环境变量输入共享密码，生成 loopback-only、禁止删除的 Dufs 配置。
+    通过 ChatEnv 管理写入凭据，生成 loopback-only、匿名可读、鉴权可写、禁止删除的 Dufs 配置。
 
 -   **启动服务**
 
@@ -45,13 +45,16 @@ chatshare dufs install
 
 ## 初始化
 
-不要把密码放进 CLI 参数。默认从 `CHATSHARE_DUFS_PASSWORD` 读取：
+不要把密码放进 CLI 参数。服务部署时优先把写入凭据放进 ChatEnv active `chatshare` profile；ChatShare 会从 ChatEnv 读取 `CHATSHARE_DUFS_USERNAME`、`CHATSHARE_DUFS_PASSWORD` 和 `CHATSHARE_DUFS_BASE_URL`：
 
 ```bash
-read -rsp "Dufs password: " CHATSHARE_DUFS_PASSWORD && echo
-export CHATSHARE_DUFS_PASSWORD
-chatshare dufs init
+chatenv init -t chatshare -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
+read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
+printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
+chatshare dufs init
 ```
 
 默认结果：
@@ -59,9 +62,10 @@ unset CHATSHARE_DUFS_PASSWORD
 - 根目录：`~/.chatarch/chatshare/instances/default/data/`
 - 配置：`~/.chatarch/chatshare/instances/default/config.yaml`
 - 监听：`127.0.0.1:5000`
-- 账号：`chatshare`
-- 读取、上传、搜索、归档和哈希可用
-- 删除、CORS、外部符号链接和匿名读取关闭
+- 写入账号：ChatEnv 中的 `CHATSHARE_DUFS_USERNAME`，默认 `chatshare`
+- 匿名浏览、下载、内联查看、搜索、归档和哈希可用
+- HTTP/WebDAV 上传/PUT 需要 Dufs HTTP Digest Auth
+- 删除、CORS 和外部符号链接关闭
 
 ## 安装用户服务并启动
 
@@ -86,7 +90,7 @@ chatshare put ./report.pdf reports/2026/report.pdf
 chatshare url reports/2026/report.pdf
 ```
 
-目标必须是根目录内的相对路径；绝对路径和 `..` 会被拒绝。返回 URL 不包含账号或密码，访问时由 Dufs HTTP Digest Auth 完成鉴权。
+目标必须是根目录内的相对路径；绝对路径和 `..` 会被拒绝。返回 URL 不包含账号或密码；数据读取是匿名的，HTTP/WebDAV `PUT` 使用 Dufs HTTP Digest Auth。
 
 ## 自动化输出
 

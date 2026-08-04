@@ -50,4 +50,4 @@ ChatShare places Dufs inside ChatArch-owned paths and operational boundaries. Th
 
 ## Out of scope
 
-ChatShare does not currently provide accounts, anonymous capability links, expiry, download counts, per-file revocation, object storage, or multi-host orchestration. Dufs's direct-path model does not imply those semantics.
+ChatShare does not currently provide accounts, per-file capability links, expiry, download counts, per-file revocation, object storage, or multi-host orchestration. Dufs's direct-path model does not imply those semantics.

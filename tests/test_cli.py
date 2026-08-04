@@ -134,6 +134,8 @@ def test_init_command_maps_options_without_password_value(monkeypatch, tmp_path)
     assert result.exit_code == 0, result.output
     assert json.loads(result.output)["username"] == "operator"
     _, kwargs = calls[0]
+    environ = kwargs.pop("environ")
+    assert isinstance(environ, dict)
     assert kwargs == {
         "base_url": "https://share.example.test",
         "bind": "localhost",
@@ -157,6 +159,43 @@ def test_actual_init_does_not_emit_secret(monkeypatch, tmp_path):
     assert auth_value not in result.output
     payload = json.loads(result.output)
     assert payload["config"].endswith("config.yaml")
+
+
+def test_init_reads_password_from_chatenv_active_profile_without_leaking(tmp_path):
+    from chatenv import EnvStore
+
+    from chatshare.config import ChatshareConfig
+
+    chatarch_home = tmp_path / "chatarch"
+    auth_value = "[REDACTED]"
+    store = EnvStore(chatarch_home / "envs")
+    store.save_active(
+        ChatshareConfig,
+        {
+            "CHATSHARE_DUFS_USERNAME": "writer",
+            "CHATSHARE_DUFS_PASSWORD": auth_value,
+            "CHATSHARE_DUFS_BASE_URL": "http://127.0.0.1:5123",
+        },
+    )
+
+    result = invoke(
+        [
+            "--home",
+            str(chatarch_home),
+            "--json",
+            "dufs",
+            "init",
+            "--port",
+            "5123",
+        ],
+        env={},
+    )
+
+    assert result.exit_code == 0, result.output
+    assert auth_value not in result.output
+    payload = json.loads(result.output)
+    assert payload["username"] == "writer"
+    assert payload["base_url"] == "http://127.0.0.1:5123"
 
 
 def test_service_install_and_control_commands_delegate(monkeypatch, tmp_path):

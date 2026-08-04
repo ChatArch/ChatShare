@@ -23,8 +23,8 @@ chatshare dufs
 │   ├── --root PATH          # defaults to the ChatArch-owned data directory
 │   ├── --bind HOST          # loopback only
 │   ├── --port PORT          # defaults to 5000
-│   ├── --base-url URL       # public base used for generated share URLs
-│   ├── --username NAME      # defaults to chatshare
+│   ├── --base-url URL       # public base used for generated share URLs; may come from ChatEnv
+│   ├── --username NAME      # writer account; may come from ChatEnv, defaults to chatshare
 │   ├── --password-env NAME  # defaults to CHATSHARE_DUFS_PASSWORD
 │   └── --force              # replace existing configuration
 ├── service
