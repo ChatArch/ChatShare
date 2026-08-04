@@ -6,8 +6,8 @@
 |---|---|
 | Install, initialize, and manage service | The ChatArch user logged into the host |
 | Local `put` and `url` | The same ChatArch user; no HTTP request |
-| Browse, download, and inline view | A client holding the shared Dufs Basic Auth credential |
-| HTTP/WebDAV upload | A client holding the shared Dufs Basic Auth credential |
+| Browse, download, and inline view | A client holding the shared Dufs HTTP Digest Auth credential |
+| HTTP/WebDAV upload | A client holding the shared Dufs HTTP Digest Auth credential |
 | HTTP delete | Disabled by default |
 | Cleanup, expiry, and per-file revocation | Not implemented |
 

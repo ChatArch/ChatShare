@@ -86,7 +86,7 @@ chatshare put ./report.pdf reports/2026/report.pdf
 chatshare url reports/2026/report.pdf
 ```
 
-目标必须是根目录内的相对路径；绝对路径和 `..` 会被拒绝。返回 URL 不包含账号或密码，访问时由 Dufs Basic Auth 完成鉴权。
+目标必须是根目录内的相对路径；绝对路径和 `..` 会被拒绝。返回 URL 不包含账号或密码，访问时由 Dufs HTTP Digest Auth 完成鉴权。
 
 ## 自动化输出
 

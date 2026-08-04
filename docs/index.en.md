@@ -46,7 +46,7 @@ ChatShare places Dufs inside ChatArch-owned paths and operational boundaries. Th
 | Configuration and state | Owns state under `~/.chatarch/chatshare/` | Reads generated YAML configuration |
 | Service lifecycle | Linux `systemd --user` | Foreground file-server process |
 | File publication | Atomically copies into the managed root and builds a URL | Serves files and accepts HTTP/WebDAV uploads |
-| Authentication | Collects and stores the shared credential safely | Basic Auth path permissions |
+| Authentication | Collects and stores the shared credential safely | HTTP Digest Auth path permissions |
 
 ## Out of scope
 

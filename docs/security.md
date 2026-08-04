@@ -6,8 +6,8 @@
 |---|---|
 | 安装、初始化、服务管理 | 登录到主机的 ChatArch 用户 |
 | 本机 `put` 与 `url` | 同一 ChatArch 用户；不经过 HTTP |
-| 浏览、下载、内联查看 | 持有共享 Dufs Basic Auth 的客户端 |
-| HTTP/WebDAV 上传 | 持有共享 Dufs Basic Auth 的客户端 |
+| 浏览、下载、内联查看 | 持有共享 Dufs HTTP Digest Auth 的客户端 |
+| HTTP/WebDAV 上传 | 持有共享 Dufs HTTP Digest Auth 的客户端 |
 | HTTP 删除 | 默认不可用 |
 | 清理、过期、逐文件撤销 | 当前未实现 |
 

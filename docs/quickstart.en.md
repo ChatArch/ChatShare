@@ -86,7 +86,7 @@ chatshare put ./report.pdf reports/2026/report.pdf
 chatshare url reports/2026/report.pdf
 ```
 
-The destination must be a relative path below the managed root. Absolute paths and `..` are rejected. Returned URLs contain no username or password; Dufs Basic Auth handles access.
+The destination must be a relative path below the managed root. Absolute paths and `..` are rejected. Returned URLs contain no username or password; Dufs HTTP Digest Auth handles access.
 
 ## Automation output
 

@@ -46,7 +46,7 @@ ChatShare 把 Dufs 收进 ChatArch 的用户级目录和操作边界中：CLI �
 | 配置与状态 | 管理 `~/.chatarch/chatshare/` 下的状态 | 读取生成的 YAML 配置 |
 | 服务生命周期 | Linux `systemd --user` | 前台文件服务进程 |
 | 文件发布 | 原子复制到受控根目录并生成 URL | 通过 HTTP/WebDAV 提供读取与上传 |
-| 鉴权 | 安全采集和保存共享凭据 | Basic Auth 路径权限 |
+| 鉴权 | 安全采集和保存共享凭据 | HTTP Digest Auth 路径权限 |
 
 ## 不在当前范围
 

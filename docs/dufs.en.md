@@ -6,7 +6,7 @@ ChatShare does not modify Dufs source. It combines official release assets, conf
 
 | Layer | Responsibility |
 |---|---|
-| Dufs | HTTP/WebDAV, directory UI, Basic Auth, uploads, and reads |
+| Dufs | HTTP/WebDAV, directory UI, HTTP Digest Auth, uploads, and reads |
 | ChatShare | Release selection and integrity, ChatArch paths, configuration, systemd user lifecycle, and file publication |
 | Reverse proxy | TLS, trusted Host enforcement, external ingress, and request limits; outside this CLI |
 
@@ -45,7 +45,7 @@ A download, digest, extraction, or version failure never replaces the currently 
 
 ## Configuration
 
-The default config is loopback-only with shared Basic Auth:
+The default config is loopback-only with shared HTTP Digest Auth:
 
 ```yaml
 serve-path: '<managed-data-root>'

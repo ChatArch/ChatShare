@@ -6,7 +6,7 @@ ChatShare 不修改 Dufs 源码。它把官方 release asset、配置和 Linux �
 
 | 层 | 责任 |
 |---|---|
-| Dufs | HTTP/WebDAV、目录展示、Basic Auth、上传与读取 |
+| Dufs | HTTP/WebDAV、目录展示、HTTP Digest Auth、上传与读取 |
 | ChatShare | release 选择和校验、ChatArch 路径、配置、systemd 用户生命周期、文件发布 |
 | 反向代理 | TLS、可信 Host、外部入口与请求限制；不在当前 CLI 中 |
 
@@ -45,7 +45,7 @@ Linux 的激活 unit 位于 `~/.config/systemd/user/chatshare-dufs.service`。�
 
 ## 配置
 
-默认配置只监听 loopback，并使用共享 Basic Auth：
+默认配置只监听 loopback，并使用共享 HTTP Digest Auth：
 
 ```yaml
 serve-path: '<managed-data-root>'
