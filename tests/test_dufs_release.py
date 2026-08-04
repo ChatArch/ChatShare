@@ -178,6 +178,16 @@ def test_verify_dufs_binary_requires_expected_version(tmp_path):
 
     assert verify_dufs_binary(binary, "v0.46.0", runner=ok_runner) == "dufs v0.46.0"
 
+    def cargo_version_runner(*args, **kwargs):
+        return subprocess.CompletedProcess(
+            args[0], 0, stdout="dufs 0.46.0\n", stderr=""
+        )
+
+    assert (
+        verify_dufs_binary(binary, "v0.46.0", runner=cargo_version_runner)
+        == "dufs 0.46.0"
+    )
+
     def mismatch_runner(*args, **kwargs):
         return subprocess.CompletedProcess(
             args[0], 0, stdout="dufs v0.45.0\n", stderr=""
@@ -193,6 +203,16 @@ def test_verify_dufs_binary_requires_expected_version(tmp_path):
 
     with pytest.raises(ChatShareError, match="version mismatch"):
         verify_dufs_binary(binary, "v0.46.0", runner=prefix_runner)
+
+    for invalid_output in ["dufs v0.46.0-rc1\n", "dufs x0.46.0garbage\n"]:
+        with pytest.raises(ChatShareError, match="version mismatch"):
+            verify_dufs_binary(
+                binary,
+                "v0.46.0",
+                runner=lambda *args, output=invalid_output, **kwargs: (
+                    subprocess.CompletedProcess(args[0], 0, stdout=output, stderr="")
+                ),
+            )
 
 
 def test_install_dufs_writes_manifest_and_atomically_activates_version(tmp_path):
@@ -236,6 +256,7 @@ def test_install_dufs_writes_manifest_and_atomically_activates_version(tmp_path)
     manifest = json.loads(paths.dufs_manifest("v0.46.0").read_text())
     assert manifest == {
         "asset": "dufs-v0.46.0-x86_64-unknown-linux-musl.tar.gz",
+        "binary_sha256": hashlib.sha256(b"new-binary").hexdigest(),
         "repo": "sigoden/dufs",
         "sha256": "a" * 64,
         "target": "x86_64-unknown-linux-musl",
@@ -274,13 +295,15 @@ def test_install_reuses_existing_version_without_network(tmp_path):
     runtime.mkdir(parents=True)
     binary = runtime / "dufs"
     binary.write_bytes(b"known-good")
-    digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    binary_digest = hashlib.sha256(binary.read_bytes()).hexdigest()
+    archive_digest = "a" * 64
     (runtime / "install.json").write_text(
         json.dumps(
             {
                 "asset": "dufs-v0.46.0-x86_64-unknown-linux-musl.tar.gz",
+                "binary_sha256": binary_digest,
                 "repo": "sigoden/dufs",
-                "sha256": digest,
+                "sha256": archive_digest,
                 "target": "x86_64-unknown-linux-musl",
                 "version": "v0.46.0",
             }
@@ -298,7 +321,8 @@ def test_install_reuses_existing_version_without_network(tmp_path):
     )
 
     assert result["reused"] is True
-    assert result["sha256"] == digest
+    assert result["sha256"] == archive_digest
+    assert result["binary_sha256"] == binary_digest
     assert verified == [(binary, "v0.46.0")]
     assert os.readlink(paths.dufs_current) == "v0.46.0"
 
@@ -307,13 +331,16 @@ def test_install_refuses_to_reuse_tampered_binary(tmp_path):
     paths = ChatSharePaths.from_home(tmp_path / "chatarch")
     runtime = paths.dufs_runtime("v0.46.0")
     runtime.mkdir(parents=True)
-    (runtime / "dufs").write_bytes(b"tampered")
+    binary = runtime / "dufs"
+    binary.write_bytes(b"tampered")
+    actual_digest = hashlib.sha256(binary.read_bytes()).hexdigest()
     (runtime / "install.json").write_text(
         json.dumps(
             {
                 "asset": "dufs-v0.46.0-x86_64-unknown-linux-musl.tar.gz",
+                "binary_sha256": "a" * 64,
                 "repo": "sigoden/dufs",
-                "sha256": "a" * 64,
+                "sha256": actual_digest,
                 "target": "x86_64-unknown-linux-musl",
                 "version": "v0.46.0",
             }
@@ -321,4 +348,8 @@ def test_install_refuses_to_reuse_tampered_binary(tmp_path):
     )
 
     with pytest.raises(ChatShareError, match="SHA-256 mismatch"):
-        install_dufs(paths, target="x86_64-unknown-linux-musl")
+        install_dufs(
+            paths,
+            target="x86_64-unknown-linux-musl",
+            verifier=lambda binary, version: "dufs 0.46.0",
+        )

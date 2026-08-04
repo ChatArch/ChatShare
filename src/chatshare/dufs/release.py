@@ -251,7 +251,7 @@ def verify_dufs_binary(
             f"Dufs binary version check failed: {output or 'no output'}"
         )
     expected = re.escape(version.removeprefix("v"))
-    if re.search(rf"(?<![0-9.])v?{expected}(?![0-9.])", output) is None:
+    if re.fullmatch(rf"dufs v?{expected}", output) is None:
         raise ChatShareError(
             f"Dufs binary version mismatch: expected {version}, got {output!r}"
         )
@@ -303,7 +303,7 @@ def _file_sha256(path: Path) -> str:
 
 def _validate_reused_manifest(
     manifest: dict[str, Any], *, version: str, target: str, repo: str, path: Path
-) -> str:
+) -> tuple[str, str]:
     expected = {
         "asset": f"dufs-{version}-{target}.tar.gz",
         "repo": repo,
@@ -317,7 +317,15 @@ def _validate_reused_manifest(
     sha256 = manifest.get("sha256")
     if not isinstance(sha256, str) or _SHA256_RE.fullmatch(sha256) is None:
         raise ChatShareError(f"Dufs install manifest has an invalid SHA-256: {path}")
-    return sha256
+    binary_sha256 = manifest.get("binary_sha256")
+    if (
+        not isinstance(binary_sha256, str)
+        or _SHA256_RE.fullmatch(binary_sha256) is None
+    ):
+        raise ChatShareError(
+            f"Dufs install manifest has an invalid binary SHA-256: {path}"
+        )
+    return sha256, binary_sha256
 
 
 def install_dufs(
@@ -345,19 +353,20 @@ def install_dufs(
                 "Managed Dufs binary and manifest must not be symlinks"
             )
         manifest = _read_manifest(manifest_path)
-        expected_sha256 = _validate_reused_manifest(
+        _, expected_binary_sha256 = _validate_reused_manifest(
             manifest, version=version, target=target, repo=repo, path=manifest_path
         )
-        actual_sha256 = _file_sha256(binary)
-        if actual_sha256 != expected_sha256:
+        actual_binary_sha256 = _file_sha256(binary)
+        if actual_binary_sha256 != expected_binary_sha256:
             raise ChatShareError(
-                f"Dufs binary SHA-256 mismatch at {binary}: expected {expected_sha256}, got {actual_sha256}"
+                f"Dufs binary SHA-256 mismatch at {binary}: expected {expected_binary_sha256}, got {actual_binary_sha256}"
             )
         verify(binary, version)
         _activate_version(paths, version)
         return {
             "asset": manifest.get("asset"),
             "binary": str(binary),
+            "binary_sha256": manifest.get("binary_sha256"),
             "reused": True,
             "sha256": manifest.get("sha256"),
             "target": manifest.get("target"),
@@ -382,8 +391,10 @@ def install_dufs(
         download(asset, archive)
         extract_dufs_archive(archive, staged_binary)
         verify(staged_binary, version)
+        binary_sha256 = _file_sha256(staged_binary)
         manifest = {
             "asset": asset.name,
+            "binary_sha256": binary_sha256,
             "repo": repo,
             "sha256": asset.sha256,
             "target": target,
