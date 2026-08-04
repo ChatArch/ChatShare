@@ -29,10 +29,12 @@ chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
-chatshare dufs init --base-url https://share.public.wzhecnu.cn
+chatshare dufs init
 chatshare dufs service install
 chatshare dufs start
-chatshare put ./report.pdf reports/report.pdf
+printf 'hello from ChatShare\n' > hello-share.txt
+chatshare put ./hello-share.txt examples/hello-share.txt
+chatshare url examples/hello-share.txt
 ```
 
 ## 文档
