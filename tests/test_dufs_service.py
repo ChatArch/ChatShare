@@ -59,7 +59,8 @@ def test_render_service_unit_uses_managed_paths_without_secret(tmp_path):
         f'ExecStart="{paths.dufs_current_binary}" --config "{paths.config_file}"'
         in text
     )
-    assert f'WorkingDirectory="{paths.data_dir.resolve()}"' in text
+    assert f"WorkingDirectory={paths.data_dir.resolve()}" in text
+    assert f'WorkingDirectory="{paths.data_dir.resolve()}"' not in text
     assert "Restart=on-failure" in text
     assert "NoNewPrivileges=true" in text
     assert "PrivateTmp=true" in text

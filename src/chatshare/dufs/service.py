@@ -49,6 +49,13 @@ def _systemd_quote(value: Path | str) -> str:
     return f'"{escaped}"'
 
 
+def _systemd_path(value: Path | str) -> str:
+    text = str(value)
+    if "\n" in text or "\r" in text:
+        raise ChatShareError("systemd unit paths must not contain newlines")
+    return text.replace("%", "%%")
+
+
 def _atomic_write(path: Path, content: str, *, mode: int = 0o644) -> None:
     existed = path.parent.exists()
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -88,7 +95,7 @@ def render_service_unit(paths: ChatSharePaths) -> str:
             "[Service]",
             "Type=simple",
             f"ExecStart={_systemd_quote(paths.dufs_current_binary)} --config {_systemd_quote(state.config)}",
-            f"WorkingDirectory={_systemd_quote(state.root)}",
+            f"WorkingDirectory={_systemd_path(state.root)}",
             "Restart=on-failure",
             "RestartSec=3",
             "NoNewPrivileges=true",
