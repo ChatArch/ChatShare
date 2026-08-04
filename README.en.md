@@ -1,49 +1,42 @@
 <div align="center">
-    <a href="https://pypi.python.org/pypi/ChatShare">
-        <img src="https://img.shields.io/pypi/v/ChatShare.svg" alt="PyPI version" />
-    </a>
-    <a href="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml">
-        <img src="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml/badge.svg" alt="Tests" />
-    </a>
-    <a href="https://ChatArch.github.io/ChatShare">
-        <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
-    </a>
+    <a href="https://pypi.org/project/ChatShare/"><img src="https://img.shields.io/pypi/v/ChatShare.svg" alt="PyPI version" /></a>
+    <a href="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml"><img src="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml/badge.svg" alt="Test status" /></a>
+    <a href="https://arch.gh.wzhecnu.cn/ChatShare/en/"><img src="https://img.shields.io/badge/docs-MkDocs-blue.svg" alt="Documentation" /></a>
 </div>
 
-<div align="center">
-
-[English](README.en.md) | [简体中文](README.md)
-</div>
+<div align="center">[Chinese](README.md) | [English](README.en.md)</div>
 
 # ChatShare
 
-ChatShare: ChatArch sharing utilities
+ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs](https://github.com/sigoden/dufs), with auditable binary installation, configuration, user-service lifecycle, local file import, and direct URL generation.
 
-## Quick Start
+## Secure defaults
+
+- Dufs is installed under `~/.chatarch/chatshare/runtimes/dufs/`, never a system prefix.
+- The service binds only to `127.0.0.1`; public ingress belongs to a separate reverse-proxy task.
+- Reads and writes require Dufs Basic Auth. The shared password is read from an environment variable and persisted only in a mode-`0600` config file.
+- Delete and external-symlink access are disabled by default.
+- Linux lifecycle uses `systemd --user`; ChatShare does not use `kill`, `pkill`, or an unmanaged background process.
+
+## Shortest workflow
 
 ```bash
-pip install -e ".[dev]"
-chatshare hello ChatArch
-python -m pytest -q
-python -m build
+uv tool install ChatShare
+chatshare dufs install
+read -rsp "Dufs password: " CHATSHARE_DUFS_PASSWORD && echo
+export CHATSHARE_DUFS_PASSWORD
+chatshare dufs init
+unset CHATSHARE_DUFS_PASSWORD
+chatshare dufs service install
+chatshare dufs start
+chatshare put ./report.pdf reports/report.pdf
 ```
 
-## CLI Contract
+## Documentation
 
-This template depends on `chatstyle>=0.1.0` and `chatenv>=0.1.1`. New commands should prefer:
+- [Quick Start](https://arch.gh.wzhecnu.cn/ChatShare/en/quickstart/)
+- [CLI Tree](https://arch.gh.wzhecnu.cn/ChatShare/en/cli-tree/)
+- [Dufs Runtime](https://arch.gh.wzhecnu.cn/ChatShare/en/dufs/)
+- [Security and Boundaries](https://arch.gh.wzhecnu.cn/ChatShare/en/security/)
 
-- `CommandSchema` / `CommandField` for inputs.
-- `add_interactive_option()` for the shared `-i/-I` switch.
-- `resolve_command_inputs()` for missing args, defaults, TTY behavior, and validation.
-
-## Layout
-
-- `src/`: package source code
-- `tests/code-tests/`: code tests and migrated historical tests
-- `tests/cli-tests/`: real CLI tests, doc-first
-- `tests/mock-cli-tests/`: mock/fake CLI tests, doc-first
-- `docs/`: long-lived project docs built by mkdocs
-
-## Development Notes
-
-See `DEVELOP.md` and `AGENTS.md` before expanding the scaffold.
+See [`DEVELOP.md`](DEVELOP.md) and [`AGENTS.md`](AGENTS.md) for development conventions.

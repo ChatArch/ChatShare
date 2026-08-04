@@ -1,9 +1,54 @@
 site_name: ChatShare 文档
-site_url: https://ChatArch.github.io/ChatShare
+site_url: https://arch.gh.wzhecnu.cn/ChatShare/
 repo_url: https://github.com/ChatArch/ChatShare
+repo_name: ChatArch/ChatShare
 theme:
   name: material
   language: zh
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - content.code.copy
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          default: true
+          name: 中文
+          build: true
+          site_name: ChatShare 文档
+        - locale: en
+          name: English
+          build: true
+          site_name: ChatShare Documentation
+          nav_translations:
+            首页: Home
+            快速开始: Quick Start
+            CLI 树: CLI Tree
+            Dufs 运行时: Dufs Runtime
+            安全与边界: Security and Boundaries
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+extra:
+  alternate:
+    - name: 中文
+      link: /ChatShare/
+      lang: zh
+    - name: English
+      link: /ChatShare/en/
+      lang: en
 nav:
   - 首页: index.md
-  - English: index.en.md
+  - 快速开始: quickstart.md
+  - CLI 树: cli-tree.md
+  - Dufs 运行时: dufs.md
+  - 安全与边界: security.md

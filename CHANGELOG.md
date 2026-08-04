@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-08-04
+
+### Added
+
+- 设计并实现由 ChatArch 管理的 Dufs CLI：可信 release 安装、安全配置、Linux `systemd --user` 生命周期、本机文件发布与直达 URL。
+- 新增中英文快速开始、CLI 树、Dufs 运行时和安全边界文档。
+
+### Changed
+
+- 文档站切换到 ChatArch 公共文档域名、后缀式中英文站点和 PR Preview Docs。
+
+
 ## 2026-06-23
 
 ### Added

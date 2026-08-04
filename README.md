@@ -1,49 +1,42 @@
 <div align="center">
-    <a href="https://pypi.python.org/pypi/ChatShare">
-        <img src="https://img.shields.io/pypi/v/ChatShare.svg" alt="PyPI version" />
-    </a>
-    <a href="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml">
-        <img src="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml/badge.svg" alt="Tests" />
-    </a>
-    <a href="https://ChatArch.github.io/ChatShare">
-        <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
-    </a>
+    <a href="https://pypi.org/project/ChatShare/"><img src="https://img.shields.io/pypi/v/ChatShare.svg" alt="PyPI 版本" /></a>
+    <a href="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml"><img src="https://github.com/ChatArch/ChatShare/actions/workflows/ci.yml/badge.svg" alt="测试状态" /></a>
+    <a href="https://arch.gh.wzhecnu.cn/ChatShare/"><img src="https://img.shields.io/badge/docs-MkDocs-blue.svg" alt="文档" /></a>
 </div>
 
-<div align="center">
-
-[English](README.en.md) | [简体中文](README.md)
-</div>
+<div align="center">[中文版](README.md) | [英文版](README.en.md)</div>
 
 # ChatShare
 
-ChatShare: ChatArch sharing utilities
+ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](https://github.com/sigoden/dufs)，提供可审计的二进制安装、配置、用户级服务生命周期，以及本机文件导入与直达 URL 生成。
 
-## 快速开始
+## 安全默认值
+
+- Dufs 固定安装到 `~/.chatarch/chatshare/runtimes/dufs/`，不写系统目录。
+- 服务只绑定 `127.0.0.1`；公网入口应由独立反向代理任务配置。
+- 读写均要求 Dufs Basic Auth，共享密码只从环境变量读取并写入 `0600` 配置文件。
+- 删除和符号链接访问默认关闭。
+- Linux 生命周期使用 `systemd --user`，不使用 `kill`、`pkill` 或不受控后台进程。
+
+## 最短流程
 
 ```bash
-pip install -e ".[dev]"
-chatshare hello ChatArch
-python -m pytest -q
-python -m build
+uv tool install ChatShare
+chatshare dufs install
+read -rsp "Dufs password: " CHATSHARE_DUFS_PASSWORD && echo
+export CHATSHARE_DUFS_PASSWORD
+chatshare dufs init
+unset CHATSHARE_DUFS_PASSWORD
+chatshare dufs service install
+chatshare dufs start
+chatshare put ./report.pdf reports/report.pdf
 ```
 
-## CLI 规范
+## 文档
 
-这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.1`，新的命令应优先使用：
+- [快速开始](https://arch.gh.wzhecnu.cn/ChatShare/quickstart/)
+- [CLI 树](https://arch.gh.wzhecnu.cn/ChatShare/cli-tree/)
+- [Dufs 运行时](https://arch.gh.wzhecnu.cn/ChatShare/dufs/)
+- [安全与边界](https://arch.gh.wzhecnu.cn/ChatShare/security/)
 
-- `CommandSchema` / `CommandField` 描述输入。
-- `add_interactive_option()` 提供统一 `-i/-I`。
-- `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
-
-## 目录结构
-
-- `src/`：包源码
-- `tests/code-tests/`：代码测试和历史测试迁移
-- `tests/cli-tests/`：真实 CLI 测试，doc-first
-- `tests/mock-cli-tests/`：mock/fake CLI 测试，doc-first
-- `docs/`：长期维护文档，由 mkdocs 构建
-
-## 开发说明
-
-扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
+开发约定见 [`DEVELOP.md`](DEVELOP.md) 与 [`AGENTS.md`](AGENTS.md)。
