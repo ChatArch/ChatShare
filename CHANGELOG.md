@@ -2,6 +2,13 @@
 
 ## 2026-08-11
 
+### Fixed
+
+- 发布 `0.2.2` hotfix：为 Material 图标卡片启用 `pymdownx.emoji` + Material emoji renderer，避免 MkDocs 生成页面残留 `:material-*:` literal token。
+- 增加回归测试：docs 源码只要使用 `:material-*:`，`mkdocs.yml` 必须配置 Material emoji renderer。
+
+## 2026-08-11
+
 ### Added
 
 - 新增 runtime `chatshare --tree`，从真实 Click registry 输出 `dufs`、`put`、`url` 命令树，并明确排除隐藏兼容 `hello` 入口。
