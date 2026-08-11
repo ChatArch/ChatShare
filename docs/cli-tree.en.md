@@ -1,54 +1,31 @@
 # CLI Tree
 
-## Top-level commands
+`chatshare --tree` renders the command tree from the current Click registry. This page should stay aligned with runtime readback.
 
 ```text
-chatshare [--home PATH] [--json] [--version]
-├── dufs                 # Dufs runtime, configuration, and user service
-├── put SOURCE [DEST]    # Publish a local file into the share root
-└── url PATH             # Build a direct URL for an existing relative path
+chatshare # Manage Dufs-backed file sharing inside ChatArch
+├── --help # Show this message and exit
+├── --version # Show the version and exit
+├── --tree # Print the registered command tree
+├── --home HOME # ChatArch home (default: ChatEnv home, normally ~/.chatarch).
+├── --json # Emit structured JSON output.
+├── dufs # Manage the Dufs runtime, configuration, and user service
+│   ├── install [--version VERSION] [--platform TARGET] [--force] # Install and verify an official Dufs release asset
+│   ├── init [--root ROOT] [--bind BIND] [--port PORT] [--base-url BASE-URL] [--username USERNAME] [--password-env PASSWORD-ENV] [--force] # Initialize the secure default Dufs instance
+│   ├── service # Install the Linux systemd user-service definition
+│   │   └── install [--enable] # Install the generated systemd user unit
+│   ├── start # Start Dufs through systemd --user
+│   ├── stop # Stop Dufs through systemd --user
+│   ├── restart # Restart Dufs through systemd --user
+│   ├── status # Show runtime, config, unit, and active state
+│   └── logs [--lines LINES] # Read the bounded tail of the Dufs access log
+├── put SOURCE [DESTINATION] [--overwrite] # Publish a local file into the managed share root
+└── url PATH # Build a direct URL for an existing managed file
 ```
-
-`--home` is the ChatArch home, derived from ChatEnv and normally `~/.chatarch`. `--json` enables structured output for the invocation.
-
-## Dufs runtime
-
-```text
-chatshare dufs
-├── install
-│   ├── --version VERSION    # defaults to v0.46.0; no implicit latest
-│   ├── --platform TARGET    # explicit test/cross-install override
-│   └── --force              # atomically replace the same-version binary
-├── init
-│   ├── --root PATH          # defaults to the ChatArch-owned data directory
-│   ├── --bind HOST          # loopback only
-│   ├── --port PORT          # defaults to 5000
-│   ├── --base-url URL       # public base used for generated share URLs; may come from ChatEnv
-│   ├── --username NAME      # writer account; may come from ChatEnv, defaults to chatshare
-│   ├── --password-env NAME  # defaults to CHATSHARE_DUFS_PASSWORD
-│   └── --force              # replace existing configuration
-├── service
-│   └── install [--enable]   # install the Linux systemd user unit
-├── start                    # systemctl --user start
-├── stop                     # systemctl --user stop
-├── restart                  # systemctl --user restart
-├── status                   # summarize runtime, config, unit, and active state
-└── logs [--lines N]         # read the tail of the managed access log
-```
-
-## File publication
-
-```text
-chatshare put SOURCE [DESTINATION]
-└── --overwrite          # explicitly allow atomic replacement
-
-chatshare url PATH
-```
-
-`DESTINATION` and `PATH` are POSIX-style relative paths. The CLI rejects absolute paths, empty components, `.`, `..`, and any resolved target outside the managed root.
 
 ## Interface contract
 
+- `--home` is the ChatArch home, derived from ChatEnv and normally `~/.chatarch`. `--json` enables structured output for the invocation.
 - CLI callbacks only resolve arguments and render output; install, config, service, and file operations expose importable Python APIs.
 - Destructive replacement requires `--force` or `--overwrite`.
 - Passwords are supplied by environment-variable name; there is no `--password VALUE` option.

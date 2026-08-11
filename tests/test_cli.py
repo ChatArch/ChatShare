@@ -16,11 +16,32 @@ def test_help_exposes_real_product_tree_and_hides_legacy_hello():
     result = invoke(["--help"])
 
     assert result.exit_code == 0, result.output
+    assert "--tree" in result.output
     assert "dufs" in result.output
     assert "put" in result.output
     assert "url" in result.output
     assert "--home" in result.output
     assert "--json" in result.output
+    assert "hello" not in result.output
+
+
+def test_tree_option_renders_registered_product_tree_and_hides_legacy_hello():
+    result = invoke(["--tree"])
+
+    assert result.exit_code == 0, result.output
+    assert "chatshare # Manage Dufs-backed file sharing inside ChatArch" in result.output
+    assert "--help" in result.output
+    assert "--version" in result.output
+    assert "--tree" in result.output
+    assert "--home" in result.output
+    assert "--json" in result.output
+    assert "├── dufs" in result.output
+    assert "│   ├── install" in result.output
+    assert "│   ├── init" in result.output
+    assert "│   ├── service" in result.output
+    assert "│   │   └── install" in result.output
+    assert "├── put SOURCE [DESTINATION] [--overwrite]" in result.output
+    assert "└── url PATH" in result.output
     assert "hello" not in result.output
 
 
@@ -48,7 +69,7 @@ def test_dufs_help_exposes_documented_command_tree():
 def test_version_and_hidden_hello_compatibility():
     version = invoke(["--version"])
     assert version.exit_code == 0
-    assert "0.2.0" in version.output
+    assert "0.2.1" in version.output
 
     hello = invoke(["hello", "Alice", "-I"])
     assert hello.exit_code == 0

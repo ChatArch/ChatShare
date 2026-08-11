@@ -37,6 +37,8 @@ chatshare put ./hello-share.txt examples/hello-share.txt
 chatshare url examples/hello-share.txt
 ```
 
+Run `chatshare --tree` to read the live command tree generated from the Click registry; hidden compatibility entries are excluded from the product tree.
+
 ## Documentation
 
 - [Quick Start](https://arch.gh.wzhecnu.cn/ChatShare/en/quickstart/)

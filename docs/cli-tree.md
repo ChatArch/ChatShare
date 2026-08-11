@@ -1,54 +1,31 @@
 # CLI 树
 
-## 顶层命令
+`chatshare --tree` 会从当前 Click 注册表生成以下命令树。这个页面应与 runtime readback 保持一致。
 
 ```text
-chatshare [--home PATH] [--json] [--version]
-├── dufs                 # Dufs 运行时、配置与用户服务
-├── put SOURCE [DEST]    # 把本机文件发布到分享根目录
-└── url PATH             # 为已有相对路径生成直达 URL
+chatshare # Manage Dufs-backed file sharing inside ChatArch
+├── --help # Show this message and exit
+├── --version # Show the version and exit
+├── --tree # Print the registered command tree
+├── --home HOME # ChatArch home (default: ChatEnv home, normally ~/.chatarch).
+├── --json # Emit structured JSON output.
+├── dufs # Manage the Dufs runtime, configuration, and user service
+│   ├── install [--version VERSION] [--platform TARGET] [--force] # Install and verify an official Dufs release asset
+│   ├── init [--root ROOT] [--bind BIND] [--port PORT] [--base-url BASE-URL] [--username USERNAME] [--password-env PASSWORD-ENV] [--force] # Initialize the secure default Dufs instance
+│   ├── service # Install the Linux systemd user-service definition
+│   │   └── install [--enable] # Install the generated systemd user unit
+│   ├── start # Start Dufs through systemd --user
+│   ├── stop # Stop Dufs through systemd --user
+│   ├── restart # Restart Dufs through systemd --user
+│   ├── status # Show runtime, config, unit, and active state
+│   └── logs [--lines LINES] # Read the bounded tail of the Dufs access log
+├── put SOURCE [DESTINATION] [--overwrite] # Publish a local file into the managed share root
+└── url PATH # Build a direct URL for an existing managed file
 ```
-
-`--home` 表示 ChatArch home，默认来自 ChatEnv，通常为 `~/.chatarch`。`--json` 对当前调用启用结构化输出。
-
-## Dufs 运行时
-
-```text
-chatshare dufs
-├── install
-│   ├── --version VERSION    # 默认 v0.46.0，不接受隐式 latest
-│   ├── --platform TARGET    # 测试/交叉安装时显式覆盖
-│   └── --force              # 原子替换同版本二进制
-├── init
-│   ├── --root PATH          # 默认 ChatArch 内部 data 目录
-│   ├── --bind HOST          # 仅接受 loopback
-│   ├── --port PORT          # 默认 5000
-│   ├── --base-url URL       # 生成分享 URL 的公开基址
-│   ├── --username NAME      # 写入账号；可来自 ChatEnv，默认 chatshare
-│   ├── --password-env NAME  # 默认 CHATSHARE_DUFS_PASSWORD
-│   └── --force              # 覆盖现有配置
-├── service
-│   └── install [--enable]   # 安装 Linux systemd 用户 unit
-├── start                    # systemctl --user start
-├── stop                     # systemctl --user stop
-├── restart                  # systemctl --user restart
-├── status                   # 汇总运行时、配置、unit 与 active 状态
-└── logs [--lines N]         # 读取受控 access log 末尾
-```
-
-## 文件发布
-
-```text
-chatshare put SOURCE [DESTINATION]
-└── --overwrite          # 显式允许原子替换已有文件
-
-chatshare url PATH
-```
-
-`DESTINATION` 和 `PATH` 使用 POSIX 风格相对路径。命令拒绝绝对路径、空组件、`.`、`..` 以及解析后越出根目录的目标。
 
 ## 接口约定
 
+- `--home` 表示 ChatArch home，默认来自 ChatEnv，通常为 `~/.chatarch`。`--json` 对当前调用启用结构化输出。
 - CLI 只负责参数解析和输出；安装、配置、服务与文件操作均有可导入 Python API。
 - 破坏性覆盖必须显式使用 `--force` 或 `--overwrite`。
 - 密码只通过环境变量名传入；不提供 `--password VALUE`。

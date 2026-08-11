@@ -37,6 +37,8 @@ chatshare put ./hello-share.txt examples/hello-share.txt
 chatshare url examples/hello-share.txt
 ```
 
+运行 `chatshare --tree` 可读取由 Click 注册表生成的实时命令树；隐藏兼容入口不会出现在产品树中。
+
 ## 文档
 
 - [快速开始](https://arch.gh.wzhecnu.cn/ChatShare/quickstart/)

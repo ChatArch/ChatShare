@@ -2,7 +2,7 @@
 
 ## CLI Rules
 
-- Use `chatstyle>=0.1.0` and `chatenv>=0.1.1` as the canonical CLI interaction runtime.
+- Use `chatstyle>=0.1.0` and `chatenv>=0.2.4` as the canonical CLI interaction runtime.
 - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
 - Missing required args should auto-enter interactive mode when recoverable.
 - `-i` forces interactive mode; `-I` disables prompting and must fail fast.
