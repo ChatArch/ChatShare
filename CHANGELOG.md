@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-11
+
+### Added
+
+- 新增 runtime `chatshare --tree`，从真实 Click registry 输出 `dufs`、`put`、`url` 命令树，并明确排除隐藏兼容 `hello` 入口。
+- 补充测试锁定 `--tree` 与隐藏兼容命令的验收边界。
+
+### Changed
+
+- 发布 `0.2.1` patch，并同步 CLI 树文档到 runtime readback 输出。
+
 ## 2026-08-04
 
 ### Added
