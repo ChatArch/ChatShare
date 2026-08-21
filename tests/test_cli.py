@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from click.testing import CliRunner
+from chatstyle import render_click_tree
 
 from chatshare.cli import main
 from chatshare.errors import ChatShareError
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def invoke(args, **kwargs):
@@ -17,6 +21,7 @@ def test_help_exposes_real_product_tree_and_hides_legacy_hello():
 
     assert result.exit_code == 0, result.output
     assert "--tree" in result.output
+    assert "--tree-brief" in result.output
     assert "dufs" in result.output
     assert "put" in result.output
     assert "url" in result.output
@@ -29,10 +34,13 @@ def test_tree_option_renders_registered_product_tree_and_hides_legacy_hello():
     result = invoke(["--tree"])
 
     assert result.exit_code == 0, result.output
-    assert "chatshare # Manage Dufs-backed file sharing inside ChatArch" in result.output
+    assert result.output.strip() == render_click_tree(main, root_name="chatshare")
+    assert result.output.splitlines()[0] == "chatshare"
+    assert result.output.splitlines().count("chatshare") == 1
     assert "--help" in result.output
     assert "--version" in result.output
     assert "--tree" in result.output
+    assert "--tree-brief" in result.output
     assert "--home" in result.output
     assert "--json" in result.output
     assert "├── dufs" in result.output
@@ -40,9 +48,45 @@ def test_tree_option_renders_registered_product_tree_and_hides_legacy_hello():
     assert "│   ├── init" in result.output
     assert "│   ├── service" in result.output
     assert "│   │   └── install" in result.output
-    assert "├── put SOURCE [DESTINATION] [--overwrite]" in result.output
-    assert "└── url PATH" in result.output
+    assert "├── put <SOURCE> [DESTINATION] [--overwrite]" in result.output
+    assert "└── url <PATH>" in result.output
     assert "hello" not in result.output
+
+
+def test_tree_brief_renders_same_surface_without_signatures():
+    result = invoke(["--tree-brief"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output.strip() == render_click_tree(
+        main, root_name="chatshare", brief=True
+    )
+    assert "dufs" in result.output
+    assert "service" in result.output
+    assert "put  # Publish a local file" in result.output
+    assert "url  # Build a direct URL" in result.output
+    for signature in ("SOURCE", "[DESTINATION]", "[--overwrite]", "[--lines LINES]"):
+        assert signature not in result.output
+    assert "hello" not in result.output
+
+
+def test_tree_root_uses_public_console_command_in_module_mode():
+    result = CliRunner().invoke(
+        main, ["--tree"], prog_name="python -m chatshare.cli"
+    )
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[0] == "chatshare"
+    assert "python -m chatshare.cli" not in result.output
+
+
+def test_documented_trees_match_registered_command_surface():
+    tree = render_click_tree(main, root_name="chatshare")
+    brief_tree = render_click_tree(main, root_name="chatshare", brief=True)
+
+    for relative_path in ("docs/cli-tree.md", "docs/cli-tree.en.md"):
+        text = (ROOT / relative_path).read_text(encoding="utf-8")
+        assert f"```text\n{tree}\n```" in text
+        assert f"```text\n{brief_tree}\n```" in text
 
 
 def test_dufs_help_exposes_documented_command_tree():
@@ -69,7 +113,7 @@ def test_dufs_help_exposes_documented_command_tree():
 def test_version_and_hidden_hello_compatibility():
     version = invoke(["--version"])
     assert version.exit_code == 0
-    assert "0.2.2" in version.output
+    assert "0.2.3" in version.output
 
     hello = invoke(["hello", "Alice", "-I"])
     assert hello.exit_code == 0
