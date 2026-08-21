@@ -37,7 +37,7 @@ chatshare put ./hello-share.txt examples/hello-share.txt
 chatshare url examples/hello-share.txt
 ```
 
-Run `chatshare --tree` to read the live command tree generated from the Click registry; hidden compatibility entries are excluded from the product tree.
+Run `chatshare --tree` for the full live command tree that ChatStyle generates from the Click registry. `chatshare --tree-brief` shows the same command surface without parameter signatures. Hidden compatibility entries are excluded from the product tree.
 
 ## Documentation
 

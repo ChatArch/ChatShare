@@ -2,7 +2,9 @@
 
 ## CLI Rules
 
-- Use `chatstyle>=0.1.0` and `chatenv>=0.2.4` as the canonical CLI interaction runtime.
+- Keep the internal runtime bounds at `chatstyle>=0.2.0,<0.3.0` and `chatenv>=0.2.10,<0.3.0`.
+- Keep the public Click root explicitly named `chatshare`; use ChatStyle `add_tree_option()` for `--tree` and `--tree-brief` instead of a package-local renderer.
+- Keep the typed `chatshare` provider registered under `chatenv.configs`, and use ChatEnv's `get_paths()` / `EnvStore` storage paths.
 - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
 - Missing required args should auto-enter interactive mode when recoverable.
 - `-i` forces interactive mode; `-I` disables prompting and must fail fast.

@@ -13,6 +13,7 @@ from chatstyle import (
     CommandField,
     CommandSchema,
     add_interactive_option,
+    add_tree_option,
     render_success,
     resolve_command_inputs,
 )
@@ -61,95 +62,7 @@ def _emit(context: CliContext, value: dict[str, Any]) -> None:
         click.echo(f"{key}: {rendered}")
 
 
-def _format_metavar(name: str) -> str:
-    return name.replace("_", "-").upper()
-
-
-def _format_argument(param: click.Argument) -> str:
-    metavar = _format_metavar(param.name or "ARG")
-    if param.nargs != 1:
-        metavar = f"{metavar}..."
-    return f"[{metavar}]" if not param.required else metavar
-
-
-def _format_option(param: click.Option) -> str:
-    option = next((opt for opt in param.opts if opt.startswith("--")), param.opts[0])
-    if param.is_flag or param.flag_value is not None:
-        return option
-    return f"{option} {_format_metavar(param.name or 'VALUE')}"
-
-
-def _command_signature(name: str, command: click.Command) -> str:
-    parts = [name]
-    for param in command.params:
-        if isinstance(command, click.Group) and isinstance(param, click.Option):
-            continue
-        if isinstance(param, click.Argument):
-            parts.append(_format_argument(param))
-        elif isinstance(param, click.Option) and not getattr(param, "hidden", False):
-            parts.append(f"[{_format_option(param)}]")
-    return " ".join(parts)
-
-
-def _command_help(command: click.Command) -> str:
-    return (command.short_help or command.help or "").strip().rstrip(".")
-
-
-def _group_items(group: click.Group) -> list[tuple[str, str | click.Command]]:
-    items: list[tuple[str, str | click.Command]] = []
-    if group is main:
-        items.extend([
-            ("--help", "Show this message and exit"),
-            ("--version", "Show the version and exit"),
-            ("--tree", "Print the registered command tree"),
-        ])
-    for param in group.params:
-        if isinstance(param, click.Option) and not getattr(param, "hidden", False):
-            opts = set(param.opts)
-            if "--help" in opts or "--version" in opts or "--tree" in opts:
-                continue
-            items.append((_format_option(param), param.help or ""))
-    for name, command in group.commands.items():
-        if command.hidden:
-            continue
-        items.append((name, command))
-    return items
-
-
-def render_cli_tree(root: click.Group | None = None) -> str:
-    """Render the registered Click command tree for `chatshare --tree`."""
-    if root is None:
-        root = main
-    lines = [f"{root.name or 'chatshare'} # {_command_help(root)}"]
-
-    def walk(items: list[tuple[str, str | click.Command]], prefix: str = "") -> None:
-        for index, (name, entry) in enumerate(items):
-            connector = "└── " if index == len(items) - 1 else "├── "
-            child_prefix = prefix + ("    " if index == len(items) - 1 else "│   ")
-            if isinstance(entry, click.Command):
-                signature = _command_signature(name, entry)
-                help_text = _command_help(entry)
-                lines.append(f"{prefix}{connector}{signature} # {help_text}" if help_text else f"{prefix}{connector}{signature}")
-                if isinstance(entry, click.Group):
-                    walk(_group_items(entry), child_prefix)
-            else:
-                lines.append(f"{prefix}{connector}{name} # {entry}" if entry else f"{prefix}{connector}{name}")
-
-    walk(_group_items(root))
-    return "\n".join(lines)
-
-
-def _tree_callback(context: click.Context, _param: click.Parameter, value: bool) -> None:
-    if not value or context.resilient_parsing:
-        return
-    if not isinstance(context.command, click.Group):
-        raise click.ClickException("--tree is only available on command groups")
-    click.echo(render_cli_tree(context.command))
-    context.exit()
-
-
 @click.group(name="chatshare", context_settings={"help_option_names": ["-h", "--help"]})
-@click.option("--tree", is_flag=True, is_eager=True, expose_value=False, callback=_tree_callback, help="Print the registered command tree and exit.")
 @click.option(
     "--home",
     type=click.Path(path_type=Path, file_okay=False, dir_okay=True),
@@ -160,6 +73,7 @@ def _tree_callback(context: click.Context, _param: click.Parameter, value: bool)
     "--json", "json_output", is_flag=True, help="Emit structured JSON output."
 )
 @click.version_option(version=__version__, prog_name="chatshare")
+@add_tree_option(renderer_options={"root_name": "chatshare"})
 @click.pass_context
 def main(context: click.Context, home: Path | None, json_output: bool) -> None:
     """Manage Dufs-backed file sharing inside ChatArch."""
@@ -171,7 +85,7 @@ def main(context: click.Context, home: Path | None, json_output: bool) -> None:
 
 @main.group()
 def dufs() -> None:
-    """Manage the Dufs runtime, configuration, and user service."""
+    """Manage the local Dufs runtime, configuration, and user service."""
 
 
 @dufs.command("install")
@@ -186,7 +100,7 @@ def dufs() -> None:
 def install_command(
     context: CliContext, version: str, target: str | None, force: bool
 ) -> None:
-    """Install and verify an official Dufs release asset."""
+    """Install a verified Dufs runtime; writes managed runtime files."""
 
     from chatshare.dufs.release import install_dufs
 
@@ -239,7 +153,7 @@ def init_command(
     password_env: str,
     force: bool,
 ) -> None:
-    """Initialize the secure default Dufs instance."""
+    """Initialize secure Dufs config and state; writes managed files."""
 
     from chatshare.config import merged_chatshare_environ
     from chatshare.dufs.config import DEFAULT_USERNAME, init_instance
@@ -267,7 +181,7 @@ def init_command(
 
 @dufs.group("service")
 def service_group() -> None:
-    """Install the Linux systemd user-service definition."""
+    """Manage the Linux systemd user-service definition."""
 
 
 @service_group.command("install")
@@ -276,7 +190,7 @@ def service_group() -> None:
 )
 @click.pass_obj
 def install_service_command(context: CliContext, enable: bool) -> None:
-    """Install the generated systemd user unit."""
+    """Write the systemd user unit; optionally enable login startup."""
 
     from chatshare.dufs.service import install_service
 
@@ -294,7 +208,7 @@ def _control_and_emit(context: CliContext, action: str) -> None:
 @dufs.command("start")
 @click.pass_obj
 def start_command(context: CliContext) -> None:
-    """Start Dufs through systemd --user."""
+    """Start Dufs through systemd --user; changes service state."""
 
     _control_and_emit(context, "start")
 
@@ -302,7 +216,7 @@ def start_command(context: CliContext) -> None:
 @dufs.command("stop")
 @click.pass_obj
 def stop_command(context: CliContext) -> None:
-    """Stop Dufs through systemd --user."""
+    """Stop Dufs through systemd --user; changes service state."""
 
     _control_and_emit(context, "stop")
 
@@ -310,7 +224,7 @@ def stop_command(context: CliContext) -> None:
 @dufs.command("restart")
 @click.pass_obj
 def restart_command(context: CliContext) -> None:
-    """Restart Dufs through systemd --user."""
+    """Restart Dufs through systemd --user; changes service state."""
 
     _control_and_emit(context, "restart")
 
@@ -318,7 +232,7 @@ def restart_command(context: CliContext) -> None:
 @dufs.command("status")
 @click.pass_obj
 def status_command(context: CliContext) -> None:
-    """Show runtime, config, unit, and active state."""
+    """Read runtime, config, unit, and active state; no writes."""
 
     from chatshare.dufs.service import get_service_status
 
@@ -330,7 +244,7 @@ def status_command(context: CliContext) -> None:
 @click.option("--lines", type=click.IntRange(1, 10000), default=100, show_default=True)
 @click.pass_obj
 def logs_command(context: CliContext, lines: int) -> None:
-    """Read the bounded tail of the Dufs access log."""
+    """Read a bounded Dufs access-log tail; no writes."""
 
     from chatshare.dufs.service import read_access_logs
 
@@ -351,7 +265,7 @@ def put_command(
     destination: str | None,
     overwrite: bool,
 ) -> None:
-    """Publish a local file into the managed share root."""
+    """Publish a local file; writes or replaces managed share data."""
 
     from chatshare.sharing import publish_file
 
@@ -370,7 +284,7 @@ def put_command(
 @click.argument("path")
 @click.pass_obj
 def url_command(context: CliContext, path: str) -> None:
-    """Build a direct URL for an existing managed file."""
+    """Build a direct URL for an existing managed file; no writes."""
 
     from chatshare.sharing import build_file_url
 

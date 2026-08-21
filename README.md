@@ -37,7 +37,7 @@ chatshare put ./hello-share.txt examples/hello-share.txt
 chatshare url examples/hello-share.txt
 ```
 
-运行 `chatshare --tree` 可读取由 Click 注册表生成的实时命令树；隐藏兼容入口不会出现在产品树中。
+运行 `chatshare --tree` 可读取 ChatStyle 从 Click 注册表生成的完整实时命令树；`chatshare --tree-brief` 显示省略参数签名的同一命令面。隐藏兼容入口不会出现在产品树中。
 
 ## 文档
 

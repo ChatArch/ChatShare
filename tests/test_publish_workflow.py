@@ -32,3 +32,10 @@ def test_publish_workflow_rejects_tag_version_mismatch() -> None:
     assert "GITHUB_REF_NAME" in text
     assert "RELEASE_TAG" in text
     assert "does not match package version" in text
+
+
+def test_publish_workflow_requires_default_branch_ancestry() -> None:
+    text = PUBLISH_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "fetch-depth: 0" in text
+    assert 'git merge-base --is-ancestor "${GITHUB_SHA}" refs/remotes/origin/main' in text

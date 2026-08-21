@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-08-22
+
+### Changed
+
+- 发布 `0.2.3` patch：移除 package-local Click tree renderer，改用 `chatstyle>=0.2.0,<0.3.0` 的 `add_tree_option()`，并新增真实注册命令面的 `--tree-brief`。
+- 将 ChatEnv runtime 下限对齐到 `chatenv>=0.2.10,<0.3.0`，保留 typed `chatshare` profile registration 与 ChatEnv storage paths。
+- CLI tree 说明补充读写/服务状态副作用，CI 增加 Python 3.10-3.12、installed console-script、build 与 Twine gates。
+
 ## 2026-08-11
 
 ### Fixed
