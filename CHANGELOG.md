@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-29
+
+### Added
+
+- 准备 `0.2.4`：新增 ChatShare 管理的 Dufs 自定义页面 assets，并在 Dufs config 中写入 `assets:`，让目录页显示右上角文字登录按钮和页面内登录弹窗。
+- 网页端上传、新建、移动、保存等写操作改为先通过自定义登录弹窗收集凭据，再用 XHR HTTP Digest Auth 发起请求，避免直接触发浏览器默认认证弹窗。
+
 ## 2026-08-22
 
 ### Changed

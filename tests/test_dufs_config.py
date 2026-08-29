@@ -44,7 +44,10 @@ def test_init_instance_writes_secure_config_and_non_secret_state(tmp_path):
     assert "allow-delete: false" in config_text
     assert "allow-symlink: false" in config_text
     assert "enable-cors: false" in config_text
+    assert f"assets: '{paths.dufs_assets_dir}'" in config_text
     assert str(paths.access_log) in config_text
+    for name in ("favicon.ico", "index.css", "index.html", "index.js"):
+        assert (paths.dufs_assets_dir / name).is_file()
 
     state_text = paths.state_file.read_text()
     assert auth_value not in state_text
@@ -56,6 +59,7 @@ def test_init_instance_writes_secure_config_and_non_secret_state(tmp_path):
 
     assert mode(paths.instance_dir) == 0o700
     assert mode(paths.data_dir) == 0o700
+    assert mode(paths.dufs_assets_dir) == 0o700
     assert mode(paths.logs_dir) == 0o700
     assert mode(paths.config_file) == 0o600
     assert mode(paths.state_file) == 0o600
@@ -212,15 +216,28 @@ def test_init_rejects_invalid_password_environment_variable_name(tmp_path):
         )
 
 
+def test_init_allows_email_style_writer_username(tmp_path):
+    paths = ChatSharePaths.from_home(tmp_path / "chatarch")
+
+    result = init_instance(
+        paths,
+        username="writer@example.test",
+        environ={DEFAULT_PASSWORD_ENV: "safe-value"},
+    )
+
+    assert result["username"] == "writer@example.test"
+    assert "'writer@example.test:safe-value@/:rw'" in paths.config_file.read_text()
+
+
 @pytest.mark.parametrize(
     ("username", "password"),
     [
         ("bad:name", "safe-value"),
-        ("bad@name", "safe-value"),
+        ("bad@/name", "safe-value"),
         ("bad,name", "safe-value"),
         ("bad\nname", "safe-value"),
         ("chatshare", "bad:value"),
-        ("chatshare", "bad@value"),
+        ("chatshare", "bad@/value"),
         ("chatshare", "bad,value"),
         ("chatshare", "bad\nvalue"),
     ],

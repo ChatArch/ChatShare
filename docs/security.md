@@ -18,6 +18,7 @@
 - 默认 ChatEnv type：`chatshare`，关键字段：`CHATSHARE_DUFS_USERNAME`、`CHATSHARE_DUFS_PASSWORD`、`CHATSHARE_DUFS_BASE_URL`。
 - 默认密码变量名：`CHATSHARE_DUFS_PASSWORD`；CLI 接收变量名，不接收密码值参数。
 - Dufs 需要在启动时读取账号规则，因此密码会存在于 `config.yaml`；该文件以 `0600` 写入。
+- 网页端登录弹窗只把用户输入交给浏览器/XHR 的 HTTP Digest Auth 流程；不会新增后端会话、cookie 或 token。
 - 密码不得出现在 argv、URL、stdout、JSON、access log、unit 文件、README 或测试 fixture。
 - 用户名和密码拒绝 Dufs auth 语法分隔符以及换行，防止规则注入。
 
@@ -39,7 +40,7 @@
 
 - 分享到期、下载次数和逐文件撤销
 - 多用户/账号所有权和审计
-- 浏览器会话、OAuth/OIDC
+- 浏览器会话、OAuth/OIDC 或服务端账号所有权
 - S3/object key、CDN 或多节点复制
 - 远程主机注册表和集中式编排
 

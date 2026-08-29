@@ -113,7 +113,7 @@ def test_dufs_help_exposes_documented_command_tree():
 def test_version_and_hidden_hello_compatibility():
     version = invoke(["--version"])
     assert version.exit_code == 0
-    assert "0.2.3" in version.output
+    assert "0.2.4" in version.output
 
     hello = invoke(["hello", "Alice", "-I"])
     assert hello.exit_code == 0

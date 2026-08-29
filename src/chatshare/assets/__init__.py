@@ -1,0 +1,1 @@
+"""Packaged ChatShare web assets."""

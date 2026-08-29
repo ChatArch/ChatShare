@@ -12,7 +12,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from chatshare.dufs.config import load_instance_state
+from chatshare.dufs.config import load_instance_state, sync_dufs_assets
 from chatshare.errors import ChatShareError
 from chatshare.paths import ChatSharePaths
 
@@ -153,6 +153,7 @@ def install_service(
         raise ChatShareError(
             f"ChatShare Dufs instance is not initialized: {paths.instance_dir}"
         )
+    sync_dufs_assets(paths)
     text = render_service_unit(paths)
     live_dir = (
         Path(unit_dir).expanduser() if unit_dir is not None else default_user_unit_dir()

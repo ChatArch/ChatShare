@@ -2,12 +2,12 @@
 
 ## Responsibility boundary
 
-ChatShare does not modify Dufs source. It combines official release assets, configuration, and a Linux user service into a ChatArch-managed runtime.
+ChatShare does not modify Dufs source. It combines official release assets, configuration, custom UI assets, and a Linux user service into a ChatArch-managed runtime.
 
 | Layer | Responsibility |
 |---|---|
 | Dufs | HTTP/WebDAV, directory UI, HTTP Digest Auth, uploads, and reads |
-| ChatShare | Release selection and integrity, ChatArch paths, configuration, systemd user lifecycle, and file publication |
+| ChatShare | Release selection and integrity, ChatArch paths, configuration, web assets, systemd user lifecycle, and file publication |
 | Reverse proxy | TLS, trusted Host enforcement, external ingress, and request limits; outside this CLI |
 
 ## Layout
@@ -22,6 +22,10 @@ ChatShare does not modify Dufs source. It combines official release assets, conf
 ├── instances/default/
 │   ├── config.yaml
 │   ├── instance.json
+│   ├── assets/dufs/
+│   │   ├── index.html
+│   │   ├── index.css
+│   │   └── index.js
 │   ├── data/
 │   └── logs/access.log
 └── services/chatshare-dufs.service
@@ -61,10 +65,11 @@ allow-symlink: false
 allow-archive: true
 allow-hash: true
 enable-cors: false
+assets: '<managed-assets-root>'
 log-file: '<managed-access-log>'
 ```
 
-The placeholders are not copyable credentials. The real password is read only from the environment variable named by `--password-env`. Generated `config.yaml` and `instance.json` files use mode `0600`; directories use `0700`. `status` and JSON output never read or display the password.
+The placeholders are not copyable credentials. The real password is read first from the active ChatEnv `chatshare` profile, or from the process environment variable selected by `--password-env`; generated `config.yaml` and `instance.json` files use mode `0600`, and directories use mode `0700`. `status` and JSON output never read or display the password. `assets` points at the custom Dufs UI that ChatShare syncs into `~/.chatarch/chatshare/instances/default/assets/dufs/` for the in-page login dialog.
 
 ## Lifecycle
 
