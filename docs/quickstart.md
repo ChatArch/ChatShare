@@ -64,7 +64,8 @@ chatshare dufs init
 - 监听：`127.0.0.1:5000`
 - 写入账号：ChatEnv 中的 `CHATSHARE_DUFS_USERNAME`，默认 `chatshare`
 - 匿名浏览、下载、内联查看、搜索、归档和哈希可用
-- HTTP/WebDAV 上传或 `PUT` 需要 Dufs HTTP Digest Auth；网页端会显示 ChatShare 登录弹窗，不再直接依赖浏览器默认认证弹窗
+- HTTP/WebDAV 上传或 `PUT` 需要 Dufs HTTP Auth；网页端会显示 ChatShare 登录弹窗，并显式发送认证 header，不再直接依赖浏览器默认认证弹窗
+- 网页目录页提供拖拽上传区和“选择文件”按钮；拖拽文件会直接进入上传队列，未登录时会先弹出 ChatShare 登录框
 - 删除、CORS 和外部符号链接关闭
 
 ## 安装用户服务并启动

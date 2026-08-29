@@ -14,7 +14,7 @@ ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs
 
 - Dufs is installed under `~/.chatarch/chatshare/runtimes/dufs/`, never a system prefix.
 - The service binds only to `127.0.0.1`; public ingress belongs to a separate reverse-proxy task.
-- Browsing, downloads, and inline reads are anonymous by default; HTTP/WebDAV `PUT` requires Dufs HTTP Digest Auth, and the web UI starts that flow through the ChatShare login dialog. The writer password is read from ChatEnv and persisted only in a mode-`0600` runtime config file.
+- Browsing, downloads, and inline reads are anonymous by default; HTTP/WebDAV `PUT` requires Dufs HTTP Auth, and the web UI starts that flow through the ChatShare login dialog. The writer password is read from ChatEnv and persisted only in a mode-`0600` runtime config file.
 - Delete and external-symlink access are disabled by default.
 - Linux lifecycle uses `systemd --user`; ChatShare does not use `kill`, `pkill`, or an unmanaged background process.
 

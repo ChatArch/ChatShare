@@ -14,7 +14,7 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 
 - Dufs 固定安装到 `~/.chatarch/chatshare/runtimes/dufs/`，不写系统目录。
 - 服务只绑定 `127.0.0.1`；公网入口应由独立反向代理任务配置。
-- 浏览、下载和内联查看默认匿名可访问；HTTP/WebDAV `PUT` 等写入操作需要 Dufs HTTP Digest Auth，网页端使用 ChatShare 自定义登录弹窗发起鉴权。
+- 浏览、下载和内联查看默认匿名可访问；HTTP/WebDAV `PUT` 等写入操作需要 Dufs HTTP Auth，网页端使用 ChatShare 自定义登录弹窗发起鉴权。
 - 删除和符号链接访问默认关闭。
 - Linux 生命周期使用 `systemd --user`，不使用 `kill`、`pkill` 或不受控后台进程。
 

@@ -116,6 +116,52 @@ body {
   font-style: italic;
 }
 
+.upload-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.7rem 0 1rem;
+  border: 1px dashed #8c959f;
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+  background:
+    linear-gradient(135deg, rgba(9, 105, 218, 0.08), rgba(46, 160, 67, 0.08)),
+    #f6f8fa;
+}
+
+.upload-panel.dragging {
+  border-color: #0969da;
+  background:
+    linear-gradient(135deg, rgba(9, 105, 218, 0.16), rgba(46, 160, 67, 0.12)),
+    #ffffff;
+}
+
+.upload-panel-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.upload-panel-copy strong {
+  font-size: 1.05rem;
+}
+
+.upload-panel-copy span {
+  color: #57606a;
+}
+
+.upload-panel-button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: #1f883d;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
 .uploaders-table th,
 .paths-table th {
   text-align: left;
@@ -359,10 +405,54 @@ body {
   user-select: none;
 }
 
+.auth-menu-wrap {
+  position: relative;
+}
+
 .logout-btn {
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 0.45em;
+  border: 1px solid #d0d7de;
+  border-radius: 999px;
+  padding: 0.28em 0.75em;
+  background: #ffffff;
+  color: #24292e;
+  font: inherit;
+}
+
+.account-caret {
+  color: #57606a;
+}
+
+.auth-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 15;
+  min-width: 8rem;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  padding: 0.35rem;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(27, 31, 36, 0.16);
+}
+
+.logout-menu-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: transparent;
+  color: #cf222e;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.logout-menu-btn:hover {
+  background: #ffebe9;
 }
 
 .user-name {
@@ -380,6 +470,17 @@ body {
 @media (min-width: 768px) {
   .path a {
     min-width: 400px;
+  }
+}
+
+@media (max-width: 640px) {
+  .upload-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .upload-panel-button {
+    width: 100%;
   }
 }
 
@@ -432,10 +533,51 @@ body {
     color: white;
   }
 
+  .upload-panel {
+    border-color: #30363d;
+    background:
+      linear-gradient(135deg, rgba(56, 139, 253, 0.12), rgba(63, 185, 80, 0.10)),
+      #0d1117;
+  }
+
+  .upload-panel.dragging {
+    border-color: #58a6ff;
+    background:
+      linear-gradient(135deg, rgba(56, 139, 253, 0.20), rgba(63, 185, 80, 0.14)),
+      #161b22;
+  }
+
+  .upload-panel-copy span {
+    color: #8b949e;
+  }
+
   .login-btn {
     border-color: #30363d;
     background: linear-gradient(180deg, #21262d, #161b22);
     color: #f0f6fc;
+  }
+
+  .logout-btn {
+    border-color: #30363d;
+    background: #161b22;
+    color: #f0f6fc;
+  }
+
+  .account-caret {
+    color: #8b949e;
+  }
+
+  .auth-menu {
+    border-color: #30363d;
+    background: #161b22;
+  }
+
+  .logout-menu-btn {
+    color: #ff7b72;
+  }
+
+  .logout-menu-btn:hover {
+    background: rgba(248, 81, 73, 0.12);
   }
 
   .login-btn:hover {

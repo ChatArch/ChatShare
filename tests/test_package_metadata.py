@@ -22,8 +22,17 @@ def test_packaged_dufs_assets_include_chatshare_login_dialog():
 
     assert asset_root.joinpath("favicon.ico").is_file()
     assert "login-dialog" in index_html
+    assert "upload-panel" in index_html
+    assert "auth-menu" in index_html
     assert "登录后上传" in index_html
+    assert "登录上传" in index_html
+    assert "退出登录" in index_html
+    assert "拖拽文件到这里上传" in index_html
     assert "CHATSHARE_AUTH_STORAGE" in index_js
+    assert "ensureAuthenticated" in index_js
+    assert "setAuthenticatedUser" in index_js
+    assert "basicAuthHeader" in index_js
+    assert "LOGOUT" not in index_js
     assert "openWithCredentials" in index_js
 
 

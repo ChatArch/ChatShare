@@ -7,8 +7,8 @@
   <noscript>
     <meta http-equiv="refresh" content="0; url=?noscript">
   </noscript>
-  <link rel="icon" type="image/x-icon" href="__ASSETS_PREFIX__favicon.ico?v=chatshare-0.2.4">
-  <link rel="stylesheet" href="__ASSETS_PREFIX__index.css?v=chatshare-0.2.4">
+  <link rel="icon" type="image/x-icon" href="__ASSETS_PREFIX__favicon.ico?v=chatshare-0.2.4-homefix">
+  <link rel="stylesheet" href="__ASSETS_PREFIX__index.css?v=chatshare-0.2.4-homefix">
 </head>
 
 <body>
@@ -78,21 +78,24 @@
       <input type="submit" hidden />
     </form>
     <div class="toolbox-right">
-      <button type="button" class="login-btn hidden" title="Login">
+      <button type="button" class="login-btn hidden" title="登录上传">
         <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
           <path fill-rule="evenodd"
             d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z" />
           <path fill-rule="evenodd"
             d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
         </svg>
-        <span>登录</span>
+        <span>登录上传</span>
       </button>
-      <div class="logout-btn hidden" title="Logout">
-        <svg width="16" height="16" viewBox="0 0 16 16">
-          <path fill-rule="evenodd" d="M10 3.5a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 1 1 0v2A1.5 1.5 0 0 1 9.5 14h-8A1.5 1.5 0 0 1 0 12.5v-9A1.5 1.5 0 0 1 1.5 2h8A1.5 1.5 0 0 1 11 3.5v2a.5.5 0 0 1-1 0z"/>
-          <path fill-rule="evenodd" d="M4.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H14.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708z"/>
-        </svg>
-        <span class="user-name"></span>
+      <div class="auth-menu-wrap hidden">
+        <button type="button" class="logout-btn" title="账户菜单" aria-expanded="false">
+          <span class="login-status">已登录</span>
+          <span class="user-name hidden"></span>
+          <span class="account-caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="auth-menu hidden" role="menu">
+          <button type="button" class="logout-menu-btn" role="menuitem">退出登录</button>
+        </div>
       </div>
       <div class="save-btn hidden" title="Save file">
         <svg viewBox="0 0 1024 1024" width="24" height="24">
@@ -105,6 +108,13 @@
   </div>
   <div class="main">
     <div class="index-page hidden">
+      <div class="upload-panel hidden">
+        <div class="upload-panel-copy">
+          <strong>拖拽文件到这里上传</strong>
+          <span>也可以选择文件；首次上传会先登录。</span>
+        </div>
+        <button type="button" class="upload-panel-button">选择文件</button>
+      </div>
       <div class="empty-folder hidden"></div>
       <table class="uploaders-table hidden">
         <thead>
@@ -147,7 +157,7 @@
     </div>
   </div>
   <template id="index-data">__INDEX_DATA__</template>
-  <script src="__ASSETS_PREFIX__index.js?v=chatshare-0.2.4"></script>
+  <script src="__ASSETS_PREFIX__index.js?v=chatshare-0.2.4-homefix"></script>
 </body>
 
 </html>

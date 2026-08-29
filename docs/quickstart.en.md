@@ -64,7 +64,8 @@ Defaults:
 - Listener: `127.0.0.1:5000`
 - Writer username: `CHATSHARE_DUFS_USERNAME` from ChatEnv, defaulting to `chatshare`
 - Anonymous browse, download, inline view, search, archive, and hash enabled
-- HTTP/WebDAV upload or `PUT` requires Dufs HTTP Digest Auth; the web UI shows the ChatShare login dialog instead of relying on the browser's default auth prompt
+- HTTP/WebDAV upload or `PUT` requires Dufs HTTP Auth; the web UI shows the ChatShare login dialog and sends an explicit auth header instead of relying on the browser's default auth prompt
+- The directory page provides a drag-and-drop upload zone and a "Choose files" button; dropped files enter the upload queue directly, opening the ChatShare login dialog first when needed
 - Delete, CORS, and external symlinks disabled
 
 ## Install and start the user service

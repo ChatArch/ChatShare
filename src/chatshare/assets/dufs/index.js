@@ -88,6 +88,10 @@ let $uploadersTable;
 /**
  * @type Element
  */
+let $uploadPanel;
+/**
+ * @type Element
+ */
 let $emptyFolder;
 /**
  * @type Element
@@ -101,6 +105,18 @@ let $loginBtn;
  * @type Element
  */
 let $logoutBtn;
+/**
+ * @type Element
+ */
+let $authMenu;
+/**
+ * @type Element
+ */
+let $authMenuWrap;
+/**
+ * @type Element
+ */
+let $logoutMenuBtn;
 /**
  * @type Element
  */
@@ -130,6 +146,16 @@ let $loginError;
  */
 let $loginSubmit;
 const CHATSHARE_AUTH_STORAGE = "chatshare.dufs.credentials";
+let dropzoneReady = false;
+let uploadFileReady = false;
+let newFolderReady = false;
+let newFileReady = false;
+let downloadTokenReady = false;
+let authControlsReady = false;
+let loginDialogReady = false;
+let pendingLogin = null;
+let pendingLoginResolve = null;
+let pendingLoginReject = null;
 
 // manage unload event to prevent leaving with uploads in progress
 const beforeUnloadHandler = (event) => {
@@ -159,10 +185,14 @@ async function ready() {
   $pathsTableHead = document.querySelector(".paths-table thead");
   $pathsTableBody = document.querySelector(".paths-table tbody");
   $uploadersTable = document.querySelector(".uploaders-table");
+  $uploadPanel = document.querySelector(".upload-panel");
   $emptyFolder = document.querySelector(".empty-folder");
   $editor = document.querySelector(".editor");
   $loginBtn = document.querySelector(".login-btn");
   $logoutBtn = document.querySelector(".logout-btn");
+  $authMenu = document.querySelector(".auth-menu");
+  $authMenuWrap = document.querySelector(".auth-menu-wrap");
+  $logoutMenuBtn = document.querySelector(".logout-menu-btn");
   $userName = document.querySelector(".user-name");
   $loginDialog = document.querySelector(".login-dialog");
   $loginForm = document.querySelector(".login-form");
@@ -339,7 +369,7 @@ Uploader.runQueue = async () => {
   let uploader = Uploader.queues.shift();
   if (!Uploader.auth) {
     try {
-      await checkAuth();
+      await ensureAuthenticated();
       Uploader.auth = true;
     } catch (err) {
       Uploader.auth = false;
@@ -396,7 +426,7 @@ async function setupIndexPage() {
     $download.classList.remove("hidden");
   }
 
-  if (DATA.allow_upload) {
+  if (DATA.allow_upload || DATA.auth) {
     setupDropzone();
     setupUploadFile();
     setupNewFolder();
@@ -547,47 +577,86 @@ function addPath(file, index) {
 }
 
 function setupDropzone() {
+  if (dropzoneReady) return;
+  dropzoneReady = true;
   ["drag", "dragstart", "dragend", "dragover", "dragenter", "dragleave", "drop"].forEach(name => {
     document.addEventListener(name, e => {
       e.preventDefault();
       e.stopPropagation();
     });
   });
+  ["dragenter", "dragover"].forEach(name => {
+    document.addEventListener(name, e => {
+      if (Array.from(e.dataTransfer?.types || []).includes("Files")) {
+        $uploadPanel?.classList.add("dragging");
+      }
+    });
+  });
+  ["dragleave", "dragend", "drop"].forEach(name => {
+    document.addEventListener(name, () => $uploadPanel?.classList.remove("dragging"));
+  });
   document.addEventListener("drop", async e => {
-    if (!e.dataTransfer.items[0].webkitGetAsEntry) {
-      const files = Array.from(e.dataTransfer.files).filter(v => v.size > 0);
+    const items = Array.from(e.dataTransfer?.items || []);
+    const files = Array.from(e.dataTransfer?.files || []).filter(v => v.size > 0);
+    const entries = items
+      .map(item => item.webkitGetAsEntry ? item.webkitGetAsEntry() : null)
+      .filter(Boolean);
+    if (entries.length > 0) {
+      addFileEntries(entries, []);
+    } else {
       for (const file of files) {
         new Uploader(file, []).upload();
       }
-    } else {
-      const entries = [];
-      const len = e.dataTransfer.items.length;
-      for (let i = 0; i < len; i++) {
-        entries.push(e.dataTransfer.items[i].webkitGetAsEntry());
-      }
-      addFileEntries(entries, []);
     }
   });
 }
 
 async function setupAuth() {
   setupLoginDialog();
+  setupAuthControls();
   if (DATA.user) {
-    rememberAuthenticatedUser(DATA.user);
-    Uploader.auth = true;
-    $logoutBtn.classList.remove("hidden");
-    $logoutBtn.addEventListener("click", logout);
-    $userName.textContent = DATA.user;
+    setAuthenticatedUser(DATA.user);
   } else {
-    $loginBtn.classList.remove("hidden");
-    $loginBtn.addEventListener("click", () => openLoginDialog());
-    if (new URLSearchParams(location.search).has("login")) {
+    setLoggedOut();
+    const credentials = getStoredCredentials();
+    if (credentials) {
+      try {
+        await checkAuth(undefined, credentials);
+      } catch {
+        clearStoredCredentials();
+        setLoggedOut();
+      }
+    }
+    if (!DATA.user && new URLSearchParams(location.search).has("login")) {
       openLoginDialog();
     }
   }
 }
 
+function setupAuthControls() {
+  if (authControlsReady) return;
+  authControlsReady = true;
+  $loginBtn.addEventListener("click", () => openLoginDialog());
+  $logoutBtn.addEventListener("click", () => toggleAuthMenu());
+  $logoutMenuBtn.addEventListener("click", logout);
+  document.addEventListener("click", event => {
+    if (!$authMenuWrap.contains(event.target)) closeAuthMenu();
+  });
+}
+
+function toggleAuthMenu() {
+  const open = $authMenu.classList.toggle("hidden");
+  $logoutBtn.setAttribute("aria-expanded", String(!open));
+}
+
+function closeAuthMenu() {
+  $authMenu.classList.add("hidden");
+  $logoutBtn.setAttribute("aria-expanded", "false");
+}
+
 function setupLoginDialog() {
+  if (loginDialogReady) return;
+  loginDialogReady = true;
   $loginForm.addEventListener("submit", async event => {
     event.preventDefault();
     $loginError.textContent = "";
@@ -603,8 +672,11 @@ function setupLoginDialog() {
       await checkAuth("login", credentials);
       storeCredentials(credentials);
       closeLoginDialog();
+      resolvePendingLogin(DATA.user);
+      Uploader.runQueue();
     } catch (err) {
       clearStoredCredentials();
+      setLoggedOut();
       $loginError.textContent = err?.message || "登录失败，请检查账号密码";
       $loginPassword.focus();
     } finally {
@@ -612,13 +684,16 @@ function setupLoginDialog() {
     }
   });
 
-  document.querySelector(".login-close").addEventListener("click", closeLoginDialog);
+  document.querySelector(".login-close").addEventListener("click", () => cancelLoginDialog());
   $loginDialog.addEventListener("click", event => {
-    if (event.target === $loginDialog) closeLoginDialog();
+    if (event.target === $loginDialog) cancelLoginDialog();
   });
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && !$loginDialog.classList.contains("hidden")) {
-      closeLoginDialog();
+      cancelLoginDialog();
+    }
+    if (event.key === "Escape" && !$authMenu.classList.contains("hidden")) {
+      closeAuthMenu();
     }
   });
 }
@@ -635,6 +710,67 @@ function openLoginDialog() {
 
 function closeLoginDialog() {
   $loginDialog.classList.add("hidden");
+}
+
+function cancelLoginDialog() {
+  closeLoginDialog();
+  rejectPendingLogin(new Error("登录已取消"));
+}
+
+function waitForLogin() {
+  if (!pendingLogin) {
+    pendingLogin = new Promise((resolve, reject) => {
+      pendingLoginResolve = resolve;
+      pendingLoginReject = reject;
+    });
+  }
+  openLoginDialog();
+  return pendingLogin;
+}
+
+function resolvePendingLogin(value) {
+  if (pendingLoginResolve) pendingLoginResolve(value);
+  pendingLogin = null;
+  pendingLoginResolve = null;
+  pendingLoginReject = null;
+}
+
+function rejectPendingLogin(error) {
+  if (pendingLoginReject) pendingLoginReject(error);
+  pendingLogin = null;
+  pendingLoginResolve = null;
+  pendingLoginReject = null;
+}
+
+function setAuthenticatedUser(username) {
+  DATA.user = username;
+  rememberAuthenticatedUser(username);
+  Uploader.auth = true;
+  $loginBtn.classList.add("hidden");
+  $authMenuWrap.classList.remove("hidden");
+  $userName.textContent = username;
+  setupDownloadWithToken();
+}
+
+function setLoggedOut() {
+  DATA.user = null;
+  Uploader.auth = false;
+  $authMenuWrap.classList.add("hidden");
+  closeAuthMenu();
+  $loginBtn.classList.remove("hidden");
+  $userName.textContent = "";
+}
+
+async function ensureAuthenticated() {
+  if (!DATA.auth) return;
+  const credentials = getStoredCredentials();
+  if (credentials) {
+    if (!DATA.user || !Uploader.auth) {
+      await checkAuth(undefined, credentials);
+    }
+    return;
+  }
+  await waitForLogin();
 }
 
 function getStoredCredentials() {
@@ -664,11 +800,17 @@ function rememberAuthenticatedUser(username) {
   }
 }
 
+function basicAuthHeader(credentials) {
+  const bytes = new TextEncoder().encode(`${credentials.username}:${credentials.password}`);
+  let binary = "";
+  bytes.forEach(byte => binary += String.fromCharCode(byte));
+  return `Basic ${btoa(binary)}`;
+}
+
 function openWithCredentials(xhr, method, url, credentials = getStoredCredentials()) {
+  xhr.open(method, url, true);
   if (credentials?.username && credentials?.password) {
-    xhr.open(method, url, true, credentials.username, credentials.password);
-  } else {
-    xhr.open(method, url, true);
+    xhr.setRequestHeader("Authorization", basicAuthHeader(credentials));
   }
 }
 
@@ -700,12 +842,19 @@ function authRequest(method, url, options = {}) {
 }
 
 function setupDownloadWithToken() {
+  if (downloadTokenReady) return;
+  downloadTokenReady = true;
   document.querySelectorAll("a.dlwt").forEach(link => {
     link.addEventListener("click", async e => {
       e.preventDefault();
       try {
         const link = e.currentTarget || e.target;
         const originalHref = link.getAttribute("href");
+        if (!DATA.user && !getStoredCredentials()) {
+          location.href = originalHref;
+          return;
+        }
+        await ensureAuthenticated();
         const tokengenUrl = new URL(originalHref);
         tokengenUrl.searchParams.set("tokengen", "");
         const res = await authRequest("GET", tokengenUrl.toString());
@@ -745,16 +894,27 @@ function setupSearch() {
 }
 
 function setupUploadFile() {
-  document.querySelector(".upload-file").classList.remove("hidden");
-  document.getElementById("file").addEventListener("change", async e => {
+  if (uploadFileReady) return;
+  uploadFileReady = true;
+  const $uploadFile = document.querySelector(".upload-file");
+  const $fileInput = document.getElementById("file");
+  $uploadFile.classList.remove("hidden");
+  $uploadPanel?.classList.remove("hidden");
+  document.querySelector(".upload-panel-button")?.addEventListener("click", () => {
+    $fileInput.click();
+  });
+  $fileInput.addEventListener("change", async e => {
     const files = e.target.files;
     for (let file of files) {
       new Uploader(file, []).upload();
     }
+    e.target.value = "";
   });
 }
 
 function setupNewFolder() {
+  if (newFolderReady) return;
+  newFolderReady = true;
   const $newFolder = document.querySelector(".new-folder");
   $newFolder.classList.remove("hidden");
   $newFolder.addEventListener("click", () => {
@@ -764,6 +924,8 @@ function setupNewFolder() {
 }
 
 function setupNewFile() {
+  if (newFileReady) return;
+  newFileReady = true;
   const $newFile = document.querySelector(".new-file");
   $newFile.classList.remove("hidden");
   $newFile.addEventListener("click", () => {
@@ -862,7 +1024,7 @@ async function deletePath(index) {
 async function doDeletePath(name, url, cb) {
   if (!confirm(`Delete \`${name}\`?`)) return;
   try {
-    await checkAuth();
+    await ensureAuthenticated();
     const res = await authRequest("DELETE", url);
     await assertResOK(res);
     cb();
@@ -900,7 +1062,7 @@ async function doMovePath(fileUrl) {
   const newFileUrl = fileUrlObj.origin + prefix + newPath.split("/").map(encodeURIComponent).join("/");
 
   try {
-    await checkAuth();
+    await ensureAuthenticated();
     const res1 = await authRequest("HEAD", newFileUrl);
     if (res1.status === 200) {
       if (!confirm("Override existing file?")) {
@@ -925,7 +1087,7 @@ async function doMovePath(fileUrl) {
  */
 async function saveChange() {
   try {
-    await checkAuth();
+    await ensureAuthenticated();
     const res = await authRequest("PUT", baseUrl(), { body: $editor.value });
     await assertResOK(res);
     location.reload();
@@ -945,26 +1107,14 @@ async function checkAuth(variant, credentials = getStoredCredentials()) {
   const res = await authRequest("CHECKAUTH", baseUrl() + qs, { credentials });
   await assertResOK(res);
   const username = await res.text();
-  DATA.user = username || credentials.username;
-  $loginBtn.classList.add("hidden");
-  $logoutBtn.classList.remove("hidden");
-  $userName.textContent = DATA.user;
+  setAuthenticatedUser(username || credentials.username);
 }
 
 function logout() {
   if (!DATA.auth) return;
   clearStoredCredentials();
-  Uploader.auth = false;
-  const url = baseUrl();
-  const xhr = new XMLHttpRequest();
-  xhr.open("LOGOUT", url, true, "logout", "logout");
-  xhr.onload = () => {
-    location.href = url;
-  }
-  xhr.onerror = () => {
-    location.href = url;
-  }
-  xhr.send();
+  rejectPendingLogin(new Error("登录已取消"));
+  setLoggedOut();
 }
 
 /**
@@ -974,7 +1124,7 @@ function logout() {
 async function createFolder(name) {
   const url = newUrl(name);
   try {
-    await checkAuth();
+    await ensureAuthenticated();
     const res = await authRequest("MKCOL", url);
     await assertResOK(res);
     location.href = url;
@@ -986,7 +1136,7 @@ async function createFolder(name) {
 async function createFile(name) {
   const url = newUrl(name);
   try {
-    await checkAuth();
+    await ensureAuthenticated();
     const res = await authRequest("PUT", url, { body: "" });
     await assertResOK(res);
     location.href = url + "?edit";

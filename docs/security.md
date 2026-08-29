@@ -7,7 +7,7 @@
 | 安装、初始化、服务管理 | 登录到主机的 ChatArch 用户 |
 | 本机 `put` 与 `url` | 同一 ChatArch 用户；不经过 HTTP |
 | 浏览、下载、内联查看 | 匿名客户端；持有 URL 即可读取公开数据 |
-| HTTP/WebDAV 上传/PUT | 持有共享 Dufs HTTP Digest Auth 的客户端 |
+| HTTP/WebDAV 上传/PUT | 持有共享 Dufs HTTP Auth 凭据的客户端 |
 | HTTP 删除 | 默认不可用 |
 | 清理、过期、逐文件撤销 | 当前未实现 |
 
@@ -18,7 +18,7 @@
 - 默认 ChatEnv type：`chatshare`，关键字段：`CHATSHARE_DUFS_USERNAME`、`CHATSHARE_DUFS_PASSWORD`、`CHATSHARE_DUFS_BASE_URL`。
 - 默认密码变量名：`CHATSHARE_DUFS_PASSWORD`；CLI 接收变量名，不接收密码值参数。
 - Dufs 需要在启动时读取账号规则，因此密码会存在于 `config.yaml`；该文件以 `0600` 写入。
-- 网页端登录弹窗只把用户输入交给浏览器/XHR 的 HTTP Digest Auth 流程；不会新增后端会话、cookie 或 token。
+- 网页端登录弹窗只把用户输入交给浏览器/XHR 的 HTTP Auth header；不会新增后端会话、cookie 或 token，也不会调用 Dufs `LOGOUT` 挑战接口。
 - 密码不得出现在 argv、URL、stdout、JSON、access log、unit 文件、README 或测试 fixture。
 - 用户名和密码拒绝 Dufs auth 语法分隔符以及换行，防止规则注入。
 
