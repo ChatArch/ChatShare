@@ -9,7 +9,13 @@ import pytest
 from chatshare.dufs.config import DEFAULT_PASSWORD_ENV, init_instance
 from chatshare.errors import ChatShareError
 from chatshare.paths import ChatSharePaths
-from chatshare.sharing import build_file_url, publish_file
+from chatshare.sharing import (
+    build_file_url,
+    build_share_tree,
+    publish_directory,
+    publish_file,
+    publish_path,
+)
 
 
 def ready_paths(tmp_path, *, base_url=None):
@@ -57,6 +63,70 @@ def test_publish_nested_destination_and_url_quotes_each_segment(tmp_path):
         "https://share.example.test/files/%E6%8A%A5%E5%91%8A%202026/a%20%231.bin"
     )
     assert Path(result["destination"]).read_bytes() == b"data"
+
+
+def test_publish_directory_preserves_tree_and_accepts_trailing_destination(tmp_path):
+    paths = ready_paths(tmp_path, base_url="https://share.example.test/base/")
+    source = tmp_path / "bundle"
+    (source / "slides").mkdir(parents=True)
+    (source / "empty").mkdir()
+    (source / "intro.txt").write_text("intro", encoding="utf-8")
+    (source / "slides" / "01.txt").write_text("slide", encoding="utf-8")
+
+    result = publish_directory(paths, source, "talks/bundle/")
+
+    target = paths.data_dir / "talks" / "bundle"
+    assert (target / "intro.txt").read_text(encoding="utf-8") == "intro"
+    assert (target / "slides" / "01.txt").read_text(encoding="utf-8") == "slide"
+    assert (target / "empty").is_dir()
+    assert result == {
+        "destination": str(target),
+        "directories": 3,
+        "files": 2,
+        "overwritten": False,
+        "overwritten_files": 0,
+        "path": "talks/bundle",
+        "source": str(source.resolve()),
+        "url": "https://share.example.test/base/talks/bundle",
+    }
+
+
+def test_publish_path_dispatches_to_directory_upload(tmp_path):
+    paths = ready_paths(tmp_path)
+    source = tmp_path / "bundle"
+    source.mkdir()
+    (source / "item.txt").write_text("data", encoding="utf-8")
+
+    result = publish_path(paths, source, "published")
+
+    assert result["files"] == 1
+    assert (paths.data_dir / "published" / "item.txt").read_text(
+        encoding="utf-8"
+    ) == "data"
+
+
+def test_publish_directory_refuses_then_replaces_existing_files(tmp_path):
+    paths = ready_paths(tmp_path)
+    source = tmp_path / "bundle"
+    source.mkdir()
+    item = source / "item.txt"
+    item.write_text("old", encoding="utf-8")
+    publish_directory(paths, source, "published")
+
+    item.write_text("new", encoding="utf-8")
+    with pytest.raises(ChatShareError, match="already exists"):
+        publish_directory(paths, source, "published")
+    assert (paths.data_dir / "published" / "item.txt").read_text(
+        encoding="utf-8"
+    ) == "old"
+
+    result = publish_directory(paths, source, "published", overwrite=True)
+
+    assert result["overwritten"] is True
+    assert result["overwritten_files"] == 1
+    assert (paths.data_dir / "published" / "item.txt").read_text(
+        encoding="utf-8"
+    ) == "new"
 
 
 @pytest.mark.parametrize(
@@ -187,3 +257,24 @@ def test_build_file_url_rejects_target_symlink_even_inside_root(tmp_path):
 
     with pytest.raises(ChatShareError, match="symlink"):
         build_file_url(paths, "link.txt")
+
+
+def test_build_share_tree_renders_ascii_tree_and_reports_url(tmp_path):
+    paths = ready_paths(tmp_path, base_url="https://share.example.test/base/")
+    root = paths.data_dir / "published"
+    (root / "slides").mkdir(parents=True)
+    (root / "slides" / "01.txt").write_text("slide", encoding="utf-8")
+    (root / "intro.txt").write_text("intro", encoding="utf-8")
+
+    result = build_share_tree(paths, "published")
+
+    assert result["kind"] == "directory"
+    assert result["entries"] == 3
+    assert result["path"] == "published"
+    assert result["url"] == "https://share.example.test/base/published"
+    assert result["lines"] == [
+        "published/",
+        "+-- slides/",
+        "|   `-- 01.txt",
+        "`-- intro.txt",
+    ]

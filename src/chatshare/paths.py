@@ -61,6 +61,10 @@ class ChatSharePaths:
         return self.instance_dir / "data"
 
     @property
+    def dufs_assets_dir(self) -> Path:
+        return self.instance_dir / "assets" / "dufs"
+
+    @property
     def logs_dir(self) -> Path:
         return self.instance_dir / "logs"
 

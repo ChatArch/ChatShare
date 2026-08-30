@@ -253,7 +253,7 @@ def logs_command(context: CliContext, lines: int) -> None:
 
 
 @main.command("put")
-@click.argument("source", type=click.Path(path_type=Path, dir_okay=False))
+@click.argument("source", type=click.Path(path_type=Path))
 @click.argument("destination", required=False)
 @click.option(
     "--overwrite", is_flag=True, help="Atomically replace an existing destination."
@@ -265,18 +265,30 @@ def put_command(
     destination: str | None,
     overwrite: bool,
 ) -> None:
-    """Publish a local file; writes or replaces managed share data."""
+    """Publish a local file or directory; writes managed share data."""
 
-    from chatshare.sharing import publish_file
+    from chatshare.sharing import publish_path
 
     result = _execute(
-        lambda: publish_file(
+        lambda: publish_path(
             context.paths,
             source,
             destination,
             overwrite=overwrite,
         )
     )
+    _emit(context, result)
+
+
+@main.command("tree")
+@click.argument("prefix", required=False)
+@click.pass_obj
+def tree_command(context: CliContext, prefix: str | None) -> None:
+    """Print the managed share tree under an optional prefix; no writes."""
+
+    from chatshare.sharing import build_share_tree
+
+    result = _execute(lambda: build_share_tree(context.paths, prefix))
     _emit(context, result)
 
 

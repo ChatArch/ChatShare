@@ -2,12 +2,12 @@
 
 ## 责任边界
 
-ChatShare 不修改 Dufs 源码。它把官方 release asset、配置和 Linux 用户服务组合成一个 ChatArch 可管理的运行时。
+ChatShare 不修改 Dufs 源码。它把官方 release asset、配置、定制 UI assets 和 Linux 用户服务组合成一个 ChatArch 可管理的运行时。
 
 | 层 | 责任 |
 |---|---|
 | Dufs | HTTP/WebDAV、目录展示、HTTP Digest Auth、上传与读取 |
-| ChatShare | release 选择和校验、ChatArch 路径、配置、systemd 用户生命周期、文件发布 |
+| ChatShare | release 选择和校验、ChatArch 路径、配置、页面 assets、systemd 用户生命周期、文件发布 |
 | 反向代理 | TLS、可信 Host、外部入口与请求限制；不在当前 CLI 中 |
 
 ## 目录布局
@@ -22,6 +22,10 @@ ChatShare 不修改 Dufs 源码。它把官方 release asset、配置和 Linux �
 ├── instances/default/
 │   ├── config.yaml
 │   ├── instance.json
+│   ├── assets/dufs/
+│   │   ├── index.html
+│   │   ├── index.css
+│   │   └── index.js
 │   ├── data/
 │   └── logs/access.log
 └── services/chatshare-dufs.service
@@ -61,10 +65,11 @@ allow-symlink: false
 allow-archive: true
 allow-hash: true
 enable-cors: false
+assets: '<managed-assets-root>'
 log-file: '<managed-access-log>'
 ```
 
-这里的占位符不是可复制凭据。真实密码优先从 ChatEnv active `chatshare` profile 读取，也可由 `--password-env` 指定的进程环境变量覆盖；生成的 `config.yaml` 和 `instance.json` 权限为 `0600`，目录为 `0700`。`status` 和 JSON 输出不读取或显示密码。
+这里的占位符不是可复制凭据。真实密码优先从 ChatEnv active `chatshare` profile 读取，也可由 `--password-env` 指定的进程环境变量覆盖；生成的 `config.yaml` 和 `instance.json` 权限为 `0600`，目录为 `0700`。`status` 和 JSON 输出不读取或显示密码。`assets` 指向 ChatShare 同步到 `~/.chatarch/chatshare/instances/default/assets/dufs/` 的自定义 Dufs 页面资源，用于提供页面内登录弹窗。
 
 ## 生命周期
 

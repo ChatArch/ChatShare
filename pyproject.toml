@@ -44,3 +44,6 @@ where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.package-data]
+"chatshare.assets.dufs" = ["favicon.ico", "index.css", "index.html", "index.js"]

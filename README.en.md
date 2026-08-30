@@ -8,13 +8,13 @@
 
 # ChatShare
 
-ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs](https://github.com/sigoden/dufs), with auditable binary installation, configuration, user-service lifecycle, local file import, and direct URL generation.
+ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs](https://github.com/sigoden/dufs), with auditable binary installation, configuration, user-service lifecycle, local file/directory import, share-tree inspection, and direct URL generation.
 
 ## Secure defaults
 
 - Dufs is installed under `~/.chatarch/chatshare/runtimes/dufs/`, never a system prefix.
 - The service binds only to `127.0.0.1`; public ingress belongs to a separate reverse-proxy task.
-- Browsing, downloads, and inline reads are anonymous by default; HTTP/WebDAV `PUT` requires Dufs HTTP Digest Auth. The writer password is read from ChatEnv and persisted only in a mode-`0600` runtime config file.
+- Browsing, downloads, and inline reads are anonymous by default; HTTP/WebDAV `PUT` requires Dufs HTTP Auth, and the web UI starts that flow through the ChatShare login dialog. The writer password is read from ChatEnv and persisted only in a mode-`0600` runtime config file.
 - Delete and external-symlink access are disabled by default.
 - Linux lifecycle uses `systemd --user`; ChatShare does not use `kill`, `pkill`, or an unmanaged background process.
 
@@ -34,10 +34,11 @@ chatshare dufs service install
 chatshare dufs start
 printf 'hello from ChatShare\n' > hello-share.txt
 chatshare put ./hello-share.txt examples/hello-share.txt
+chatshare tree examples
 chatshare url examples/hello-share.txt
 ```
 
-Run `chatshare --tree` for the full live command tree that ChatStyle generates from the Click registry. `chatshare --tree-brief` shows the same command surface without parameter signatures. Hidden compatibility entries are excluded from the product tree.
+Run `chatshare --tree` for the full live command tree that ChatStyle generates from the Click registry. `chatshare tree <prefix>` inspects the actual published share tree, and `chatshare --tree-brief` shows the command surface without parameter signatures. Hidden compatibility entries are excluded from the product tree.
 
 ## Documentation
 

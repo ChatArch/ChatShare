@@ -1,0 +1,607 @@
+html {
+  font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  color: #24292e;
+}
+
+body {
+  /* prevent premature breadcrumb wrapping on mobile */
+  min-width: 538px;
+  margin: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0.6em 1em;
+  position: sticky;
+  top: 0;
+  background-color: white;
+}
+
+.breadcrumb {
+  font-size: 1.25em;
+  padding-right: 0.6em;
+  word-break: break-all;
+}
+
+.breadcrumb>a {
+  color: #0366d6;
+  text-decoration: none;
+}
+
+.breadcrumb>a:hover {
+  text-decoration: underline;
+}
+
+/* final breadcrumb */
+.breadcrumb>b {
+  color: #24292e;
+}
+
+.breadcrumb>.separator {
+  color: #586069;
+  padding: 0 0.25em;
+}
+
+.breadcrumb svg {
+  height: 100%;
+  fill: rgba(3, 47, 98, 0.5);
+}
+
+.toolbox {
+  display: flex;
+  margin-right: 10px;
+}
+
+.toolbox>a,
+.toolbox>div {
+  /* vertically align with breadcrumb text */
+  height: 1.1rem;
+}
+
+.toolbox .control {
+  cursor: pointer;
+  padding-left: 0.25em;
+}
+
+.upload-file input {
+  display: none;
+}
+
+.upload-file label {
+  cursor: pointer;
+}
+
+.searchbar {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 246px;
+  height: 22px;
+  background-color: #fafafa;
+  transition: all .15s;
+  border: 1px #ddd solid;
+  border-radius: 15px;
+  margin-bottom: 2px;
+}
+
+.searchbar #search {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  line-height: 16px;
+  padding: 1px;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.searchbar .icon {
+  color: #9a9a9a;
+  padding: 3px 3px;
+  cursor: pointer;
+}
+
+.main {
+  padding: 0 1em;
+}
+
+.empty-folder {
+  font-style: italic;
+}
+
+.upload-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.7rem 0 1rem;
+  border: 1px dashed #8c959f;
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+  background:
+    linear-gradient(135deg, rgba(9, 105, 218, 0.08), rgba(46, 160, 67, 0.08)),
+    #f6f8fa;
+}
+
+.upload-panel.dragging {
+  border-color: #0969da;
+  background:
+    linear-gradient(135deg, rgba(9, 105, 218, 0.16), rgba(46, 160, 67, 0.12)),
+    #ffffff;
+}
+
+.upload-panel-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.upload-panel-copy strong {
+  font-size: 1.05rem;
+}
+
+.upload-panel-copy span {
+  color: #57606a;
+}
+
+.upload-panel-button {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  background: #1f883d;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.uploaders-table th,
+.paths-table th {
+  text-align: left;
+  font-weight: unset;
+  color: #5c5c5c;
+  white-space: nowrap;
+}
+
+.uploaders-table td,
+.paths-table td {
+  white-space: nowrap;
+}
+
+.uploaders-table .cell-status {
+  width: 80px;
+  padding-left: 0.6em;
+}
+
+.cell-status span {
+  display: inline-block;
+}
+
+.paths-table thead a {
+  color: unset;
+  text-decoration: none;
+}
+
+.paths-table thead a>span {
+  padding-left: 2px;
+}
+
+.paths-table tbody tr:hover {
+  background-color: #fafafa;
+}
+
+.paths-table .cell-actions {
+  width: 90px;
+  display: flex;
+  padding-left: 0.5em;
+}
+
+.paths-table .cell-mtime {
+  width: 120px;
+  padding-left: 0.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.paths-table .cell-size {
+  text-align: right;
+  width: 70px;
+  padding-left: 0.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.path svg {
+  height: 16px;
+  fill: rgba(3, 47, 98, 0.5);
+  padding-right: 0.5em;
+  vertical-align: text-top;
+}
+
+.path {
+  list-style: none;
+}
+
+.path a {
+  color: #0366d6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  max-width: calc(100vw - 375px);
+  min-width: 170px;
+}
+
+.path a:hover {
+  text-decoration: underline;
+}
+
+.action-btn {
+  padding-right: 0.3em;
+  cursor: pointer;
+}
+
+.uploaders-table {
+  padding: 0.5em 0;
+}
+
+.uploader {
+  padding-right: 1em;
+}
+
+.editor {
+  width: 100%;
+  height: calc(100vh - 5rem);
+  border: 1px solid #ced4da;
+  outline: none;
+  padding: 5px;
+}
+
+.toolbox-right {
+  margin-left: auto;
+  margin-right: 2em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.login-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  border: 1px solid #d0d7de;
+  border-radius: 999px;
+  padding: 0.28em 0.75em;
+  background: linear-gradient(180deg, #ffffff, #f6f8fa);
+  color: #24292e;
+  font: inherit;
+  box-shadow: 0 1px 2px rgba(27, 31, 36, 0.08);
+}
+
+.login-btn:hover {
+  border-color: #8c959f;
+  background: #f3f4f6;
+}
+
+.login-btn svg {
+  fill: currentColor;
+}
+
+.login-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.login-card {
+  position: relative;
+  width: min(420px, calc(100vw - 3rem));
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 24px;
+  padding: 1.75rem;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.16), transparent 32%),
+    #ffffff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+}
+
+.login-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.95rem;
+  border: 0;
+  background: transparent;
+  color: #57606a;
+  cursor: pointer;
+  font-size: 1.4rem;
+}
+
+.login-kicker {
+  margin: 0 0 0.35rem;
+  color: #0969da;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+
+.login-copy {
+  margin: 0.7rem 0 1.25rem;
+  color: #57606a;
+}
+
+.login-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.login-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: #57606a;
+  font-size: 0.92rem;
+}
+
+.login-form input {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #d0d7de;
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  color: #24292e;
+  font: inherit;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: #0969da;
+  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.16);
+}
+
+.login-error {
+  min-height: 1.2em;
+  margin: 0;
+  color: #cf222e;
+}
+
+.login-submit {
+  border: 0;
+  border-radius: 14px;
+  padding: 0.8rem 1rem;
+  background: #0969da;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.login-submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.save-btn {
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.auth-menu-wrap {
+  position: relative;
+}
+
+.logout-btn {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  border: 1px solid #d0d7de;
+  border-radius: 999px;
+  padding: 0.28em 0.75em;
+  background: #ffffff;
+  color: #24292e;
+  font: inherit;
+}
+
+.account-caret {
+  color: #57606a;
+}
+
+.auth-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  z-index: 15;
+  min-width: 8rem;
+  border: 1px solid #d0d7de;
+  border-radius: 12px;
+  padding: 0.35rem;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(27, 31, 36, 0.16);
+}
+
+.logout-menu-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  background: transparent;
+  color: #cf222e;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.logout-menu-btn:hover {
+  background: #ffebe9;
+}
+
+.user-name {
+  padding-left: 3px;
+}
+
+.not-editable {
+  font-style: italic;
+}
+
+.retry-btn {
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .path a {
+    min-width: 400px;
+  }
+}
+
+@media (max-width: 640px) {
+  .upload-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .upload-panel-button {
+    width: 100%;
+  }
+}
+
+/* dark theme */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #000;
+  }
+
+  html,
+  .breadcrumb>b,
+  .searchbar #search {
+    color: #fff;
+  }
+
+  .uploaders-table th,
+  .paths-table th {
+    color: #ddd;
+  }
+
+  svg,
+  .path svg,
+  .breadcrumb svg {
+    fill: #fff;
+  }
+
+  .head {
+    background-color: #111;
+  }
+
+  .searchbar {
+    background-color: #111;
+    border-color: #fff6;
+  }
+
+  .searchbar svg {
+    fill: #fff6;
+  }
+
+  .path a {
+    color: #3191ff;
+  }
+
+  .paths-table tbody tr:hover {
+    background-color: #1a1a1a;
+  }
+
+  .editor {
+    background: black;
+    color: white;
+  }
+
+  .upload-panel {
+    border-color: #30363d;
+    background:
+      linear-gradient(135deg, rgba(56, 139, 253, 0.12), rgba(63, 185, 80, 0.10)),
+      #0d1117;
+  }
+
+  .upload-panel.dragging {
+    border-color: #58a6ff;
+    background:
+      linear-gradient(135deg, rgba(56, 139, 253, 0.20), rgba(63, 185, 80, 0.14)),
+      #161b22;
+  }
+
+  .upload-panel-copy span {
+    color: #8b949e;
+  }
+
+  .login-btn {
+    border-color: #30363d;
+    background: linear-gradient(180deg, #21262d, #161b22);
+    color: #f0f6fc;
+  }
+
+  .logout-btn {
+    border-color: #30363d;
+    background: #161b22;
+    color: #f0f6fc;
+  }
+
+  .account-caret {
+    color: #8b949e;
+  }
+
+  .auth-menu {
+    border-color: #30363d;
+    background: #161b22;
+  }
+
+  .logout-menu-btn {
+    color: #ff7b72;
+  }
+
+  .logout-menu-btn:hover {
+    background: rgba(248, 81, 73, 0.12);
+  }
+
+  .login-btn:hover {
+    border-color: #8b949e;
+    background: #30363d;
+  }
+
+  .login-card {
+    border-color: rgba(139, 148, 158, 0.35);
+    background:
+      radial-gradient(circle at 20% 0%, rgba(56, 139, 253, 0.18), transparent 32%),
+      #0d1117;
+    color: #f0f6fc;
+  }
+
+  .login-copy,
+  .login-form label,
+  .login-close {
+    color: #8b949e;
+  }
+
+  .login-form input {
+    border-color: #30363d;
+    background: #010409;
+    color: #f0f6fc;
+  }
+}

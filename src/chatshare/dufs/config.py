@@ -8,6 +8,7 @@ import re
 import tempfile
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
+from importlib import resources
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
@@ -18,8 +19,10 @@ DEFAULT_BIND = "127.0.0.1"
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = "chatshare"
 DEFAULT_PASSWORD_ENV = "CHATSHARE_DUFS_PASSWORD"
+_DUFS_ASSET_PACKAGE = "chatshare.assets.dufs"
+_DUFS_ASSET_NAMES = ("index.html", "index.css", "index.js", "favicon.ico")
 _LOOPBACK_BINDS = {"127.0.0.1", "localhost", "::1"}
-_AUTH_SEPARATORS = {":", "@", ",", "\n", "\r"}
+_AUTH_SEPARATORS = {":", ",", "\n", "\r"}
 _ENV_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -96,6 +99,47 @@ def _atomic_write(path: Path, content: str, *, mode: int) -> None:
         raise ChatShareError(f"Unable to write {path}: {exc}") from exc
 
 
+def _atomic_write_bytes(path: Path, content: bytes, *, mode: int) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            delete=False,
+        ) as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+            temporary = Path(handle.name)
+        temporary.chmod(mode)
+        os.replace(temporary, path)
+        path.chmod(mode)
+    except Exception as exc:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+        raise ChatShareError(f"Unable to write {path}: {exc}") from exc
+
+
+def sync_dufs_assets(paths: ChatSharePaths) -> dict[str, object]:
+    """Copy packaged Dufs UI assets into the managed ChatArch instance."""
+
+    _ensure_managed_directory(paths.dufs_assets_dir)
+    copied: list[str] = []
+    try:
+        package_root = resources.files(_DUFS_ASSET_PACKAGE)
+        for name in _DUFS_ASSET_NAMES:
+            content = package_root.joinpath(name).read_bytes()
+            _atomic_write_bytes(paths.dufs_assets_dir / name, content, mode=0o600)
+            copied.append(name)
+    except Exception as exc:
+        if isinstance(exc, ChatShareError):
+            raise
+        raise ChatShareError(f"Unable to sync Dufs UI assets: {exc}") from exc
+    return {"assets": str(paths.dufs_assets_dir), "files": copied}
+
+
 def _yaml_quote(value: str) -> str:
     if "\n" in value or "\r" in value:
         raise ChatShareError("Dufs config values must not contain newlines")
@@ -108,6 +152,7 @@ def _validate_auth_value(label: str, value: str) -> str:
         or not value
         or value != value.strip()
         or any(separator in value for separator in _AUTH_SEPARATORS)
+        or "@/" in value
     ):
         raise ChatShareError(
             f"Dufs {label} contains an auth-rule delimiter, newline, or surrounding whitespace"
@@ -163,6 +208,7 @@ def _render_config(state: InstanceState, password: str) -> str:
             "allow-archive: true",
             "allow-hash: true",
             "enable-cors: false",
+            f"assets: {_yaml_quote(str(state.config.parent / 'assets' / 'dufs'))}",
             f"log-file: {_yaml_quote(str(state.access_log))}",
             "",
         ]
@@ -226,6 +272,7 @@ def init_instance(
     _ensure_managed_directory(paths.instance_dir)
     _ensure_data_root(root_path)
     _ensure_managed_directory(paths.logs_dir)
+    sync_dufs_assets(paths)
     _atomic_write(paths.config_file, _render_config(state, password), mode=0o600)
     state_text = json.dumps(state.to_json_dict(), indent=2, sort_keys=True) + "\n"
     _atomic_write(paths.state_file, state_text, mode=0o600)

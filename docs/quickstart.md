@@ -18,7 +18,7 @@
 
 -   **从分享，到获取**
 
-    `chatshare put` 发布本机文件，`chatshare url` 重新取回已发布文件的公网链接，匿名 `curl` 或浏览器即可下载。
+    `chatshare put` 发布本机文件或目录，`chatshare tree` 查看已发布目录结构，`chatshare url` 重新取回已发布文件的公网链接，匿名 `curl` 或浏览器即可下载。
 
 </div>
 
@@ -64,7 +64,8 @@ chatshare dufs init
 - 监听：`127.0.0.1:5000`
 - 写入账号：ChatEnv 中的 `CHATSHARE_DUFS_USERNAME`，默认 `chatshare`
 - 匿名浏览、下载、内联查看、搜索、归档和哈希可用
-- HTTP/WebDAV 上传或 `PUT` 需要 Dufs HTTP Digest Auth
+- HTTP/WebDAV 上传或 `PUT` 需要 Dufs HTTP Auth；网页端会显示 ChatShare 登录弹窗，并显式发送认证 header，不再直接依赖浏览器默认认证弹窗
+- 网页目录页提供拖拽上传区和“选择文件”按钮；拖拽文件会直接进入上传队列，未登录时会先弹出 ChatShare 登录框
 - 删除、CORS 和外部符号链接关闭
 
 ## 安装用户服务并启动
@@ -85,7 +86,7 @@ chatshare dufs service install --enable
 
 ## 完整示例：从分享，到获取
 
-下面的示例演示一个完整闭环：准备文件、发布、重新取链接、匿名下载验证。
+下面的示例演示一个完整闭环：准备文件、发布、查看分享目录、重新取链接、匿名下载验证。
 
 ```bash
 # 1. 准备一个本机文件。
@@ -95,18 +96,22 @@ printf 'hello from ChatShare\n' > hello-share.txt
 #    这一步是本机 operator 动作：把文件原子复制到 ~/.chatarch/chatshare/.../data/。
 chatshare --json put ./hello-share.txt examples/hello-share.txt
 
-# 3. 之后如果只知道分享内路径，可以重新取回公网链接。
+# 3. 查看已发布目录的服务端实际树结构。
+chatshare tree examples
+
+# 4. 之后如果只知道分享内路径，可以重新取回公网链接。
 chatshare --json url examples/hello-share.txt
 
-# 4. 匿名访问这个公网链接，不需要账号密码。
+# 5. 匿名访问这个公网链接，不需要账号密码。
 curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
 ```
 
-`chatshare put` 和 `chatshare url` 的区别：
+`chatshare put`、`chatshare tree` 和 `chatshare url` 的区别：
 
-| 命令 | 做什么 | 是否上传文件 |
+| 命令 | 做什么 | 是否写入分享目录 |
 | --- | --- | --- |
-| `chatshare put SOURCE [DEST]` | 把本机文件复制到托管分享根目录，并返回 `DEST` 的链接 | 是 |
+| `chatshare put SOURCE [DEST]` | 把本机文件或目录复制到托管分享根目录，并返回 `DEST` 的链接；目录会递归保留相对路径 | 是 |
+| `chatshare tree [DEST]` | 读取托管分享根目录或某个子目录的实际树结构 | 否 |
 | `chatshare url DEST` | 检查 `DEST` 已经在托管分享根目录中存在，然后按 `CHATSHARE_DUFS_BASE_URL` 生成链接 | 否 |
 
 因此，`chatshare url` 适合这些场景：
@@ -155,5 +160,6 @@ curl -fsSL "${base_url%/}/hello-http-put.txt"
 ```bash
 chatshare --json dufs status
 chatshare --json put ./report.pdf reports/report.pdf
+chatshare --json tree reports
 chatshare --json url reports/report.pdf
 ```

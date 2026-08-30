@@ -18,7 +18,7 @@
 
 -   **Share, then retrieve**
 
-    `chatshare put` publishes a local file, `chatshare url` retrieves the public URL for an already-published path, and anonymous `curl` or a browser can download it.
+    `chatshare put` publishes a local file or directory, `chatshare tree` inspects the published directory structure, `chatshare url` retrieves the public URL for an already-published path, and anonymous `curl` or a browser can download it.
 
 </div>
 
@@ -64,7 +64,8 @@ Defaults:
 - Listener: `127.0.0.1:5000`
 - Writer username: `CHATSHARE_DUFS_USERNAME` from ChatEnv, defaulting to `chatshare`
 - Anonymous browse, download, inline view, search, archive, and hash enabled
-- HTTP/WebDAV upload or `PUT` requires Dufs HTTP Digest Auth
+- HTTP/WebDAV upload or `PUT` requires Dufs HTTP Auth; the web UI shows the ChatShare login dialog and sends an explicit auth header instead of relying on the browser's default auth prompt
+- The directory page provides a drag-and-drop upload zone and a "Choose files" button; dropped files enter the upload queue directly, opening the ChatShare login dialog first when needed
 - Delete, CORS, and external symlinks disabled
 
 ## Install and start the user service
@@ -85,7 +86,7 @@ chatshare dufs service install --enable
 
 ## Complete example: share, then retrieve
 
-This example shows the full loop: prepare a file, publish it, retrieve the URL again, and download it anonymously.
+This example shows the full loop: prepare a file, publish it, inspect the share tree, retrieve the URL again, and download it anonymously.
 
 ```bash
 # 1. Prepare a local file.
@@ -96,18 +97,22 @@ printf 'hello from ChatShare\n' > hello-share.txt
 #    ~/.chatarch/chatshare/.../data/.
 chatshare --json put ./hello-share.txt examples/hello-share.txt
 
-# 3. If you later only know the in-share path, retrieve the public URL again.
+# 3. Inspect the actual server-side tree for the published directory.
+chatshare tree examples
+
+# 4. If you later only know the in-share path, retrieve the public URL again.
 chatshare --json url examples/hello-share.txt
 
-# 4. Read the public URL anonymously; no username or password is needed.
+# 5. Read the public URL anonymously; no username or password is needed.
 curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
 ```
 
-`chatshare put` and `chatshare url` are different commands:
+`chatshare put`, `chatshare tree`, and `chatshare url` are different commands:
 
-| Command | What it does | Uploads a file |
+| Command | What it does | Writes share data |
 | --- | --- | --- |
-| `chatshare put SOURCE [DEST]` | Copies a local file into the managed share root and returns the URL for `DEST` | Yes |
+| `chatshare put SOURCE [DEST]` | Copies a local file or directory into the managed share root and returns the URL for `DEST`; directory uploads preserve relative paths recursively | Yes |
+| `chatshare tree [DEST]` | Reads the actual tree under the managed share root or a subdirectory | No |
 | `chatshare url DEST` | Checks that `DEST` already exists under the managed share root, then builds the URL from `CHATSHARE_DUFS_BASE_URL` | No |
 
 Use `chatshare url` when:
@@ -156,5 +161,6 @@ Place global `--json` before the subcommand:
 ```bash
 chatshare --json dufs status
 chatshare --json put ./report.pdf reports/report.pdf
+chatshare --json tree reports
 chatshare --json url reports/report.pdf
 ```

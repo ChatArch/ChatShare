@@ -8,13 +8,13 @@
 
 # ChatShare
 
-ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](https://github.com/sigoden/dufs)，提供可审计的二进制安装、配置、用户级服务生命周期，以及本机文件导入与直达 URL 生成。
+ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](https://github.com/sigoden/dufs)，提供可审计的二进制安装、配置、用户级服务生命周期，以及本机文件/目录导入、分享目录树查看与直达 URL 生成。
 
 ## 安全默认值
 
 - Dufs 固定安装到 `~/.chatarch/chatshare/runtimes/dufs/`，不写系统目录。
 - 服务只绑定 `127.0.0.1`；公网入口应由独立反向代理任务配置。
-- 浏览、下载和内联查看默认匿名可访问；HTTP/WebDAV `PUT` 等写入操作需要 Dufs HTTP Digest Auth。
+- 浏览、下载和内联查看默认匿名可访问；HTTP/WebDAV `PUT` 等写入操作需要 Dufs HTTP Auth，网页端使用 ChatShare 自定义登录弹窗发起鉴权。
 - 删除和符号链接访问默认关闭。
 - Linux 生命周期使用 `systemd --user`，不使用 `kill`、`pkill` 或不受控后台进程。
 
@@ -34,10 +34,11 @@ chatshare dufs service install
 chatshare dufs start
 printf 'hello from ChatShare\n' > hello-share.txt
 chatshare put ./hello-share.txt examples/hello-share.txt
+chatshare tree examples
 chatshare url examples/hello-share.txt
 ```
 
-运行 `chatshare --tree` 可读取 ChatStyle 从 Click 注册表生成的完整实时命令树；`chatshare --tree-brief` 显示省略参数签名的同一命令面。隐藏兼容入口不会出现在产品树中。
+运行 `chatshare --tree` 可读取 ChatStyle 从 Click 注册表生成的完整实时命令树；`chatshare tree <prefix>` 查看已发布分享目录的实际文件树；`chatshare --tree-brief` 显示省略参数签名的同一命令面。隐藏兼容入口不会出现在产品树中。
 
 ## 文档
 
