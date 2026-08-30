@@ -20,7 +20,8 @@ chatshare
 │   ├── start  # Start Dufs through systemd --user; changes service state.
 │   ├── status  # Read runtime, config, unit, and active state; no writes.
 │   └── stop  # Stop Dufs through systemd --user; changes service state.
-├── put <SOURCE> [DESTINATION] [--overwrite]  # Publish a local file; writes or replaces managed share data.
+├── put <SOURCE> [DESTINATION] [--overwrite]  # Publish a local file or directory; writes managed share data.
+├── tree [PREFIX]  # Print the managed share tree under an optional prefix; no writes.
 └── url <PATH>  # Build a direct URL for an existing managed file; no writes.
 ```
 
@@ -44,14 +45,15 @@ chatshare
 │   ├── start  # Start Dufs through systemd --user; changes service state.
 │   ├── status  # Read runtime, config, unit, and active state; no writes.
 │   └── stop  # Stop Dufs through systemd --user; changes service state.
-├── put  # Publish a local file; writes or replaces managed share data.
+├── put  # Publish a local file or directory; writes managed share data.
+├── tree  # Print the managed share tree under an optional prefix; no writes.
 └── url  # Build a direct URL for an existing managed file; no writes.
 ```
 
 ## 接口约定
 
 - `--home` 表示 ChatArch home，默认来自 ChatEnv，通常为 `~/.chatarch`。`--json` 对当前调用启用结构化输出。
-- CLI 只负责参数解析和输出；安装、配置、服务与文件操作均有可导入 Python API。
+- CLI 只负责参数解析和输出；安装、配置、服务、文件发布与目录树读取均有可导入 Python API。
 - 破坏性覆盖必须显式使用 `--force` 或 `--overwrite`。
 - 密码只通过环境变量名传入；不提供 `--password VALUE`。
 - 当前只有一个 `default` 实例，不提供多实例或远程主机注册表。

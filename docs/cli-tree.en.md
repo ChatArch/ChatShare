@@ -20,7 +20,8 @@ chatshare
 │   ├── start  # Start Dufs through systemd --user; changes service state.
 │   ├── status  # Read runtime, config, unit, and active state; no writes.
 │   └── stop  # Stop Dufs through systemd --user; changes service state.
-├── put <SOURCE> [DESTINATION] [--overwrite]  # Publish a local file; writes or replaces managed share data.
+├── put <SOURCE> [DESTINATION] [--overwrite]  # Publish a local file or directory; writes managed share data.
+├── tree [PREFIX]  # Print the managed share tree under an optional prefix; no writes.
 └── url <PATH>  # Build a direct URL for an existing managed file; no writes.
 ```
 
@@ -44,14 +45,15 @@ chatshare
 │   ├── start  # Start Dufs through systemd --user; changes service state.
 │   ├── status  # Read runtime, config, unit, and active state; no writes.
 │   └── stop  # Stop Dufs through systemd --user; changes service state.
-├── put  # Publish a local file; writes or replaces managed share data.
+├── put  # Publish a local file or directory; writes managed share data.
+├── tree  # Print the managed share tree under an optional prefix; no writes.
 └── url  # Build a direct URL for an existing managed file; no writes.
 ```
 
 ## Interface contract
 
 - `--home` is the ChatArch home, derived from ChatEnv and normally `~/.chatarch`. `--json` enables structured output for the invocation.
-- CLI callbacks only resolve arguments and render output; install, config, service, and file operations expose importable Python APIs.
+- CLI callbacks only resolve arguments and render output; install, config, service, file publishing, and tree inspection expose importable Python APIs.
 - Destructive replacement requires `--force` or `--overwrite`.
 - Passwords are supplied by environment-variable name; there is no `--password VALUE` option.
 - This version owns one `default` instance and has no multi-instance or remote-host registry.

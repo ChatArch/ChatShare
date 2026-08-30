@@ -24,6 +24,7 @@ def test_help_exposes_real_product_tree_and_hides_legacy_hello():
     assert "--tree-brief" in result.output
     assert "dufs" in result.output
     assert "put" in result.output
+    assert "tree" in result.output
     assert "url" in result.output
     assert "--home" in result.output
     assert "--json" in result.output
@@ -49,6 +50,7 @@ def test_tree_option_renders_registered_product_tree_and_hides_legacy_hello():
     assert "│   ├── service" in result.output
     assert "│   │   └── install" in result.output
     assert "├── put <SOURCE> [DESTINATION] [--overwrite]" in result.output
+    assert "├── tree [PREFIX]" in result.output
     assert "└── url <PATH>" in result.output
     assert "hello" not in result.output
 
@@ -62,7 +64,8 @@ def test_tree_brief_renders_same_surface_without_signatures():
     )
     assert "dufs" in result.output
     assert "service" in result.output
-    assert "put  # Publish a local file" in result.output
+    assert "put  # Publish a local file or directory" in result.output
+    assert "tree  # Print the managed share tree" in result.output
     assert "url  # Build a direct URL" in result.output
     for signature in ("SOURCE", "[DESTINATION]", "[--overwrite]", "[--lines LINES]"):
         assert signature not in result.output
@@ -329,19 +332,28 @@ def test_status_and_logs_commands_delegate(monkeypatch, tmp_path):
     assert logs.output.splitlines() == ["one", "two"]
 
 
-def test_put_and_url_commands_delegate(monkeypatch, tmp_path):
+def test_put_tree_and_url_commands_delegate(monkeypatch, tmp_path):
     from chatshare import sharing
 
     put_calls = []
+    tree_calls = []
     url_calls = []
     source = tmp_path / "source.txt"
     source.write_text("data")
     monkeypatch.setattr(
         sharing,
-        "publish_file",
+        "publish_path",
         lambda paths, source, destination, **kwargs: (
             put_calls.append((paths, source, destination, kwargs))
             or {"path": destination, "url": "https://share.test/item"}
+        ),
+    )
+    monkeypatch.setattr(
+        sharing,
+        "build_share_tree",
+        lambda paths, prefix: (
+            tree_calls.append((paths, prefix))
+            or {"lines": ["nested/", "`-- item.txt"], "path": prefix}
         ),
     )
     monkeypatch.setattr(
@@ -367,6 +379,11 @@ def test_put_and_url_commands_delegate(monkeypatch, tmp_path):
     assert put.exit_code == 0, put.output
     assert json.loads(put.output)["path"] == "nested/item.txt"
     assert put_calls[0][1:] == (source, "nested/item.txt", {"overwrite": True})
+
+    tree = invoke(["--home", str(tmp_path / "home"), "tree", "nested"])
+    assert tree.exit_code == 0, tree.output
+    assert tree.output.splitlines() == ["nested/", "`-- item.txt"]
+    assert tree_calls[0][1] == "nested"
 
     url = invoke(["--home", str(tmp_path / "home"), "--json", "url", "nested/item.txt"])
     assert url.exit_code == 0, url.output
