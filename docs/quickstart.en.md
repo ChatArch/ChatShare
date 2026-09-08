@@ -1,5 +1,7 @@
 # Quick Start
 
+The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install `ChatShare[server]==0.2.5`, run `chatshare serve`, then point the reverse proxy at the application. The application owns login, sessions and authorization; the proxy only forwards. Known files remain public, while directories, search, archives and writes require authentication. See [security boundaries](security.en.md). Installing only the base package omits the optional server dependencies.
+
 ## Choose an entry point
 
 <div class="grid cards" markdown>
@@ -49,7 +51,7 @@ Do not pass the password as a CLI argument. Service deployments should store the
 
 ```bash
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
 chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
@@ -104,7 +106,7 @@ chatshare tree examples
 chatshare --json url examples/hello-share.txt
 
 # 5. Read the public URL anonymously; no username or password is needed.
-curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
+curl -fsSL https://share.example/examples/hello-share.txt
 ```
 
 `chatshare put`, `chatshare tree`, and `chatshare url` are different commands:
@@ -125,7 +127,7 @@ It does not copy, upload, or create files. If the target file does not exist, it
 
 ## Complete example: HTTP PUT requires authentication
 
-Web browsing and downloads are anonymous, but network-side HTTP/WebDAV `PUT` requires Dufs HTTP Digest Auth. The example below keeps the secret in ChatEnv and a temporary curl config, not in argv, URLs, or logs:
+Through `chatshare serve`, concrete-file downloads remain anonymous while directory browsing requires login. Network-side HTTP/WebDAV `PUT` still supports the original Dufs HTTP Digest Auth. The example below keeps the secret in ChatEnv and a temporary curl config, not in argv, URLs, or logs:
 
 ```bash
 base_url="$(chatenv get CHATSHARE_DUFS_BASE_URL)"

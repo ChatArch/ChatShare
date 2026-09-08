@@ -146,6 +146,27 @@ let $loginError;
  */
 let $loginSubmit;
 const CHATSHARE_AUTH_STORAGE = "chatshare.dufs.credentials";
+const CHATSHARE_GATEWAY = !!document.querySelector('meta[name="chatshare-gateway"]');
+if (CHATSHARE_GATEWAY) {
+  clearStoredCredentials();
+  window.addEventListener("pagehide", () => { document.documentElement.style.visibility = "hidden"; });
+  window.addEventListener("pageshow", event => {
+    if (event.persisted) location.reload();
+    else document.documentElement.style.visibility = "";
+  });
+}
+
+function gatewayLogin() {
+  location.replace("/_chatshare/login?next=" + encodeURIComponent(location.pathname + location.search));
+}
+
+async function gatewaySession() {
+  const response = await fetch("/_chatshare/session", { credentials: "same-origin", cache: "no-store", headers: { "X-ChatShare-CSRF": "1" } });
+  if (!response.ok) { gatewayLogin(); throw new Error("请重新登录"); }
+  const session = await response.json();
+  if (!session.authenticated) { gatewayLogin(); throw new Error("请重新登录"); }
+  return session;
+}
 let dropzoneReady = false;
 let uploadFileReady = false;
 let newFolderReady = false;
@@ -540,13 +561,13 @@ function addPath(file, index) {
   }
   if (DATA.allow_delete) {
     if (DATA.allow_upload) {
-      actionMove = `<div onclick="movePath(${index})" class="action-btn" id="moveBtn${index}" title="Move & Rename">${ICONS.move}</div>`;
+      actionMove = `<div class="action-btn" id="moveBtn${index}" title="Move & Rename">${ICONS.move}</div>`;
       if (!isDir) {
         actionEdit = `<a class="action-btn" title="Edit file" target="_blank" href="${url}?edit">${ICONS.edit}</a>`;
       }
     }
     actionDelete = `
-    <div onclick="deletePath(${index})" class="action-btn" id="deleteBtn${index}" title="Delete">${ICONS.delete}</div>`;
+    <div class="action-btn" id="deleteBtn${index}" title="Delete">${ICONS.delete}</div>`;
   }
   if (!actionEdit && !isDir) {
     actionView = `<a class="action-btn" title="View file" target="_blank" href="${url}?view">${ICONS.view}</a>`;
@@ -574,6 +595,8 @@ function addPath(file, index) {
   <td class="cell-size">${sizeDisplay}</td>
   ${actionCell}
 </tr>`);
+  document.getElementById(`moveBtn${index}`)?.addEventListener("click", () => movePath(index));
+  document.getElementById(`deleteBtn${index}`)?.addEventListener("click", () => deletePath(index));
 }
 
 function setupDropzone() {
@@ -614,6 +637,11 @@ function setupDropzone() {
 async function setupAuth() {
   setupLoginDialog();
   setupAuthControls();
+  if (CHATSHARE_GATEWAY) {
+    const session = await gatewaySession();
+    setAuthenticatedUser(session.username);
+    return;
+  }
   if (DATA.user) {
     setAuthenticatedUser(DATA.user);
   } else {
@@ -699,6 +727,7 @@ function setupLoginDialog() {
 }
 
 function openLoginDialog() {
+  if (CHATSHARE_GATEWAY) { gatewayLogin(); return; }
   const credentials = getStoredCredentials();
   if (credentials?.username) {
     $loginUsername.value = credentials.username;
@@ -762,6 +791,11 @@ function setLoggedOut() {
 }
 
 async function ensureAuthenticated() {
+  if (CHATSHARE_GATEWAY) {
+    const session = await gatewaySession();
+    setAuthenticatedUser(session.username);
+    return;
+  }
   if (!DATA.auth) return;
   const credentials = getStoredCredentials();
   if (credentials) {
@@ -774,6 +808,7 @@ async function ensureAuthenticated() {
 }
 
 function getStoredCredentials() {
+  if (CHATSHARE_GATEWAY) return null;
   try {
     const value = sessionStorage.getItem(CHATSHARE_AUTH_STORAGE);
     if (!value) return null;
@@ -786,11 +821,12 @@ function getStoredCredentials() {
 }
 
 function storeCredentials(credentials) {
+  if (CHATSHARE_GATEWAY) return;
   sessionStorage.setItem(CHATSHARE_AUTH_STORAGE, JSON.stringify(credentials));
 }
 
 function clearStoredCredentials() {
-  sessionStorage.removeItem(CHATSHARE_AUTH_STORAGE);
+  try { sessionStorage.removeItem(CHATSHARE_AUTH_STORAGE); } catch {}
 }
 
 function rememberAuthenticatedUser(username) {
@@ -809,6 +845,13 @@ function basicAuthHeader(credentials) {
 
 function openWithCredentials(xhr, method, url, credentials = getStoredCredentials()) {
   xhr.open(method, url, true);
+  if (CHATSHARE_GATEWAY) {
+    if (new URL(url, location.href).origin !== location.origin) throw new Error("不允许跨站请求");
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("X-ChatShare-CSRF", "1");
+    xhr.addEventListener("load", () => { if (xhr.status === 401) gatewayLogin(); });
+    return;
+  }
   if (credentials?.username && credentials?.password) {
     xhr.setRequestHeader("Authorization", basicAuthHeader(credentials));
   }
@@ -842,6 +885,7 @@ function authRequest(method, url, options = {}) {
 }
 
 function setupDownloadWithToken() {
+  if (CHATSHARE_GATEWAY) return;
   if (downloadTokenReady) return;
   downloadTokenReady = true;
   document.querySelectorAll("a.dlwt").forEach(link => {
@@ -1097,6 +1141,11 @@ async function saveChange() {
 }
 
 async function checkAuth(variant, credentials = getStoredCredentials()) {
+  if (CHATSHARE_GATEWAY) {
+    const session = await gatewaySession();
+    setAuthenticatedUser(session.username);
+    return;
+  }
   if (!DATA.auth) return;
   if (!credentials?.username || !credentials?.password) {
     if (DATA.user) return;
@@ -1110,7 +1159,15 @@ async function checkAuth(variant, credentials = getStoredCredentials()) {
   setAuthenticatedUser(username || credentials.username);
 }
 
-function logout() {
+async function logout() {
+  if (CHATSHARE_GATEWAY) {
+    const response = await fetch("/_chatshare/logout", { method: "POST", credentials: "same-origin", headers: { "X-ChatShare-CSRF": "1" } });
+    if (!response.ok) { alert("退出失败，请重试"); return; }
+    clearStoredCredentials();
+    document.body.replaceChildren();
+    location.replace("/_chatshare/login");
+    return;
+  }
   if (!DATA.auth) return;
   clearStoredCredentials();
   rejectPendingLogin(new Error("登录已取消"));
@@ -1264,6 +1321,7 @@ function encodedStr(rawStr) {
 }
 
 async function assertResOK(res) {
+  if (CHATSHARE_GATEWAY && res.status === 401) gatewayLogin();
   if (!(res.status >= 200 && res.status < 300)) {
     throw new Error(await res.text() || `Invalid status ${res.status}`);
   }

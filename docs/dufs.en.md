@@ -1,5 +1,7 @@
 # Dufs Runtime
 
+The optional `chatshare serve` directory-login gateway sits in front of Dufs; it is not a fork. It reads existing instance state without reinitialization or changes to Dufs binary/config/accounts/files or installed assets. The configuration below still describes native Dufs; gateway directory and management access has an additional server-side gate. See [security boundaries](security.en.md).
+
 ## Responsibility boundary
 
 ChatShare does not modify Dufs source. It combines official release assets, configuration, custom UI assets, and a Linux user service into a ChatArch-managed runtime.

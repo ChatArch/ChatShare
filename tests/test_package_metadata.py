@@ -13,6 +13,25 @@ def test_chatarch_internal_dependencies_are_bounded_for_release():
     assert '"chatshare.assets.dufs"' in text
     assert "chatstyle>=0.1.0,<0.2.0" not in text
     assert "chatenv>=0.2.0,<0.3.0" not in text
+    for requirement in (
+        "fastapi>=0.133,<0.134",
+        "httpx>=0.28,<0.29",
+        "uvicorn>=0.41,<0.42",
+        "anyio>=4.12,<4.13",
+        "starlette>=1.3,<1.4",
+    ):
+        assert requirement in text
+    assert '"chatshare.assets.gateway"' in text
+
+
+def test_gateway_login_assets_are_packaged_without_directory_data():
+    asset_root = resources.files("chatshare.assets.gateway")
+    html = asset_root.joinpath("login.html").read_text(encoding="utf-8")
+    assert "登录 ChatShare" in html
+    assert "index-data" not in html
+    assert asset_root.joinpath("login.js").is_file()
+    assert asset_root.joinpath("login.css").is_file()
+    assert "include tests/code-tests/gateway-ui.cjs" in Path("MANIFEST.in").read_text()
 
 
 def test_packaged_dufs_assets_include_chatshare_login_dialog():

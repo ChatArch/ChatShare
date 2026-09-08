@@ -12,9 +12,18 @@ ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs
 
 ## Secure defaults
 
+Version `0.2.5` adds application-owned directory login through the `server` extra. `chatshare serve` owns the login page, sessions and directory authorization; the reverse proxy only forwards traffic.
+
+```bash
+python -m pip install "ChatShare[server]==0.2.5"
+chatshare serve --allowed-host proxy.internal
+```
+
+The gateway defaults to `127.0.0.1:5001`, reads the existing instance root, loopback upstream and public base URL, and does not modify Dufs. Anonymous clients may only GET/HEAD/Range known concrete files; directories, JSON/search, archives and writes require login/native authentication. See [security boundaries](docs/security.en.md). Proxy cutover, TLS and live acceptance are separate operator tasks. Direct Dufs access bypasses this gate.
+
 - Dufs is installed under `~/.chatarch/chatshare/runtimes/dufs/`, never a system prefix.
 - The service binds only to `127.0.0.1`; public ingress belongs to a separate reverse-proxy task.
-- Browsing, downloads, and inline reads are anonymous by default; HTTP/WebDAV `PUT` requires Dufs HTTP Auth, and the web UI starts that flow through the ChatShare login dialog. The writer password is read from ChatEnv and persisted only in a mode-`0600` runtime config file.
+- Native Dufs remains anonymously readable with authenticated writes; gateway access limits anonymous reads to known concrete files and uses server-side cookie sessions for browser directory access.
 - Delete and external-symlink access are disabled by default.
 - Linux lifecycle uses `systemd --user`; ChatShare does not use `kill`, `pkill`, or an unmanaged background process.
 
@@ -24,7 +33,7 @@ ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs
 uv tool install ChatShare
 chatshare dufs install
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
 chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I

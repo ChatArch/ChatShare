@@ -88,6 +88,25 @@ def dufs() -> None:
     """Manage the local Dufs runtime, configuration, and user service."""
 
 
+@main.command("serve")
+@click.option("--bind", type=click.Choice(["127.0.0.1", "::1"]), default="127.0.0.1", show_default=True, help="Gateway loopback bind host.")
+@click.option("--port", type=click.IntRange(1, 65535), default=5001, show_default=True)
+@click.option("--allowed-host", "allowed_hosts", multiple=True, help="Additional exact proxy-local Host; repeatable.")
+@click.pass_obj
+def serve_command(context: CliContext, bind: str, port: int, allowed_hosts: tuple[str, ...]) -> None:
+    """Run the directory-login gateway in the foreground; no Dufs changes."""
+    try:
+        import uvicorn
+        from chatshare.gateway import create_app
+    except ImportError as exc:
+        raise click.ClickException("The gateway requires ChatShare[server].") from exc
+    try:
+        app = _execute(lambda: create_app(context.paths, allowed_hosts=allowed_hosts))
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+    uvicorn.run(app, host=bind, port=port, workers=1, proxy_headers=False, access_log=False)
+
+
 @dufs.command("install")
 @click.option(
     "--version", default="v0.46.0", show_default=True, help="Explicit Dufs release tag."

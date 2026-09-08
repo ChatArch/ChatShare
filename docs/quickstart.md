@@ -1,5 +1,7 @@
 # 快速开始
 
+以下初始化流程描述原生 Dufs。现有实例无需重新初始化；目录登录请安装 `ChatShare[server]==0.2.5`，运行 `chatshare serve`，再由运维把反向代理指向应用。登录、会话和权限由应用负责，代理仅转发。具体文件直链保持公开，目录、搜索、归档和写入需要鉴权；详见[安全与边界](security.md)。仅安装基础包不包含服务端可选依赖。
+
 ## 选择入口
 
 <div class="grid cards" markdown>
@@ -49,7 +51,7 @@ chatshare dufs install
 
 ```bash
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
 chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
@@ -103,7 +105,7 @@ chatshare tree examples
 chatshare --json url examples/hello-share.txt
 
 # 5. 匿名访问这个公网链接，不需要账号密码。
-curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
+curl -fsSL https://share.example/examples/hello-share.txt
 ```
 
 `chatshare put`、`chatshare tree` 和 `chatshare url` 的区别：
@@ -124,7 +126,7 @@ curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
 
 ## 完整示例：HTTP PUT 需要鉴权
 
-网页浏览和下载是匿名的，但网络侧 HTTP/WebDAV `PUT` 必须带 Dufs HTTP Digest Auth。下面示例只把 secret 放在 ChatEnv 和临时 curl config 中，不放在命令行参数、URL 或日志里：
+通过 `chatshare serve` 时，文件直链可匿名下载，目录浏览必须登录；网络侧 HTTP/WebDAV `PUT` 仍使用原 Dufs HTTP Digest Auth。下面示例只把 secret 放在 ChatEnv 和临时 curl config 中，不放在命令行参数、URL 或日志里：
 
 ```bash
 base_url="$(chatenv get CHATSHARE_DUFS_BASE_URL)"

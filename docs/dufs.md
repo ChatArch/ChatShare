@@ -1,5 +1,7 @@
 # Dufs 运行时
 
+目录登录网关是可选的 `chatshare serve` 前置服务，不是 Dufs fork。它读取现有实例状态，不需要重复 init 或改 Dufs binary/config/accounts/files，也不修改已安装的 assets。以下配置继续描述原生 Dufs；通过网关时目录和管理请求受到额外服务端门禁，详见[安全与边界](security.md)。
+
 ## 责任边界
 
 ChatShare 不修改 Dufs 源码。它把官方 release asset、配置、定制 UI assets 和 Linux 用户服务组合成一个 ChatArch 可管理的运行时。

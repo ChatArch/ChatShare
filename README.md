@@ -12,9 +12,18 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 
 ## 安全默认值
 
+从 `0.2.5` 起，安装 `server` 可选依赖即可使用应用内目录登录系统。登录页、会话和目录权限由 `chatshare serve` 负责；反向代理只转发，不承担鉴权。
+
+```bash
+python -m pip install "ChatShare[server]==0.2.5"
+chatshare serve --allowed-host proxy.internal
+```
+
+网关默认监听 `127.0.0.1:5001`，读取现有实例的 root、Dufs loopback 地址和公网 base URL，不修改 Dufs。仅已知具体文件可匿名 GET/HEAD/Range；根目录、目录、搜索、JSON、归档和写入需要登录/原生鉴权。完整边界见 [安全与边界](docs/security.md)。公网代理切换、TLS 与现场验证由运维单独完成，绕过网关直连 Dufs 不受此门禁保护。
+
 - Dufs 固定安装到 `~/.chatarch/chatshare/runtimes/dufs/`，不写系统目录。
 - 服务只绑定 `127.0.0.1`；公网入口应由独立反向代理任务配置。
-- 浏览、下载和内联查看默认匿名可访问；HTTP/WebDAV `PUT` 等写入操作需要 Dufs HTTP Auth，网页端使用 ChatShare 自定义登录弹窗发起鉴权。
+- 原生 Dufs 仍为匿名可读、鉴权可写；通过网关访问时，匿名只允许已知具体文件，浏览器目录访问使用服务端 cookie 会话。
 - 删除和符号链接访问默认关闭。
 - Linux 生命周期使用 `systemd --user`，不使用 `kill`、`pkill` 或不受控后台进程。
 
@@ -24,7 +33,7 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 uv tool install ChatShare
 chatshare dufs install
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
 chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I

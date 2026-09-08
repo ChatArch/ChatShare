@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - name: Verify tagged commit belongs to default branch
         run: |
-          git fetch origin main
+          git fetch --no-tags origin main:refs/remotes/origin/main
           git merge-base --is-ancestor "${GITHUB_SHA}" refs/remotes/origin/main
       - uses: actions/setup-python@v5
         with:
