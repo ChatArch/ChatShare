@@ -21,6 +21,7 @@
 - Dufs 需要在启动时读取账号规则，因此密码会存在于 `config.yaml`；该文件以 `0600` 写入。
 - 网关登录通过 numeric loopback 上的 Dufs 原生 CHECKAUTH + Basic 验证凭据。浏览器只获得随机 HttpOnly、SameSite=Strict、Path=/ 会话 cookie；公网 base URL 为 HTTPS 时设置 Secure。鉴权材料仅短暂保留于服务端内存，不写入文件、不建立第二套账号数据库。
 - 每次 cookie 授权请求重新验证 Dufs；登出、过期及密码拒绝都会撤销会话。密码轮换在原有 Dufs 进程识别新密码后生效；网关重启使全部会话失效。原生 Basic/Digest 按原请求转发验证，不把 Digest 重放成其他方法或 URI。
+- 上游 403 表示权限不足，不代表退出登录；只有转发了该会话凭据的请求收到 401 时，代理才撤销会话。匿名具体文件/token 请求失败不影响独立的浏览器会话。既有禁止删除规则继续生效，UI 显示权限错误而不强制登出。
 - 网关 JS 只清除旧 `chatshare.dufs.credentials`，不把新密码写入 DOM/storage。非网关 Dufs UI 保留旧兼容行为和旧浏览器凭据存储，不能替代服务端门禁。
 - 密码不得出现在 argv、URL、stdout、JSON、access log、unit 文件、README 或测试 fixture。
 - 用户名和密码拒绝 Dufs auth 语法分隔符以及换行，防止规则注入。

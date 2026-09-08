@@ -440,6 +440,7 @@ def create_app(
     async def proxy(request, raw_target, current, concrete):
         explicit = request.headers.get("authorization")
         authenticated = bool(explicit or current)
+        session_authorized = bool(current and not explicit and not concrete)
         headers = _headers(
             request.headers,
             {
@@ -457,7 +458,7 @@ def create_app(
         headers["accept-encoding"] = "identity"
         if explicit:
             headers["authorization"] = explicit
-        elif current and not concrete:
+        elif session_authorized:
             headers["authorization"] = current.authorization
         connection = client()
         response = None
@@ -488,7 +489,7 @@ def create_app(
                 )
             )
             if response.status_code in {401, 403}:
-                if current:
+                if response.status_code == 401 and session_authorized:
                     sessions.pop(request.cookies.get(COOKIE), None)
                 result = error(response.status_code)
                 if explicit and response.headers.get("www-authenticate"):

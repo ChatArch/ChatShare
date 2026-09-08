@@ -2,6 +2,8 @@
 
 ## 0.2.4+directorylogin.1 (local build, not a public release)
 
+- Preserve browser sessions on upstream 403 permission denials, including disabled DELETE. Revoke on proxied 401 only when that request forwarded the session's credentials; anonymous file/token failures do not revoke an independent browser session. Declare directly imported AnyIO and Starlette as bounded server dependencies.
+
 - Add optional `ChatShare[server]` and runnable `chatshare serve`: a loopback FastAPI gateway in front of unchanged Dufs, using the existing managed instance state.
 - Gate anonymous directory HTML, JSON/search/WebDAV enumeration, archives and writes; retain concrete-file GET/HEAD/Range without injecting account credentials, and check the upstream file Content-Disposition before streaming.
 - Add a Chinese login page, bounded ephemeral HttpOnly sessions verified through Dufs CHECKAUTH, same-origin CSRF checks, real logout, expiry/password-rotation checks, TrustedHost validation and no-store responses.

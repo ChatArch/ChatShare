@@ -41,6 +41,11 @@ async function exercise(gateway) {
     assert.equal(stored.length, 0);
     assert.deepEqual(xhr.headers, { "X-ChatShare-CSRF": "1" });
     assert.equal(xhr.withCredentials, true);
+    xhr.status = 403;
+    xhr.load();
+    assert.equal(replaced.length, 0);
+    await assert.rejects(vm.runInContext('assertResOK({status: 403, text: async () => ""})', context), /Invalid status 403/);
+    assert.equal(replaced.length, 0);
     xhr.status = 401;
     xhr.load();
     assert.ok(replaced.pop().startsWith("/_chatshare/login?next="));

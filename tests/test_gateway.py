@@ -120,6 +120,56 @@ def login(client):
     )
 
 
+@pytest.mark.parametrize("status", [401, 403])
+def test_session_write_rejection_revokes_only_rejected_credentials(gateway, status):
+    client, calls, control, _ = gateway
+    assert login(client).status_code == 200
+    control["status"] = status
+    response = client.request("DELETE", "/image.png", headers=CSRF)
+    assert response.status_code == status
+    assert not response.content
+    assert calls[-1].headers["authorization"] == GOOD
+    expected = (
+        {"authenticated": True, "username": "alice"}
+        if status == 403
+        else {"authenticated": False}
+    )
+    assert client.get("/_chatshare/session").json() == expected
+    assert client.get("/").status_code == (200 if status == 403 else 401)
+
+
+@pytest.mark.parametrize("status", [401, 403])
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+def test_anonymous_file_rejection_does_not_revoke_browser_session(
+    gateway, status, method
+):
+    client, calls, control, _ = gateway
+    assert login(client).status_code == 200
+    control["status"] = status
+    response = client.request(method, "/image.png?token=invalid")
+    assert response.status_code == status
+    assert not response.content
+    assert "authorization" not in calls[-1].headers
+    assert client.get("/_chatshare/session").json() == {
+        "authenticated": True,
+        "username": "alice",
+    }
+
+
+def test_native_auth_rejection_does_not_revoke_browser_session(gateway):
+    client, calls, _, _ = gateway
+    assert login(client).status_code == 200
+    response = client.request(
+        "DELETE", "/image.png", headers={"Authorization": "Basic invalid"}
+    )
+    assert response.status_code == 401
+    assert calls[-1].headers["authorization"] == "Basic invalid"
+    assert client.get("/_chatshare/session").json() == {
+        "authenticated": True,
+        "username": "alice",
+    }
+
+
 @pytest.mark.parametrize(
     "path",
     [

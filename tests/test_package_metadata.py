@@ -13,7 +13,13 @@ def test_chatarch_internal_dependencies_are_bounded_for_release():
     assert '"chatshare.assets.dufs"' in text
     assert "chatstyle>=0.1.0,<0.2.0" not in text
     assert "chatenv>=0.2.0,<0.3.0" not in text
-    for requirement in ("fastapi>=0.133,<0.134", "httpx>=0.28,<0.29", "uvicorn>=0.41,<0.42"):
+    for requirement in (
+        "fastapi>=0.133,<0.134",
+        "httpx>=0.28,<0.29",
+        "uvicorn>=0.41,<0.42",
+        "anyio>=4.12,<4.13",
+        "starlette>=1.3,<1.4",
+    ):
         assert requirement in text
     assert '"chatshare.assets.gateway"' in text
 
