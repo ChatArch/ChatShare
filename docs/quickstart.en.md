@@ -1,6 +1,6 @@
 # Quick Start
 
-The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install the fixed `0.2.4+directorylogin.1` wheel with `server` extra, run `chatshare serve`, and let the operator separately route the proxy to it. The gateway exposes only known files anonymously; directories/search/archives/writes require authentication. See [security boundaries](security.en.md). The unpinned installation examples below do not install this local candidate.
+The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install `ChatShare[server]==0.2.5`, run `chatshare serve`, then point the reverse proxy at the application. The application owns login, sessions and authorization; the proxy only forwards. Known files remain public, while directories, search, archives and writes require authentication. See [security boundaries](security.en.md). Installing only the base package omits the optional server dependencies.
 
 ## Choose an entry point
 
@@ -127,7 +127,7 @@ It does not copy, upload, or create files. If the target file does not exist, it
 
 ## Complete example: HTTP PUT requires authentication
 
-Web browsing and downloads are anonymous, but network-side HTTP/WebDAV `PUT` requires Dufs HTTP Digest Auth. The example below keeps the secret in ChatEnv and a temporary curl config, not in argv, URLs, or logs:
+Through `chatshare serve`, concrete-file downloads remain anonymous while directory browsing requires login. Network-side HTTP/WebDAV `PUT` still supports the original Dufs HTTP Digest Auth. The example below keeps the secret in ChatEnv and a temporary curl config, not in argv, URLs, or logs:
 
 ```bash
 base_url="$(chatenv get CHATSHARE_DUFS_BASE_URL)"

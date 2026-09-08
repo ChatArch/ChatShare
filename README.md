@@ -12,10 +12,10 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 
 ## 安全默认值
 
-本地候选版本 `0.2.4+directorylogin.1` 提供可选目录登录网关；不是 PyPI 发布。请安装经过验证的固定 wheel（带 `server` extra），不要用未固定的公开版本替代此候选。
+从 `0.2.5` 起，安装 `server` 可选依赖即可使用应用内目录登录系统。登录页、会话和目录权限由 `chatshare serve` 负责；反向代理只转发，不承担鉴权。
 
 ```bash
-python -m pip install '/path/to/chatshare-0.2.4+directorylogin.1-py3-none-any.whl[server]'
+python -m pip install "ChatShare[server]==0.2.5"
 chatshare serve --allowed-host proxy.internal
 ```
 

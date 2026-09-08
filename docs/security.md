@@ -52,7 +52,7 @@
 
 ## 网关运行与限制
 
-安装固定的本地 `0.2.4+directorylogin.1` wheel 和 `server` extra；这不是公开 PyPI 发布。`chatshare serve` 前台监听 `127.0.0.1:5001`，支持 `--bind ::1`、`--port` 和重复 `--allowed-host proxy.internal`。可导入 `create_app(ChatSharePaths.from_home())` 创建 ASGI 应用。非 server CLI 不导入 FastAPI/httpx/uvicorn。root、端口及公网 origin 来自已有实例状态；不添加平行 endpoint/password 环境变量，公网 URL 必须是无子路径的 HTTP(S) origin。
+安装 `ChatShare[server]==0.2.5`。登录系统由应用自身实现，Nginx 等反向代理只转发，不需要 `auth_basic` 或 `auth_request`。`chatshare serve` 前台监听 `127.0.0.1:5001`，支持 `--bind ::1`、`--port` 和重复 `--allowed-host proxy.internal`。可导入 `create_app(ChatSharePaths.from_home())` 创建 ASGI 应用。非 server CLI 不导入 FastAPI/httpx/uvicorn。root、端口及公网 origin 来自已有实例状态；不添加平行 endpoint/password 环境变量，公网 URL 必须是无子路径的 HTTP(S) origin。
 
 - 单进程/单 worker；默认会话绝对 TTL 3600 秒、最多 256 个会话、全局滚动 60 秒最多 30 次登录、最多 64 个在途请求。登录 JSON 上限 4096 字节、用户名 128 字符、密码 1024 字符，读取超时 10 秒；上游连接超时 5 秒、I/O 超时 30 秒。容量不足返回 429/503。全局限速可能影响其他用户，应由外部代理增加客户端限速。
 - Host 只接受公网 hostname、loopback 与显式 allowed-host；不信任 forwarded headers，不启用 CORS。代理必须保留配置的公网 Origin；登录/登出和 cookie 写入必须带该 Origin 与 `X-ChatShare-CSRF: 1`，拒绝 null/foreign origin 和跨站 Fetch Metadata。原生显式鉴权客户端不需要此 header。
@@ -61,4 +61,4 @@
 - 匿名 200/206 必须携带 Dufs 真实文件 Content-Disposition，分类后替换为目录时无 marker 则在发送任何正文前拒绝。304/404/416 不转发上游正文。文件/归档/上传不整体缓冲；响应以 64 KiB 块流式转发，只有已授权 Dufs 管理 HTML 可缓冲，最多 2 MiB，未知 HTML contract 返回 502。不自动重定向或重试。
 - 管理 HTML 必须包含 Dufs `index-data` 模板和 `/__dufs_v<version>__/` 版本化 assets contract；网关注入明确 marker 并改用包内 JS/CSS/favicon，不修改安装中的 Dufs assets。公开资源例外只限网关自有端点和 assets，不按用户文件后缀放行。
 - 所有响应 no-store，Vary 包含 Cookie/Authorization。原始文件响应加 CSP `sandbox allow-scripts allow-downloads`，不含 `allow-same-origin`，阻止上传的主动内容读取登录态目录 API，仍允许 PNG 嵌入；部分主动内容预览会受限。可信管理页使用独立限制性 CSP，不加文件 sandbox。页面退出隐藏快照，恢复时重新载入。
-- 不安装服务、不改代理、不部署、不改账号、不记录 secrets、不发布。监督者须在切换前验证真实 Dufs marker/template、登录 UI/上传客户端、代理/TLS、Range/hash 和回滚；候选测试仅使用临时 root 与模拟上游。
+- `serve` 不安装后台服务、不改代理或账号，也不记录凭据。生产部署使用正常服务监督器，切换前验证目标 Dufs 模板、登录/退出、上传客户端、代理/TLS、Range/哈希与回滚。自动化单元测试采用临时目录和模拟上游，不能替代目标部署的真实验收。

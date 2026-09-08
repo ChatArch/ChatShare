@@ -1,19 +1,13 @@
 # Changelog
 
-## 0.2.4+directorylogin.1 (local build, not a public release)
+## 0.2.5
 
-- Set an explicit POST action on the login form and show a no-script notice, so an unavailable script cannot submit credentials in the URL query.
-
-- Restore safe empty 404 for anonymous GET/HEAD of missing file-style URLs (no trailing slash, only raw/download/cache selectors), after strict path/root and explicit-auth checks, without contacting Dufs. This preserves existing upload clients' missing-destination checks; directories, metadata queries and writes remain gated.
-
-- Preserve browser sessions on upstream 403 permission denials, including disabled DELETE. Revoke on proxied 401 only when that request forwarded the session's credentials; anonymous file/token failures do not revoke an independent browser session. Declare directly imported AnyIO and Starlette as bounded server dependencies.
-
-- Add optional `ChatShare[server]` and runnable `chatshare serve`: a loopback FastAPI gateway in front of unchanged Dufs, using the existing managed instance state.
-- Gate anonymous directory HTML, JSON/search/WebDAV enumeration, archives and writes; retain concrete-file GET/HEAD/Range without injecting account credentials, and check the upstream file Content-Disposition before streaming.
-- Add a Chinese login page, bounded ephemeral HttpOnly sessions verified through Dufs CHECKAUTH, same-origin CSRF checks, real logout, expiry/password-rotation checks, TrustedHost validation and no-store responses.
-- Reuse the packaged Dufs UI with a gateway marker and cookie-aware JS; clear only the legacy ChatShare credential key. Non-gateway UI remains compatible.
-- Sandbox raw file content without `allow-same-origin`, strip upstream cookies/hop-by-hop headers, bound login bodies/rates/session counts/inflight requests, and close streaming resources on disconnect.
-- This candidate performs no deployment, changes no Dufs accounts/configuration/data, and makes no public release claim. Live browser, reverse-proxy and upload-client acceptance remain supervisor-owned.
+- 新增 `ChatShare[server]` 可选依赖和 `chatshare serve`，在应用内提供中文登录页、登录/退出接口、限时 HttpOnly 会话与目录权限检查，复用既有 Dufs 账号和实例，不修改 Dufs。
+- 匿名访问首页和目录进入登录页；目录 JSON、搜索、WebDAV 枚举、归档及写入需鉴权，已知文件的 GET/HEAD/Range 直链保持公开。
+- 保留原生 Basic/Digest 上传客户端及缺失文件空 404 语义；原有 403 权限拒绝不会误撤销有效会话，不放宽删除权限。
+- 增加同源 CSRF、Host 与路径校验、登录容量限制、流式资源清理、禁止缓存和主动文件内容沙箱。退出后返回或刷新仍需登录。
+- 登录表单显式使用 POST，即使脚本未加载也不会通过 URL 提交凭据；会话模式不再把密码存入浏览器存储。
+- 补齐中英文使用说明、CLI 树、打包资源与回归测试；Tag 发布检查只获取默认分支，避免覆盖已检出的注解 Tag。
 
 ## 2026-08-29
 

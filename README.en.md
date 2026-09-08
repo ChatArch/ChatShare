@@ -12,10 +12,10 @@ ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs
 
 ## Secure defaults
 
-Local candidate `0.2.4+directorylogin.1` adds an optional directory-login gateway; it is not a PyPI release. Install the tested fixed wheel with the `server` extra, not an unpinned public version:
+Version `0.2.5` adds application-owned directory login through the `server` extra. `chatshare serve` owns the login page, sessions and directory authorization; the reverse proxy only forwards traffic.
 
 ```bash
-python -m pip install '/path/to/chatshare-0.2.4+directorylogin.1-py3-none-any.whl[server]'
+python -m pip install "ChatShare[server]==0.2.5"
 chatshare serve --allowed-host proxy.internal
 ```
 
