@@ -21,6 +21,7 @@ chatshare
 │   ├── status  # Read runtime, config, unit, and active state; no writes.
 │   └── stop  # Stop Dufs through systemd --user; changes service state.
 ├── put <SOURCE> [DESTINATION] [--overwrite]  # Publish a local file or directory; writes managed share data.
+├── serve [--bind BIND] [--port PORT] [--allowed-host ALLOWED-HOSTS]  # Run the directory-login gateway in the foreground; no Dufs changes.
 ├── tree [PREFIX]  # Print the managed share tree under an optional prefix; no writes.
 └── url <PATH>  # Build a direct URL for an existing managed file; no writes.
 ```
@@ -46,6 +47,7 @@ chatshare
 │   ├── status  # Read runtime, config, unit, and active state; no writes.
 │   └── stop  # Stop Dufs through systemd --user; changes service state.
 ├── put  # Publish a local file or directory; writes managed share data.
+├── serve  # Run the directory-login gateway in the foreground; no Dufs changes.
 ├── tree  # Print the managed share tree under an optional prefix; no writes.
 └── url  # Build a direct URL for an existing managed file; no writes.
 ```

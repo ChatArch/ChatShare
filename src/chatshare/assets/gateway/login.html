@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatShare 登录</title>
+  <link rel="stylesheet" href="/_chatshare/assets/login.css">
+  <script src="/_chatshare/assets/login.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>登录 ChatShare</h1>
+    <p>浏览目录和管理文件需要登录。已有的具体文件链接仍可直接访问。</p>
+    <form>
+      <label>用户名<input name="username" autocomplete="username" maxlength="128" required></label>
+      <label>密码<input name="password" type="password" autocomplete="current-password" maxlength="1024" required></label>
+      <button type="submit">登录</button>
+      <p id="error" role="alert"></p>
+    </form>
+  </main>
+</body>
+</html>

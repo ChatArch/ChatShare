@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.4+directorylogin.1 (local build, not a public release)
+
+- Add optional `ChatShare[server]` and runnable `chatshare serve`: a loopback FastAPI gateway in front of unchanged Dufs, using the existing managed instance state.
+- Gate anonymous directory HTML, JSON/search/WebDAV enumeration, archives and writes; retain concrete-file GET/HEAD/Range without injecting account credentials, and check the upstream file Content-Disposition before streaming.
+- Add a Chinese login page, bounded ephemeral HttpOnly sessions verified through Dufs CHECKAUTH, same-origin CSRF checks, real logout, expiry/password-rotation checks, TrustedHost validation and no-store responses.
+- Reuse the packaged Dufs UI with a gateway marker and cookie-aware JS; clear only the legacy ChatShare credential key. Non-gateway UI remains compatible.
+- Sandbox raw file content without `allow-same-origin`, strip upstream cookies/hop-by-hop headers, bound login bodies/rates/session counts/inflight requests, and close streaming resources on disconnect.
+- This candidate performs no deployment, changes no Dufs accounts/configuration/data, and makes no public release claim. Live browser, reverse-proxy and upload-client acceptance remain supervisor-owned.
+
 ## 2026-08-29
 
 ### Added

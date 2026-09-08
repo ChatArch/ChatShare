@@ -16,11 +16,47 @@ def invoke(args, **kwargs):
     return CliRunner().invoke(main, args, **kwargs)
 
 
+def test_serve_uses_gateway_factory_and_single_loopback_worker(monkeypatch, tmp_path):
+    import chatshare.gateway
+    import uvicorn
+
+    calls = []
+    application = object()
+    def factory(paths, **kwargs):
+        calls.append((paths, kwargs))
+        return application
+    monkeypatch.setattr(chatshare.gateway, "create_app", factory)
+    monkeypatch.setattr(uvicorn, "run", lambda app, **kwargs: calls.append((app, kwargs)))
+    result = invoke(["--home", str(tmp_path), "serve", "--allowed-host", "proxy.internal", "--allowed-host", "edge.internal"])
+    assert result.exit_code == 0, result.output
+    assert calls[0][0].chatarch_home == tmp_path
+    assert calls[0][1] == {"allowed_hosts": ("proxy.internal", "edge.internal")}
+    assert calls[1] == (application, {"host": "127.0.0.1", "port": 5001, "workers": 1, "proxy_headers": False, "access_log": False})
+
+
+def test_cli_tree_and_serve_help_do_not_import_server_dependencies():
+    import subprocess
+    import sys
+
+    code = """
+import sys
+from click.testing import CliRunner
+from chatshare.cli import main
+for args in (["--tree"], ["serve", "--help"]):
+    result = CliRunner().invoke(main, args)
+    assert result.exit_code == 0, result.output
+assert not {"fastapi", "httpx", "uvicorn", "chatshare.gateway"}.intersection(sys.modules)
+"""
+    result = subprocess.run([sys.executable, "-B", "-c", code], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
 def test_help_exposes_real_product_tree_and_hides_legacy_hello():
     result = invoke(["--help"])
 
     assert result.exit_code == 0, result.output
     assert "--tree" in result.output
+    assert "serve" in result.output
     assert "--tree-brief" in result.output
     assert "dufs" in result.output
     assert "put" in result.output

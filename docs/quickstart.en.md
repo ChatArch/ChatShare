@@ -1,5 +1,7 @@
 # Quick Start
 
+The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install the fixed `0.2.4+directorylogin.1` wheel with `server` extra, run `chatshare serve`, and let the operator separately route the proxy to it. The gateway exposes only known files anonymously; directories/search/archives/writes require authentication. See [security boundaries](security.en.md). The unpinned installation examples below do not install this local candidate.
+
 ## Choose an entry point
 
 <div class="grid cards" markdown>
@@ -49,7 +51,7 @@ Do not pass the password as a CLI argument. Service deployments should store the
 
 ```bash
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
 chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
@@ -104,7 +106,7 @@ chatshare tree examples
 chatshare --json url examples/hello-share.txt
 
 # 5. Read the public URL anonymously; no username or password is needed.
-curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
+curl -fsSL https://share.example/examples/hello-share.txt
 ```
 
 `chatshare put`, `chatshare tree`, and `chatshare url` are different commands:

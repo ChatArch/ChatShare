@@ -1,5 +1,7 @@
 # 快速开始
 
+以下初始化流程描述原生 Dufs。现有实例无需重新初始化；目录登录候选请安装固定 `0.2.4+directorylogin.1` wheel（`server` extra），运行 `chatshare serve`，由运维单独把代理指向网关。网关只公开具体文件，目录/搜索/归档/写入需登录；详见[安全与边界](security.md)。下面未固定版本的安装示例不是本地候选安装方式。
+
 ## 选择入口
 
 <div class="grid cards" markdown>
@@ -49,7 +51,7 @@ chatshare dufs install
 
 ```bash
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.public.wzhecnu.cn -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
 chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
@@ -103,7 +105,7 @@ chatshare tree examples
 chatshare --json url examples/hello-share.txt
 
 # 5. 匿名访问这个公网链接，不需要账号密码。
-curl -fsSL https://share.public.wzhecnu.cn/examples/hello-share.txt
+curl -fsSL https://share.example/examples/hello-share.txt
 ```
 
 `chatshare put`、`chatshare tree` 和 `chatshare url` 的区别：
