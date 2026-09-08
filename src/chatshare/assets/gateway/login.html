@@ -11,7 +11,8 @@
   <main>
     <h1>登录 ChatShare</h1>
     <p>浏览目录和管理文件需要登录。已有的具体文件链接仍可直接访问。</p>
-    <form>
+    <noscript><p role="alert">请启用 JavaScript 后登录。</p></noscript>
+    <form method="post" action="/_chatshare/login">
       <label>用户名<input name="username" autocomplete="username" maxlength="128" required></label>
       <label>密码<input name="password" type="password" autocomplete="current-password" maxlength="1024" required></label>
       <button type="submit">登录</button>
