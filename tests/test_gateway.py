@@ -120,6 +120,61 @@ def login(client):
     )
 
 
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/missing.png",
+        "/missing.png?raw&download&cache=0",
+        "/dotted.dir/missing%20leaf.png",
+        "/new-parent/missing.png",
+        "/openapi.json",
+        "/docs",
+    ],
+)
+def test_missing_file_returns_empty_404_without_upstream(gateway, method, path):
+    client, calls, _, _ = gateway
+    response = client.request(method, path)
+    assert response.status_code == 404
+    assert not response.content
+    assert response.headers["cache-control"] == "no-store"
+    assert not calls
+
+
+@pytest.mark.parametrize(
+    "method,path",
+    [
+        ("GET", "/"),
+        ("HEAD", "/dotted.dir"),
+        ("GET", "/dotted.dir?raw"),
+        ("GET", "/missing.png/"),
+        ("GET", "/missing.png?%6ason"),
+        ("HEAD", "/missing.png?q=anything"),
+        ("GET", "/missing.png?zip"),
+        ("GET", "/missing.png?unknown"),
+        ("GET", "/missing.png?token=invalid"),
+        ("PROPFIND", "/missing.png"),
+        ("PUT", "/missing.png"),
+        ("DELETE", "/missing.png"),
+    ],
+)
+def test_missing_file_exception_does_not_bypass_gate(gateway, method, path):
+    client, calls, _, _ = gateway
+    response = client.request(method, path)
+    assert response.status_code in (401, 403)
+    assert not response.content
+    assert all(request.method == "CHECKAUTH" for request in calls)
+
+
+@pytest.mark.parametrize(
+    "authorization", ["", "Bearer invalid", "Basic invalid", "Digest invalid"]
+)
+def test_missing_file_does_not_hide_invalid_explicit_auth(gateway, authorization):
+    response = gateway[0].get("/missing.png", headers={"Authorization": authorization})
+    assert response.status_code == 401
+    assert not response.content
+
+
 @pytest.mark.parametrize("status", [401, 403])
 def test_session_write_rejection_revokes_only_rejected_credentials(gateway, status):
     client, calls, control, _ = gateway
@@ -187,8 +242,6 @@ def test_native_auth_rejection_does_not_revoke_browser_session(gateway):
         "/image.png?tokengen",
         "/image.png?unknown",
         "/?token=secret",
-        "/openapi.json",
-        "/docs",
     ],
 )
 def test_anonymous_enumeration_denied(gateway, path):
@@ -368,7 +421,7 @@ def test_hosts_assets_and_no_cors(gateway):
     client = gateway[0]
     assert client.get("/", headers={"Host": "evil.example"}).status_code == 400
     assert client.get("/_chatshare/assets/index.js").status_code == 200
-    assert client.get("/fake/index.js").status_code == 401
+    assert client.get("/fake/index.js").status_code == 404
     response = client.get("/image.png", headers={"Origin": "https://blog.example"})
     assert response.status_code == 200
     assert "access-control-allow-origin" not in response.headers

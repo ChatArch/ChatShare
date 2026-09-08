@@ -627,6 +627,14 @@ def create_app(
                 ("basic ", "digest ")
             ):
                 return error(401)
+            if (
+                explicit is None
+                and request.method in {"GET", "HEAD"}
+                and not decoded.endswith("/")
+                and all(name in {"raw", "download", "cache"} for name, _ in flags)
+                and not candidate.exists()
+            ):
+                return error(404)
             current = None if explicit else await session(request)
             if (
                 current

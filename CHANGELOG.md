@@ -2,6 +2,8 @@
 
 ## 0.2.4+directorylogin.1 (local build, not a public release)
 
+- Restore safe empty 404 for anonymous GET/HEAD of missing file-style URLs (no trailing slash, only raw/download/cache selectors), after strict path/root and explicit-auth checks, without contacting Dufs. This preserves existing upload clients' missing-destination checks; directories, metadata queries and writes remain gated.
+
 - Preserve browser sessions on upstream 403 permission denials, including disabled DELETE. Revoke on proxied 401 only when that request forwarded the session's credentials; anonymous file/token failures do not revoke an independent browser session. Declare directly imported AnyIO and Starlette as bounded server dependencies.
 
 - Add optional `ChatShare[server]` and runnable `chatshare serve`: a loopback FastAPI gateway in front of unchanged Dufs, using the existing managed instance state.

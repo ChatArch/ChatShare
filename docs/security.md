@@ -57,6 +57,7 @@
 - 单进程/单 worker；默认会话绝对 TTL 3600 秒、最多 256 个会话、全局滚动 60 秒最多 30 次登录、最多 64 个在途请求。登录 JSON 上限 4096 字节、用户名 128 字符、密码 1024 字符，读取超时 10 秒；上游连接超时 5 秒、I/O 超时 30 秒。容量不足返回 429/503。全局限速可能影响其他用户，应由外部代理增加客户端限速。
 - Host 只接受公网 hostname、loopback 与显式 allowed-host；不信任 forwarded headers，不启用 CORS。代理必须保留配置的公网 Origin；登录/登出和 cookie 写入必须带该 Origin 与 `X-ChatShare-CSRF: 1`，拒绝 null/foreign origin 和跨站 Fetch Metadata。原生显式鉴权客户端不需要此 header。
 - 匿名仅允许 managed root 内普通文件及 `raw`、`download`、`cache`、`token` 查询键；token 不能获取目录权限。保守拒绝不合法/歧义百分号编码、控制字符、反斜杠、路径穿越、重复分隔符和 symlink 逃逸，包括双重编码和文件名中的字面百分号。
+- 缺失文件例外：通过严格路径、编码及 root 校验后，无显式 Authorization 的 GET/HEAD 若路径不存在、无尾部斜杠，且没有查询或仅含 `raw`、`download`、`cache` 查询键，则在本地返回空正文、no-store 的 404，不请求 Dufs、不返回目录数据。这保留上传客户端匿名检查目标是否存在的行为。已有目录（包括带点且无尾部斜杠的目录）、根目录、元数据/搜索/归档、token 查询及写入仍受门禁保护；无效显式鉴权不能降级到该 404。
 - 匿名 200/206 必须携带 Dufs 真实文件 Content-Disposition，分类后替换为目录时无 marker 则在发送任何正文前拒绝。304/404/416 不转发上游正文。文件/归档/上传不整体缓冲；响应以 64 KiB 块流式转发，只有已授权 Dufs 管理 HTML 可缓冲，最多 2 MiB，未知 HTML contract 返回 502。不自动重定向或重试。
 - 管理 HTML 必须包含 Dufs `index-data` 模板和 `/__dufs_v<version>__/` 版本化 assets contract；网关注入明确 marker 并改用包内 JS/CSS/favicon，不修改安装中的 Dufs assets。公开资源例外只限网关自有端点和 assets，不按用户文件后缀放行。
 - 所有响应 no-store，Vary 包含 Cookie/Authorization。原始文件响应加 CSP `sandbox allow-scripts allow-downloads`，不含 `allow-same-origin`，阻止上传的主动内容读取登录态目录 API，仍允许 PNG 嵌入；部分主动内容预览会受限。可信管理页使用独立限制性 CSP，不加文件 sandbox。页面退出隐藏快照，恢复时重新载入。
