@@ -1,6 +1,6 @@
 # Quick Start
 
-The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install `ChatShare[server]==0.2.5`, run `chatshare serve`, then point the reverse proxy at the application. The application owns login, sessions and authorization; the proxy only forwards. Known files remain public, while directories, search, archives and writes require authentication. See [security boundaries](security.en.md). Installing only the base package omits the optional server dependencies.
+The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install `ChatShare[server]==0.2.6`, run `chatshare serve`, then point the reverse proxy at the application. The application owns login, sessions and authorization; the proxy only forwards. Known files remain public, while directories, search, archives and writes require authentication. See [security boundaries](security.en.md). Installing only the base package omits the optional server dependencies.
 
 ## Choose an entry point
 

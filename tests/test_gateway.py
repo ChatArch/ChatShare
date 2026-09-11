@@ -7,7 +7,7 @@ import pytest
 from chatshare.gateway import create_app
 
 
-CSRF = {"Origin": "https://share.example", "X-ChatShare-CSRF": "1"}
+ORIGIN = {"Origin": "https://share.example"}
 GOOD = "Basic " + base64.b64encode(b"alice:correct-secret").decode()
 PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII="
@@ -112,10 +112,15 @@ def gateway(tmp_path):
         client.close()
 
 
+def csrf(client):
+    token = client.get("/_chatshare/session").json()["csrf_token"]
+    return {**ORIGIN, "X-CSRF-Token": token}
+
+
 def login(client):
     return client.post(
         "/_chatshare/login",
-        headers=CSRF,
+        headers=csrf(client),
         json={"username": "alice", "password": "correct-secret"},
     )
 
@@ -180,7 +185,7 @@ def test_session_write_rejection_revokes_only_rejected_credentials(gateway, stat
     client, calls, control, _ = gateway
     assert login(client).status_code == 200
     control["status"] = status
-    response = client.request("DELETE", "/image.png", headers=CSRF)
+    response = client.request("DELETE", "/image.png", headers=csrf(client))
     assert response.status_code == status
     assert not response.content
     assert calls[-1].headers["authorization"] == GOOD
@@ -189,7 +194,10 @@ def test_session_write_rejection_revokes_only_rejected_credentials(gateway, stat
         if status == 403
         else {"authenticated": False}
     )
-    assert client.get("/_chatshare/session").json() == expected
+    session = client.get("/_chatshare/session").json()
+    assert session["authenticated"] == expected["authenticated"]
+    if expected["authenticated"]:
+        assert session["username"] == expected["username"]
     assert client.get("/").status_code == (200 if status == 403 else 401)
 
 
@@ -205,10 +213,9 @@ def test_anonymous_file_rejection_does_not_revoke_browser_session(
     assert response.status_code == status
     assert not response.content
     assert "authorization" not in calls[-1].headers
-    assert client.get("/_chatshare/session").json() == {
-        "authenticated": True,
-        "username": "alice",
-    }
+    session = client.get("/_chatshare/session").json()
+    assert session["authenticated"] is True
+    assert session["username"] == "alice"
 
 
 def test_native_auth_rejection_does_not_revoke_browser_session(gateway):
@@ -219,10 +226,9 @@ def test_native_auth_rejection_does_not_revoke_browser_session(gateway):
     )
     assert response.status_code == 401
     assert calls[-1].headers["authorization"] == "Basic invalid"
-    assert client.get("/_chatshare/session").json() == {
-        "authenticated": True,
-        "username": "alice",
-    }
+    session = client.get("/_chatshare/session").json()
+    assert session["authenticated"] is True
+    assert session["username"] == "alice"
 
 
 @pytest.mark.parametrize(
@@ -325,27 +331,30 @@ def test_browser_login_redirect_and_next(gateway):
 
 def test_login_logout_rotation_and_expiry(gateway):
     client, calls, control, root = gateway
-    assert client.get("/_chatshare/session").json() == {"authenticated": False}
+    session = client.get("/_chatshare/session").json()
+    assert session["authenticated"] is False
+    assert session["csrf_token"] and "authorization" not in session
     assert login(client).status_code == 200
     cookie = client.cookies.get("chatshare_session")
     assert cookie and len(cookie) >= 40
-    assert client.get("/_chatshare/session").json() == {
-        "authenticated": True,
-        "username": "alice",
-    }
+    session = client.get("/_chatshare/session").json()
+    assert session["authenticated"] is True
+    assert session["username"] == "alice"
+    assert session["csrf_token"]
+    assert "authorization" not in session and "password" not in session
     response = client.get("/")
     assert 'name="chatshare-gateway"' in response.text
     assert "/_chatshare/assets/index.js" in response.text
     assert "correct-secret" not in response.text
     assert response.headers["cache-control"] == "no-store"
     assert "Cookie" in response.headers["vary"]
-    assert client.post("/_chatshare/logout", headers=CSRF).status_code == 200
+    assert client.post("/_chatshare/logout", headers=csrf(client)).status_code == 200
     client.cookies.set("chatshare_session", cookie)
     assert client.get("/").status_code == 401
     client.cookies.clear()
     assert login(client).status_code == 200
     control["valid"] = False
-    assert client.get("/_chatshare/session").json() == {"authenticated": False}
+    assert client.get("/_chatshare/session").json()["authenticated"] is False
     control["valid"] = True
     assert login(client).status_code == 200
     control["now"] = 61
@@ -367,13 +376,13 @@ def test_login_failures_cookie_flags_limits(gateway):
     assert (
         client.post(
             "/_chatshare/login",
-            headers=CSRF,
+            headers=csrf(client),
             json={"username": "alice", "password": "wrong"},
         ).status_code
         == 401
     )
     assert (
-        client.post("/_chatshare/login", headers=CSRF, content=b"x" * 4097).status_code
+        client.post("/_chatshare/login", headers=csrf(client), content=b"x" * 4097).status_code
         == 413
     )
     for _ in range(5):
@@ -385,9 +394,10 @@ def test_login_failures_cookie_flags_limits(gateway):
     "headers",
     [
         {},
-        {"Origin": "null", "X-ChatShare-CSRF": "1"},
-        {"Origin": "https://evil.example", "X-ChatShare-CSRF": "1"},
-        {**CSRF, "Sec-Fetch-Site": "cross-site"},
+        {"Origin": "null", "X-CSRF-Token": "invalid"},
+        {"Origin": "https://evil.example", "X-CSRF-Token": "invalid"},
+        {**ORIGIN, "X-CSRF-Token": "invalid", "Sec-Fetch-Site": "cross-site"},
+        {**ORIGIN, "X-ChatShare-CSRF": "1"},
     ],
 )
 def test_csrf(gateway, headers):
@@ -472,7 +482,7 @@ def test_encoded_files_and_private_error_headers(gateway):
 def test_session_count_bound_and_unknown_cookie(gateway):
     client = gateway[0]
     client.cookies.set("chatshare_session", "unknown")
-    assert client.get("/_chatshare/session").json() == {"authenticated": False}
+    assert client.get("/_chatshare/session").json()["authenticated"] is False
     client.cookies.clear()
     assert login(client).status_code == 200
     client.cookies.clear()
@@ -481,14 +491,64 @@ def test_session_count_bound_and_unknown_cookie(gateway):
     assert login(client).status_code == 429
 
 
+def test_anonymous_csrf_bootstraps_are_bounded_without_evicting_sessions(gateway):
+    client, _, _, _ = gateway
+    bootstraps = []
+    for _ in range(3):
+        client.cookies.clear()
+        payload = client.get("/_chatshare/session").json()
+        bootstraps.append((client.cookies.get("chatshare_session"), payload["csrf_token"]))
+        assert payload["authenticated"] is False
+
+    stale_cookie, stale_csrf = bootstraps[0]
+    client.cookies.clear()
+    client.cookies.set("chatshare_session", stale_cookie, domain="share.example", path="/")
+    assert (
+        client.post(
+            "/_chatshare/login",
+            headers={**ORIGIN, "X-CSRF-Token": stale_csrf},
+            json={"username": "alice", "password": "correct-secret"},
+        ).status_code
+        == 403
+    )
+
+    fresh = client.get("/_chatshare/session").json()
+    assert fresh["authenticated"] is False
+    assert fresh["csrf_token"] != stale_csrf
+    assert (
+        client.post(
+            "/_chatshare/login",
+            headers={**ORIGIN, "X-CSRF-Token": fresh["csrf_token"]},
+            json={"username": "alice", "password": "correct-secret"},
+        ).status_code
+        == 200
+    )
+    first_session_cookie = client.cookies.get("chatshare_session")
+
+    client.cookies.clear()
+    assert login(client).status_code == 200
+    second_session_cookie = client.cookies.get("chatshare_session")
+
+    for _ in range(5):
+        client.cookies.clear()
+        assert client.get("/_chatshare/session").json()["authenticated"] is False
+
+    for cookie in (first_session_cookie, second_session_cookie):
+        client.cookies.set("chatshare_session", cookie, domain="share.example", path="/")
+        session = client.get("/_chatshare/session").json()
+        assert session["authenticated"] is True
+        assert session["username"] == "alice"
+        client.cookies.clear()
+
+
 def test_native_challenge_and_ajax_suppression(gateway):
     client = gateway[0]
     response = client.request("PROPFIND", "/")
     assert response.headers["www-authenticate"].startswith("Digest ")
-    response = client.get("/?json", headers={"X-ChatShare-CSRF": "1"})
+    response = client.get("/?json", headers={"X-CSRF-Token": "invalid"})
     assert response.status_code == 401 and "www-authenticate" not in response.headers
     assert login(client).status_code == 200
-    assert client.put("/new", headers=CSRF, content=b"data").status_code == 200
+    assert client.put("/new", headers=csrf(client), content=b"data").status_code == 200
     assert client.get("/?token=secret").status_code == 403
 
 
@@ -684,7 +744,10 @@ def test_managed_state_factory_and_extra_host(tmp_path, monkeypatch):
         assert (
             client.post(
                 "/_chatshare/logout",
-                headers={"Origin": "https://proxy.internal", "X-ChatShare-CSRF": "1"},
+                headers={
+                    "Origin": "https://proxy.internal",
+                    "X-CSRF-Token": csrf(client)["X-CSRF-Token"],
+                },
             ).status_code
             == 403
         )

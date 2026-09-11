@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6
+
+- 网关浏览器登录改用 ChatLogin `AsyncCallbackBackend`、`SessionManager`、`MemorySessionStore`、`require_csrf` 与共享 `LoginUI`，Dufs 仍通过 CHECKAUTH 和原请求 ACL 作为凭据及权限权威。
+- `/_chatshare/session` 保持匿名 200，并返回每次会话独有的 `csrf_token`；cookie 写入改用 `X-CSRF-Token`，旧 `X-ChatShare-CSRF: 1` 不再作为替代。
+- Dufs Authorization 只保存在服务端私有 relay context 中，并按 ChatLogin session digest 索引；登录替换、登出、过期与上游 401 撤销会同步清理该 context。
+
 ## 0.2.5
 
 - 新增 `ChatShare[server]` 可选依赖和 `chatshare serve`，在应用内提供中文登录页、登录/退出接口、限时 HttpOnly 会话与目录权限检查，复用既有 Dufs 账号和实例，不修改 Dufs。

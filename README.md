@@ -12,10 +12,10 @@ ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](
 
 ## 安全默认值
 
-从 `0.2.5` 起，安装 `server` 可选依赖即可使用应用内目录登录系统。登录页、会话和目录权限由 `chatshare serve` 负责；反向代理只转发，不承担鉴权。
+从 `0.2.6` 起，安装 `server` 可选依赖即可使用应用内目录登录系统。登录页、会话和目录权限由 `chatshare serve` 负责；反向代理只转发，不承担鉴权。
 
 ```bash
-python -m pip install "ChatShare[server]==0.2.5"
+python -m pip install "ChatShare[server]==0.2.6"
 chatshare serve --allowed-host proxy.internal
 ```
 

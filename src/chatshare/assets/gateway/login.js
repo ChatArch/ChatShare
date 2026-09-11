@@ -7,9 +7,11 @@ document.querySelector("form").addEventListener("submit", async event => {
   button.disabled = true;
   document.querySelector("#error").textContent = "";
   try {
+    const sessionResponse = await fetch("/_chatshare/session", { credentials: "same-origin", cache: "no-store" });
+    const session = await sessionResponse.json();
     const response = await fetch("/_chatshare/login", {
       method: "POST", credentials: "same-origin",
-      headers: { "Content-Type": "application/json", "X-ChatShare-CSRF": "1" },
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": session.csrf_token || "" },
       body: JSON.stringify({ username: form.username.value, password: form.password.value }),
     });
     form.password.value = "";

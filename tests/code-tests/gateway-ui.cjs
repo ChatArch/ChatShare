@@ -27,10 +27,11 @@ async function exercise(gateway) {
     },
     fetch: async (url, options) => {
       calls.push([url, options]);
-      return { ok: true, json: async () => ({ authenticated: true, username: "alice" }) };
+      return { ok: true, json: async () => ({ authenticated: true, username: "alice", csrf_token: "csrf-token" }) };
     },
   });
   vm.runInContext(source, context);
+  if (gateway) await vm.runInContext("gatewaySession()", context);
   const xhr = { headers: {}, open() {}, setRequestHeader(name, value) { this.headers[name] = value; }, addEventListener(name, callback) { this[name] = callback; } };
   context.xhr = xhr;
   vm.runInContext('openWithCredentials(xhr, "PUT", "/file")', context);
@@ -39,7 +40,7 @@ async function exercise(gateway) {
     assert.equal(vm.runInContext("getStoredCredentials()", context), null);
     vm.runInContext('storeCredentials({username: "new", password: "not-stored"})', context);
     assert.equal(stored.length, 0);
-    assert.deepEqual(xhr.headers, { "X-ChatShare-CSRF": "1" });
+    assert.deepEqual(xhr.headers, { "X-CSRF-Token": "csrf-token" });
     assert.equal(xhr.withCredentials, true);
     xhr.status = 403;
     xhr.load();
