@@ -97,6 +97,13 @@ def _safe_next(value: str) -> str:
     return value
 
 
+def _login_next(payload: dict, fallback: str) -> str:
+    value = payload.get("next", fallback)
+    if not isinstance(value, str):
+        raise ValueError("next")
+    return _safe_next(value)
+
+
 def _headers(headers, excluded=()):
     connection = {
         part.strip().lower() for part in headers.get("connection", "").split(",")
@@ -527,11 +534,6 @@ def create_app(
                 samesite="strict",
             )
             return response
-        now = clock()
-        attempts[:] = [stamp for stamp in attempts if stamp > now - 60]
-        if len(attempts) >= login_limit:
-            return error(429)
-        attempts.append(now)
         body = bytearray()
         with anyio.fail_after(10):
             async for chunk in request.stream():
@@ -552,8 +554,14 @@ def create_app(
                 or any(ord(character) < 32 for character in username + password)
             ):
                 return error(400)
+            next_url = _login_next(payload, request.query_params.get("next", "/"))
         except (ValueError, KeyError, TypeError):
             return error(400)
+        now = clock()
+        attempts[:] = [stamp for stamp in attempts if stamp > now - 60]
+        if len(attempts) >= login_limit:
+            return error(429)
+        attempts.append(now)
         authorization = (
             "Basic " + base64.b64encode(f"{username}:{password}".encode()).decode()
         )
@@ -587,11 +595,7 @@ def create_app(
                 "authenticated": True,
                 "username": username,
                 "csrf_token": csrf_token,
-                "next": _safe_next(
-                    payload.get("next", request.query_params.get("next", "/"))
-                    if isinstance(payload, dict)
-                    else "/"
-                ),
+                "next": next_url,
             },
             headers=PRIVATE_HEADERS,
         )

@@ -4,7 +4,7 @@ import asyncio
 import httpx
 import pytest
 
-from chatshare.gateway import create_app
+from chatshare.gateway import COOKIE, create_app
 
 
 ORIGIN = {"Origin": "https://share.example"}
@@ -327,6 +327,42 @@ def test_browser_login_redirect_and_next(gateway):
         assert (
             client.get("/_chatshare/login", params={"next": target}).status_code == 400
         )
+
+
+def test_login_rejects_malformed_next_before_auth_or_session_replacement(gateway):
+    client, calls, _, _ = gateway
+    login_response = login(client)
+    assert login_response.status_code == 200
+    cookie = client.cookies.get(COOKIE)
+    csrf_token = login_response.json()["csrf_token"]
+    calls_after_login = len(calls)
+
+    malformed = [
+        {"next": "//evil.example"},
+        {"next": "https://evil.example"},
+        {"next": "/%5cevil"},
+        {"next": "/%2f%2fevil"},
+        {"next": None},
+        {"next": 7},
+        {"next": ["/"]},
+    ]
+    for extra in malformed:
+        response = client.post(
+            "/_chatshare/login",
+            headers={**ORIGIN, "X-CSRF-Token": csrf_token},
+            json={"username": "alice", "password": "correct-secret", **extra},
+        )
+        assert response.status_code == 400
+        assert len(calls) == calls_after_login
+        assert client.cookies.get(COOKIE) == cookie
+        session = client.get("/_chatshare/session").json()
+        assert session["authenticated"] is True
+        assert session["username"] == "alice"
+        csrf_token = session["csrf_token"]
+        calls_after_login = len(calls)
+
+    client.cookies.clear()
+    assert login(client).status_code == 200
 
 
 def test_login_logout_rotation_and_expiry(gateway):
