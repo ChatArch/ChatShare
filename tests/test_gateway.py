@@ -1,5 +1,6 @@
 import base64
 import asyncio
+import json
 
 import httpx
 import pytest
@@ -359,6 +360,46 @@ def test_login_rejects_malformed_next_before_auth_or_session_replacement(gateway
         assert session["authenticated"] is True
         assert session["username"] == "alice"
         csrf_token = session["csrf_token"]
+        calls_after_login = len(calls)
+
+    client.cookies.clear()
+    assert login(client).status_code == 200
+
+
+@pytest.mark.parametrize("next_url", ["/\ud800", "/\udfff"])
+def test_login_rejects_lone_surrogate_next_before_side_effects(gateway, next_url):
+    client, calls, _, _ = gateway
+    login_response = login(client)
+    assert login_response.status_code == 200
+    cookie = client.cookies.get(COOKIE)
+    session = client.get("/_chatshare/session").json()
+    csrf_token = session["csrf_token"]
+    calls_after_login = len(calls)
+
+    for _ in range(2):
+        response = client.post(
+            "/_chatshare/login",
+            headers={
+                **ORIGIN,
+                "Content-Type": "application/json",
+                "X-CSRF-Token": csrf_token,
+            },
+            content=json.dumps(
+                {
+                    "username": "alice",
+                    "password": "correct-secret",
+                    "next": next_url,
+                }
+            ).encode("ascii"),
+        )
+        assert response.status_code == 400
+        assert len(calls) == calls_after_login
+        assert client.cookies.get(COOKIE) == cookie
+        session = client.get("/_chatshare/session").json()
+        assert session["authenticated"] is True
+        assert session["username"] == "alice"
+        assert session["csrf_token"] == csrf_token
+        assert client.get("/image.png").status_code == 200
         calls_after_login = len(calls)
 
     client.cookies.clear()

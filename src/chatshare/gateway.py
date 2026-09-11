@@ -101,6 +101,10 @@ def _login_next(payload: dict, fallback: str) -> str:
     value = payload.get("next", fallback)
     if not isinstance(value, str):
         raise ValueError("next")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise ValueError("next") from exc
     return _safe_next(value)
 
 
