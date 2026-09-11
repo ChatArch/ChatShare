@@ -147,6 +147,7 @@ let $loginError;
 let $loginSubmit;
 const CHATSHARE_AUTH_STORAGE = "chatshare.dufs.credentials";
 const CHATSHARE_GATEWAY = !!document.querySelector('meta[name="chatshare-gateway"]');
+let chatshareCsrfToken = null;
 if (CHATSHARE_GATEWAY) {
   clearStoredCredentials();
   window.addEventListener("pagehide", () => { document.documentElement.style.visibility = "hidden"; });
@@ -161,9 +162,10 @@ function gatewayLogin() {
 }
 
 async function gatewaySession() {
-  const response = await fetch("/_chatshare/session", { credentials: "same-origin", cache: "no-store", headers: { "X-ChatShare-CSRF": "1" } });
+  const response = await fetch("/_chatshare/session", { credentials: "same-origin", cache: "no-store" });
   if (!response.ok) { gatewayLogin(); throw new Error("请重新登录"); }
   const session = await response.json();
+  if (typeof session.csrf_token === "string") chatshareCsrfToken = session.csrf_token;
   if (!session.authenticated) { gatewayLogin(); throw new Error("请重新登录"); }
   return session;
 }
@@ -848,7 +850,7 @@ function openWithCredentials(xhr, method, url, credentials = getStoredCredential
   if (CHATSHARE_GATEWAY) {
     if (new URL(url, location.href).origin !== location.origin) throw new Error("不允许跨站请求");
     xhr.withCredentials = true;
-    xhr.setRequestHeader("X-ChatShare-CSRF", "1");
+    if (chatshareCsrfToken) xhr.setRequestHeader("X-CSRF-Token", chatshareCsrfToken);
     xhr.addEventListener("load", () => { if (xhr.status === 401) gatewayLogin(); });
     return;
   }
@@ -1161,7 +1163,8 @@ async function checkAuth(variant, credentials = getStoredCredentials()) {
 
 async function logout() {
   if (CHATSHARE_GATEWAY) {
-    const response = await fetch("/_chatshare/logout", { method: "POST", credentials: "same-origin", headers: { "X-ChatShare-CSRF": "1" } });
+    await gatewaySession();
+    const response = await fetch("/_chatshare/logout", { method: "POST", credentials: "same-origin", headers: { "X-CSRF-Token": chatshareCsrfToken || "" } });
     if (!response.ok) { alert("退出失败，请重试"); return; }
     clearStoredCredentials();
     document.body.replaceChildren();

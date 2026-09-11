@@ -19,18 +19,16 @@ def test_chatarch_internal_dependencies_are_bounded_for_release():
         "uvicorn>=0.41,<0.42",
         "anyio>=4.12,<4.13",
         "starlette>=1.3,<1.4",
+        "ChatLogin[ui]>=0.1.3,<0.2.0",
     ):
         assert requirement in text
-    assert '"chatshare.assets.gateway"' in text
 
 
-def test_gateway_login_assets_are_packaged_without_directory_data():
-    asset_root = resources.files("chatshare.assets.gateway")
-    html = asset_root.joinpath("login.html").read_text(encoding="utf-8")
-    assert "登录 ChatShare" in html
-    assert "index-data" not in html
-    assert asset_root.joinpath("login.js").is_file()
-    assert asset_root.joinpath("login.css").is_file()
+def test_gateway_uses_shared_login_ui_dependency_without_packaged_copy():
+    text = Path("pyproject.toml").read_text(encoding="utf-8")
+
+    assert '"chatshare.assets.gateway"' not in text
+    assert "ChatLogin[ui]>=0.1.3,<0.2.0" in text
     assert "include tests/code-tests/gateway-ui.cjs" in Path("MANIFEST.in").read_text()
 
 

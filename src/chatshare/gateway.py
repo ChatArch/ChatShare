@@ -15,6 +15,16 @@ from urllib.parse import parse_qsl, quote, unquote, urlsplit
 
 import httpx
 import anyio
+from chatlogin import (
+    AccessDenied,
+    AsyncCallbackBackend,
+    MemorySessionStore,
+    Principal,
+    SessionManager,
+    StoreFull,
+    require_csrf as require_chatlogin_csrf,
+)
+from chatlogin.ui import LoginUI
 from fastapi import FastAPI, Request
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import (
@@ -52,10 +62,17 @@ ASSET_PREFIX = re.compile(r"/__dufs_v\d+\.\d+\.\d+__/")
 
 
 @dataclass(repr=False)
-class Session:
+class DufsRelayContext:
     username: str
     authorization: str
-    expires: float
+    expires_at: float
+
+
+@dataclass(repr=False)
+class CsrfBootstrap:
+    csrf_token: str
+    expires_at: float
+    created_at: float
 
 
 def _decode(value: str) -> str:
@@ -78,6 +95,17 @@ def _safe_next(value: str) -> str:
     ):
         raise ValueError("next")
     return value
+
+
+def _login_next(payload: dict, fallback: str) -> str:
+    value = payload.get("next", fallback)
+    if not isinstance(value, str):
+        raise ValueError("next")
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise ValueError("next") from exc
+    return _safe_next(value)
 
 
 def _headers(headers, excluded=()):
@@ -230,7 +258,21 @@ def create_app(
     root = root.resolve(strict=True)
     if not root.is_dir():
         raise ValueError("The managed root must be a directory")
-    sessions: dict[str, Session] = {}
+    session_manager = SessionManager(
+        MemorySessionStore(max_sessions=max_sessions),
+        instance="chatshare-gateway",
+        ttl=session_ttl,
+        clock=clock,
+    )
+    login_ui = LoginUI(
+        title="ChatShare",
+        subtitle="浏览目录和管理文件需要登录。已有的具体文件链接仍可直接访问。",
+        palette="forest",
+        layout="card",
+    )
+    relay_contexts: dict[str, DufsRelayContext] = {}
+    csrf_bootstraps: dict[str, CsrfBootstrap] = {}
+    state_lock = anyio.Lock()
     attempts: list[float] = []
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.add_middleware(
@@ -254,19 +296,34 @@ def create_app(
             trust_env=False,
         )
 
-    def csrf(request):
+    def csrf_origin(request):
         fetch_site = request.headers.get("sec-fetch-site")
         return (
-            request.headers.get("x-chatshare-csrf") == "1"
-            and request.headers.get("origin") == origin
+            request.headers.get("origin") == origin
             and fetch_site in (None, "same-origin")
         )
 
-    def expire():
+    def expire_private():
         now = clock()
-        for token in list(sessions):
-            if sessions[token].expires <= now:
-                del sessions[token]
+        session_manager.purge_expired()
+        for digest, context in list(relay_contexts.items()):
+            if context.expires_at <= now:
+                relay_contexts.pop(digest, None)
+        for digest, bootstrap in list(csrf_bootstraps.items()):
+            if bootstrap.expires_at <= now:
+                csrf_bootstraps.pop(digest, None)
+
+    def bound_csrf_bootstraps():
+        expire_private()
+        overflow = len(csrf_bootstraps) - max_sessions
+        if overflow <= 0:
+            return
+        oldest = sorted(
+            csrf_bootstraps,
+            key=lambda digest: csrf_bootstraps[digest].created_at,
+        )
+        for digest in oldest[:overflow]:
+            csrf_bootstraps.pop(digest, None)
 
     async def check(authorization=None):
         headers = {"authorization": authorization} if authorization else {}
@@ -278,20 +335,105 @@ def create_app(
                     "www-authenticate"
                 )
 
+    async def authenticate(username, password):
+        authorization = (
+            "Basic " + base64.b64encode(f"{username}:{password}".encode()).decode()
+        )
+        valid, _ = await check(authorization)
+        if not valid:
+            return None
+        return Principal(username, username)
+
+    backend = AsyncCallbackBackend(authenticate)
+
+    def session_digest(token):
+        return session_manager.digest(token)
+
+    def revoke_token(token):
+        digest = session_digest(token)
+        if digest is not None:
+            relay_contexts.pop(digest, None)
+            csrf_bootstraps.pop(digest, None)
+        session_manager.revoke(token)
+
+    async def resolved_session(request):
+        async with state_lock:
+            expire_private()
+            token = request.cookies.get(COOKIE)
+            current = session_manager.resolve(token)
+            digest = session_digest(token)
+            context = relay_contexts.get(digest) if digest else None
+            if current and context:
+                return token, digest, current, context
+            if current or context:
+                revoke_token(token)
+            return token, digest, None, None
+
     async def session(request):
-        expire()
-        token = request.cookies.get(COOKIE)
-        current = sessions.get(token)
+        token, digest, current, context = await resolved_session(request)
+        if not current or not context:
+            return None, None
+        valid, _ = await check(context.authorization)
+        if not valid:
+            async with state_lock:
+                latest = session_manager.resolve(token)
+                if latest is current and relay_contexts.get(digest) is context:
+                    revoke_token(token)
+            return None, None
+        async with state_lock:
+            if session_manager.resolve(token) is not current or relay_contexts.get(digest) is not context:
+                return None, None
+        return current, context
+
+    async def csrf_context(request):
+        token, digest, current, _ = await resolved_session(request)
         if current:
-            valid, _ = await check(current.authorization)
-            if (
-                not valid
-                or current.expires <= clock()
-                or sessions.get(token) is not current
-            ):
-                sessions.pop(token, None)
-                return None
-        return current
+            return current
+        async with state_lock:
+            expire_private()
+            token = request.cookies.get(COOKIE)
+            digest = session_digest(token)
+            if digest is not None:
+                bootstrap = csrf_bootstraps.get(digest)
+                if bootstrap and bootstrap.expires_at > clock():
+                    return bootstrap
+            return None
+
+    async def ensure_csrf(request):
+        if not csrf_origin(request):
+            return False
+        context = await csrf_context(request)
+        if context is None:
+            return False
+        try:
+            require_chatlogin_csrf(context, request.headers.get("x-csrf-token"))
+        except AccessDenied:
+            return False
+        return True
+
+    async def session_payload(request):
+        current, _ = await session(request)
+        if current:
+            return {
+                "authenticated": True,
+                "username": current.principal.display_name or current.principal.user_id,
+                "csrf_token": current.csrf_token,
+            }, None
+        token = request.cookies.get(COOKIE)
+        async with state_lock:
+            expire_private()
+            digest = session_digest(token)
+            bootstrap = csrf_bootstraps.get(digest) if digest else None
+            if bootstrap is None or bootstrap.expires_at <= clock():
+                token = secrets.token_urlsafe(32)
+                digest = session_digest(token)
+                now = clock()
+                bootstrap = CsrfBootstrap(
+                    secrets.token_urlsafe(32), now + session_ttl, now
+                )
+                csrf_bootstraps[digest] = bootstrap
+                bound_csrf_bootstraps()
+        return {"authenticated": False, "csrf_token": bootstrap.csrf_token}, token
 
     def error(status):
         return Response(status_code=status, headers=PRIVATE_HEADERS)
@@ -313,7 +455,7 @@ def create_app(
                 headers=PRIVATE_HEADERS,
             )
         response = error(401)
-        if request.headers.get("x-chatshare-csrf") != "1" and request.headers.get(
+        if request.headers.get("x-csrf-token") is None and request.headers.get(
             "sec-fetch-mode"
         ) not in {"cors", "same-origin"}:
             _, challenge = await check()
@@ -327,7 +469,7 @@ def create_app(
         if path.startswith("/_chatshare/assets/") and request.method in {"GET", "HEAD"}:
             name = path.removeprefix("/_chatshare/assets/")
             package = (
-                "chatshare.assets.gateway"
+                "chatlogin.web.assets"
                 if name in {"login.js", "login.css"}
                 else "chatshare.assets.dufs"
             )
@@ -347,11 +489,14 @@ def create_app(
                 headers=PRIVATE_HEADERS,
             )
         if path == "/_chatshare/login" and request.method in {"GET", "HEAD"}:
-            _safe_next(request.query_params.get("next", "/"))
-            content = (
-                resources.files("chatshare.assets.gateway")
-                .joinpath("login.html")
-                .read_text(encoding="utf-8")
+            next_url = _safe_next(request.query_params.get("next", "/"))
+            content = login_ui.render(
+                {
+                    "assets_path": "/_chatshare/assets",
+                    "login_url": "/_chatshare/login",
+                    "session_url": "/_chatshare/session",
+                    "next": next_url,
+                }
             )
             return HTMLResponse(
                 content if request.method == "GET" else "",
@@ -361,20 +506,29 @@ def create_app(
                 },
             )
         if path == "/_chatshare/session" and request.method == "GET":
-            current = await session(request)
-            payload = {"authenticated": bool(current)}
-            if current:
-                payload["username"] = current.username
-            return JSONResponse(payload, headers=PRIVATE_HEADERS)
+            payload, token = await session_payload(request)
+            response = JSONResponse(payload, headers=PRIVATE_HEADERS)
+            if token:
+                response.set_cookie(
+                    COOKIE,
+                    token,
+                    max_age=session_ttl,
+                    secure=public.scheme == "https",
+                    httponly=True,
+                    samesite="strict",
+                    path="/",
+                )
+            return response
         if (
             path not in {"/_chatshare/login", "/_chatshare/logout"}
             or request.method != "POST"
         ):
             return error(404)
-        if not csrf(request):
+        if not await ensure_csrf(request):
             return error(403)
         if path == "/_chatshare/logout":
-            sessions.pop(request.cookies.get(COOKIE), None)
+            async with state_lock:
+                revoke_token(request.cookies.get(COOKIE))
             response = JSONResponse({"authenticated": False}, headers=PRIVATE_HEADERS)
             response.delete_cookie(
                 COOKIE,
@@ -384,11 +538,6 @@ def create_app(
                 samesite="strict",
             )
             return response
-        now = clock()
-        attempts[:] = [stamp for stamp in attempts if stamp > now - 60]
-        if len(attempts) >= login_limit:
-            return error(429)
-        attempts.append(now)
         body = bytearray()
         with anyio.fail_after(10):
             async for chunk in request.stream():
@@ -409,22 +558,50 @@ def create_app(
                 or any(ord(character) < 32 for character in username + password)
             ):
                 return error(400)
+            next_url = _login_next(payload, request.query_params.get("next", "/"))
         except (ValueError, KeyError, TypeError):
             return error(400)
+        now = clock()
+        attempts[:] = [stamp for stamp in attempts if stamp > now - 60]
+        if len(attempts) >= login_limit:
+            return error(429)
+        attempts.append(now)
         authorization = (
             "Basic " + base64.b64encode(f"{username}:{password}".encode()).decode()
         )
-        valid, _ = await check(authorization)
-        if not valid:
+        principal = await backend.authenticate(username, password)
+        if principal is None:
             return error(401)
-        expire()
-        sessions.pop(request.cookies.get(COOKIE), None)
-        if len(sessions) >= max_sessions:
-            return error(429)
-        token = secrets.token_urlsafe(32)
-        sessions[token] = Session(username, authorization, clock() + session_ttl)
+        async with state_lock:
+            expire_private()
+            previous_token = request.cookies.get(COOKIE)
+            previous_digest = session_digest(previous_token)
+            try:
+                issued = session_manager.issue(principal, previous_token=previous_token)
+            except StoreFull:
+                return error(429)
+            digest = session_digest(issued.token)
+            if digest is None:
+                session_manager.revoke(issued.token)
+                return error(503)
+            if previous_digest is not None:
+                relay_contexts.pop(previous_digest, None)
+                csrf_bootstraps.pop(previous_digest, None)
+            relay_contexts[digest] = DufsRelayContext(
+                username=username,
+                authorization=authorization,
+                expires_at=issued.session.expires_at,
+            )
+            csrf_token = issued.session.csrf_token
+            token = issued.token
         response = JSONResponse(
-            {"authenticated": True, "username": username}, headers=PRIVATE_HEADERS
+            {
+                "authenticated": True,
+                "username": username,
+                "csrf_token": csrf_token,
+                "next": next_url,
+            },
+            headers=PRIVATE_HEADERS,
         )
         response.set_cookie(
             COOKIE,
@@ -437,7 +614,7 @@ def create_app(
         )
         return response
 
-    async def proxy(request, raw_target, current, concrete):
+    async def proxy(request, raw_target, current, context, concrete):
         explicit = request.headers.get("authorization")
         authenticated = bool(explicit or current)
         session_authorized = bool(current and not explicit and not concrete)
@@ -453,13 +630,14 @@ def create_app(
                 "x-forwarded-proto",
                 "x-forwarded-for",
                 "x-chatshare-csrf",
+                "x-csrf-token",
             },
         )
         headers["accept-encoding"] = "identity"
         if explicit:
             headers["authorization"] = explicit
         elif session_authorized:
-            headers["authorization"] = current.authorization
+            headers["authorization"] = context.authorization
         connection = client()
         response = None
         transferred = False
@@ -490,7 +668,8 @@ def create_app(
             )
             if response.status_code in {401, 403}:
                 if response.status_code == 401 and session_authorized:
-                    sessions.pop(request.cookies.get(COOKIE), None)
+                    async with state_lock:
+                        revoke_token(request.cookies.get(COOKIE))
                 result = error(response.status_code)
                 if explicit and response.headers.get("www-authenticate"):
                     result.headers["www-authenticate"] = response.headers[
@@ -635,18 +814,22 @@ def create_app(
                 and not candidate.exists()
             ):
                 return error(404)
-            current = None if explicit else await session(request)
+            current, context = (None, None) if explicit else await session(request)
             if (
                 current
                 and not explicit
                 and request.method not in SAFE_METHODS
-                and not csrf(request)
+                and not await ensure_csrf(request)
             ):
                 return error(403)
             if not concrete and not explicit and not current:
                 return await denied(request)
             return await proxy(
-                request, raw_path + ("?" + query if query else ""), current, concrete
+                request,
+                raw_path + ("?" + query if query else ""),
+                current,
+                context,
+                concrete,
             )
         except (ValueError, UnicodeError, OSError):
             return error(400)
