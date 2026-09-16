@@ -52,7 +52,7 @@
 
 ## 网关运行与限制
 
-安装 `ChatShare[server]==0.2.6`。登录系统由应用自身实现，Nginx 等反向代理只转发，不需要 `auth_basic` 或 `auth_request`。`chatshare serve` 前台监听 `127.0.0.1:5001`，支持 `--bind ::1`、`--port` 和重复 `--allowed-host proxy.internal`。可导入 `create_app(ChatSharePaths.from_home())` 创建 ASGI 应用。非 server CLI 不导入 FastAPI/httpx/uvicorn。root、端口及公网 origin 来自已有实例状态；不添加平行 endpoint/password 环境变量，公网 URL 必须是无子路径的 HTTP(S) origin。
+安装 `ChatShare[server]==0.2.7`。登录系统由应用自身实现，Nginx 等反向代理只转发，不需要 `auth_basic` 或 `auth_request`。`chatshare serve` 前台监听 `127.0.0.1:5001`，支持 `--bind ::1`、`--port` 和重复 `--allowed-host proxy.internal`。可导入 `create_app(ChatSharePaths.from_home())` 创建 ASGI 应用。非 server CLI 不导入 FastAPI/httpx/uvicorn。root、端口及公网 origin 来自已有实例状态；不添加平行 endpoint/password 环境变量，公网 URL 必须是无子路径的 HTTP(S) origin。
 
 - 单进程/单 worker；默认会话绝对 TTL 3600 秒、最多 256 个会话、全局滚动 60 秒最多 30 次登录、最多 64 个在途请求。登录 JSON 上限 4096 字节、用户名 128 字符、密码 1024 字符，读取超时 10 秒；上游连接超时 5 秒、I/O 超时 30 秒。容量不足返回 429/503。全局限速可能影响其他用户，应由外部代理增加客户端限速。
 - Host 只接受公网 hostname、loopback 与显式 allowed-host；不信任 forwarded headers，不启用 CORS。代理必须保留配置的公网 Origin；登录/登出和 cookie 写入必须带该 Origin 与 `X-CSRF-Token: <session csrf_token>`，拒绝 null/foreign origin 和跨站 Fetch Metadata。原生显式鉴权客户端不需要此 header。

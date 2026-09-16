@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.2.7
 
-- Preserve bodyless GET/HEAD request framing in the gateway instead of adding an empty chunked request body. This prevents truncated concurrent file downloads from Dufs while retaining explicitly framed request bodies and streaming uploads.
-- Add regression coverage for bodyless and explicitly framed download requests; file permissions and browser session authorization are unchanged.
+- 网关保留无请求体 GET/HEAD 的原始传输语义，不再额外附加空分块请求体，修复并发下载大文件时 Dufs 响应被截断的问题。
+- 补充无请求体、显式长度及分块请求体的回归测试；继续支持流式上传，文件权限和浏览器会话鉴权不变。
 
 ## 0.2.6
 

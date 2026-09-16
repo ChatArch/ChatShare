@@ -15,7 +15,7 @@ ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs
 Version `0.2.6` adds application-owned directory login through the `server` extra. `chatshare serve` owns the login page, sessions and directory authorization; the reverse proxy only forwards traffic.
 
 ```bash
-python -m pip install "ChatShare[server]==0.2.6"
+python -m pip install "ChatShare[server]==0.2.7"
 chatshare serve --allowed-host proxy.internal
 ```
 
