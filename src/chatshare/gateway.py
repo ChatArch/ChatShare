@@ -642,11 +642,16 @@ def create_app(
         response = None
         transferred = False
         try:
+            # A body iterator makes HTTPX invent chunked framing, even for an
+            # ordinary bodyless download. Dufs can truncate those responses.
+            bodyless_download = request.method in {"GET", "HEAD"} and not any(
+                name in request.headers for name in ("content-length", "transfer-encoding")
+            )
             outgoing = connection.build_request(
                 request.method,
                 upstream + raw_target,
                 headers=headers,
-                content=request.stream(),
+                content=None if bodyless_download else request.stream(),
             )
             outgoing.headers.pop("connection", None)
             response = await connection.send(outgoing, stream=True)

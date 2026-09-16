@@ -629,6 +629,37 @@ def test_native_challenge_and_ajax_suppression(gateway):
     assert client.get("/?token=secret").status_code == 403
 
 
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+@pytest.mark.parametrize("headers", [{}, {"Content-Length": "0"}])
+def test_bodyless_download_preserves_request_framing(gateway, method, headers):
+    client, calls, _, _ = gateway
+    response = client.request(method, "/image.png", headers=headers)
+    assert response.status_code == 200
+    forwarded = calls[-1]
+    assert forwarded.content == b""
+    assert "transfer-encoding" not in forwarded.headers
+
+
+@pytest.mark.parametrize("chunked", [False, True])
+def test_explicit_download_request_body_is_not_discarded(gateway, chunked):
+    client, calls, _, _ = gateway
+
+    async def body():
+        yield b"request-"
+        yield b"body"
+
+    response = client.request(
+        "GET", "/image.png", content=body() if chunked else b"request-body"
+    )
+    assert response.status_code == 200
+    forwarded = calls[-1]
+    assert forwarded.content == b"request-body"
+    if chunked:
+        assert forwarded.headers["transfer-encoding"] == "chunked"
+    else:
+        assert forwarded.headers["content-length"] == str(len(b"request-body"))
+
+
 def test_streaming_close_on_disconnect_and_marker_mismatch(tmp_path):
     (tmp_path / "file").write_bytes(b"content")
 
