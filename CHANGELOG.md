@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Preserve bodyless GET/HEAD request framing in the gateway instead of adding an empty chunked request body. This prevents truncated concurrent file downloads from Dufs while retaining explicitly framed request bodies and streaming uploads.
+- Add regression coverage for bodyless and explicitly framed download requests; file permissions and browser session authorization are unchanged.
+
 ## 0.2.6
 
 - 网关浏览器登录改用 ChatLogin `AsyncCallbackBackend`、`SessionManager`、`MemorySessionStore`、`require_csrf` 与共享 `LoginUI`，Dufs 仍通过 CHECKAUTH 和原请求 ACL 作为凭据及权限权威。
