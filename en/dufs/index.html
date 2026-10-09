@@ -371,6 +371,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#client-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Client mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layout" class="md-nav__link">
     <span class="md-ellipsis">
       Layout
@@ -481,6 +490,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#client-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Client mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#layout" class="md-nav__link">
     <span class="md-ellipsis">
       Layout
@@ -562,7 +580,7 @@
 </tr>
 <tr>
 <td>ChatShare</td>
-<td>Release selection and integrity, ChatArch paths, configuration, web assets, systemd user lifecycle, and file publication</td>
+<td>Release selection and integrity, ChatArch paths, configuration, web assets, systemd user lifecycle, and local or configured-remote publication/directory queries</td>
 </tr>
 <tr>
 <td>Reverse proxy</td>
@@ -570,6 +588,15 @@
 </tr>
 </tbody>
 </table>
+<h2 id="client-mode">Client mode</h2>
+<p>A new machine without <code>~/.chatarch/chatshare/instances/default/instance.json</code> does not have a server fault. If its active ChatEnv <code>chatshare</code> profile has <code>CHATSHARE_DUFS_BASE_URL</code>, <code>CHATSHARE_DUFS_USERNAME</code>, and <code>CHATSHARE_DUFS_PASSWORD</code>, <code>chatshare put</code>, <code>tree</code>, and <code>url</code> automatically use the remote Dufs HTTP client:</p>
+<ul>
+<li><code>put</code> authenticates to preflight the destination, creates missing parent directories one <code>MKCOL</code> at a time, then uploads with a <code>Content-Length</code> 1 MiB streaming PUT. It never aggregates the whole file in memory and does not claim unverified atomic create-only behavior across independent writers.</li>
+<li><code>tree</code> requests <code>?json</code> for the selected directory with Basic Auth; the existing gateway/Dufs policy protects the directory listing itself.</li>
+<li><code>url</code> uses authenticated HEAD before returning a concrete-file link built from the configured base URL.</li>
+<li>HTTP requires HTTPS by default; HTTP is allowed only for loopback <code>localhost</code>/<code>127.0.0.1</code>/<code>::1</code>. A base URL cannot contain URL credentials, a query, or a fragment.</li>
+</ul>
+<p>Client mode does not install Dufs, create a local data root, register remote hosts, or alter the remote service. When a local server instance exists, the same commands keep their managed-local behavior. See <a href="../quickstart/">Quick Start</a> for configuration.</p>
 <h2 id="layout">Layout</h2>
 <div class="highlight"><pre><span></span><code>~/.chatarch/chatshare/
 ├── runtimes/dufs/

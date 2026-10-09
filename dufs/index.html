@@ -373,7 +373,7 @@
         <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      目录布局
+      客户端模式
     </span>
   </a>
   
@@ -382,7 +382,7 @@
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
-      安装事务
+      目录布局
     </span>
   </a>
   
@@ -391,7 +391,7 @@
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      配置
+      安装事务
     </span>
   </a>
   
@@ -400,7 +400,7 @@
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
-      生命周期
+      配置
     </span>
   </a>
   
@@ -408,6 +408,15 @@
       
         <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      生命周期
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       升级与回滚
     </span>
@@ -483,7 +492,7 @@
         <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      目录布局
+      客户端模式
     </span>
   </a>
   
@@ -492,7 +501,7 @@
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
-      安装事务
+      目录布局
     </span>
   </a>
   
@@ -501,7 +510,7 @@
         <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      配置
+      安装事务
     </span>
   </a>
   
@@ -510,7 +519,7 @@
         <li class="md-nav__item">
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
-      生命周期
+      配置
     </span>
   </a>
   
@@ -518,6 +527,15 @@
       
         <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      生命周期
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
       升级与回滚
     </span>
@@ -562,7 +580,7 @@
 </tr>
 <tr>
 <td>ChatShare</td>
-<td>release 选择和校验、ChatArch 路径、配置、页面 assets、systemd 用户生命周期、文件发布</td>
+<td>release 选择和校验、ChatArch 路径、配置、页面 assets、systemd 用户生命周期、本地或已配置远端的文件发布与目录查询</td>
 </tr>
 <tr>
 <td>反向代理</td>
@@ -570,7 +588,16 @@
 </tr>
 </tbody>
 </table>
-<h2 id="_2">目录布局</h2>
+<h2 id="_2">客户端模式</h2>
+<p>没有 <code>~/.chatarch/chatshare/instances/default/instance.json</code> 的新机器不是服务端故障。只要 active ChatEnv <code>chatshare</code> profile 配置了 <code>CHATSHARE_DUFS_BASE_URL</code>、<code>CHATSHARE_DUFS_USERNAME</code> 与 <code>CHATSHARE_DUFS_PASSWORD</code>，<code>chatshare put</code>、<code>tree</code> 和 <code>url</code> 自动改用远端 Dufs HTTP 客户端：</p>
+<ul>
+<li><code>put</code> 先认证检查目标，逐级 <code>MKCOL</code> 建立缺失父目录，再用带 <code>Content-Length</code> 的 1 MiB 流式 PUT 上传；不在内存聚合整个文件，也不会承诺未验证的原子跨客户端 create-only 语义。</li>
+<li><code>tree</code> 对选定目录发起带 Basic Auth 的 <code>?json</code> 请求；远端目录列表本身受现有网关/Dufs 鉴权保护。</li>
+<li><code>url</code> 认证 <code>HEAD</code> 目标后才返回基于配置 base URL 的具体文件链接。</li>
+<li>HTTP 默认要求 HTTPS；仅 loopback <code>localhost</code>/<code>127.0.0.1</code>/<code>::1</code> 可使用 HTTP。base URL 不接受 URL 内凭据、查询串或片段。</li>
+</ul>
+<p>客户端模式不安装 Dufs、不创建本机 data root、不注册远程主机，也不改变远端服务。服务端实例存在时，同一命令保留本地受管模式。完整配置见<a href="../quickstart/">快速开始</a>。</p>
+<h2 id="_3">目录布局</h2>
 <div class="highlight"><pre><span></span><code>~/.chatarch/chatshare/
 ├── runtimes/dufs/
 │   ├── v0.46.0/
@@ -589,7 +616,7 @@
 └── services/chatshare-dufs.service
 </code></pre></div>
 <p>Linux 的激活 unit 位于 <code>~/.config/systemd/user/chatshare-dufs.service</code>。它是用户级 supervisor 入口；二进制、配置、数据、日志和 unit 源文件仍由 ChatArch home 管理。</p>
-<h2 id="_3">安装事务</h2>
+<h2 id="_4">安装事务</h2>
 <p><code>chatshare dufs install</code>：</p>
 <ol>
 <li>请求 <code>sigoden/dufs</code> 的固定 tag release 元数据。</li>
@@ -601,7 +628,7 @@
 <li>原子替换版本二进制和 <code>current</code> 指针。</li>
 </ol>
 <p>任何下载、digest、解包或版本检查失败都不会覆盖当前可用二进制。</p>
-<h2 id="_4">配置</h2>
+<h2 id="_5">配置</h2>
 <p>默认配置只监听 loopback，并使用“匿名只读 + 鉴权可写”的 Dufs HTTP Digest Auth 规则：</p>
 <div class="highlight"><pre><span></span><code><span class="nt">serve-path</span><span class="p">:</span><span class="w"> </span><span class="s">'&lt;managed-data-root&gt;'</span>
 <span class="nt">bind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
@@ -620,10 +647,10 @@
 <span class="nt">log-file</span><span class="p">:</span><span class="w"> </span><span class="s">'&lt;managed-access-log&gt;'</span>
 </code></pre></div>
 <p>这里的占位符不是可复制凭据。真实密码优先从 ChatEnv active <code>chatshare</code> profile 读取，也可由 <code>--password-env</code> 指定的进程环境变量覆盖；生成的 <code>config.yaml</code> 和 <code>instance.json</code> 权限为 <code>0600</code>，目录为 <code>0700</code>。<code>status</code> 和 JSON 输出不读取或显示密码。<code>assets</code> 指向 ChatShare 同步到 <code>~/.chatarch/chatshare/instances/default/assets/dufs/</code> 的自定义 Dufs 页面资源，用于提供页面内登录弹窗。</p>
-<h2 id="_5">生命周期</h2>
+<h2 id="_6">生命周期</h2>
 <p><code>service install</code> 生成 user unit 并运行 <code>systemctl --user daemon-reload</code>。只有显式 <code>--enable</code> 才启用登录后自动启动。</p>
 <p><code>start</code>、<code>stop</code>、<code>restart</code> 不直接发送进程信号，只操作 <code>chatshare-dufs.service</code>。<code>status</code> 将 inactive 作为正常状态返回，而不是把它误报为 CLI 崩溃。</p>
-<h2 id="_6">升级与回滚</h2>
+<h2 id="_7">升级与回滚</h2>
 <ul>
 <li>升级需要显式 <code>--version vX.Y.Z</code>。</li>
 <li>新版本通过完整安装事务后才更新 <code>current</code>。</li>
