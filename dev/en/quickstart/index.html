@@ -1,0 +1,812 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/quickstart/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../cli-tree/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>Quick Start - ChatShare Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#quick-start" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../" title="ChatShare Documentation" class="md-header__button md-logo" aria-label="ChatShare Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChatShare Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Quick Start
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Select language">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../quickstart/" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatShare" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatShare
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="ChatShare Documentation" class="md-nav__button md-logo" aria-label="ChatShare Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ChatShare Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatShare" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatShare
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#choose-a-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choose a role
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-connect-to-an-existing-share-new-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      A. Connect to an existing share (new machine)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="A. Connect to an existing share (new machine)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-install-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Install the CLI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-configure-the-writer-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Configure the writer account
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-list-upload-and-retrieve-a-link" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. List, upload, and retrieve a link
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-large-files-and-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Large files and progress
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b-deploy-the-share-service-server-host-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      B. Deploy the share service (server host only)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#httpwebdav-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP/WebDAV clients
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operator commands
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI Tree
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dufs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dufs Runtime
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security and Boundaries
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#choose-a-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      Choose a role
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-connect-to-an-existing-share-new-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      A. Connect to an existing share (new machine)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="A. Connect to an existing share (new machine)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-install-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Install the CLI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-configure-the-writer-account" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Configure the writer account
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-list-upload-and-retrieve-a-link" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. List, upload, and retrieve a link
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-large-files-and-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Large files and progress
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b-deploy-the-share-service-server-host-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      B. Deploy the share service (server host only)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#httpwebdav-clients" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP/WebDAV clients
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operator-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Operator commands
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="quick-start">Quick Start</h1>
+<p>ChatShare has two roles. <strong>Most new machines only connect to an existing share</strong>: configure ChatEnv once, then upload, list a directory, and retrieve links. Do <strong>not</strong> run <code>chatshare dufs init</code> on those clients. Only the host that stores the files installs Dufs, initializes an instance, and manages its systemd service.</p>
+<blockquote>
+<p>The remote CLI, upload progress, and <code>dufs assets sync</code> described here require <code>ChatShare&gt;=0.2.8</code>. Upgrade older clients before configuring remote access; server upgrades also require web-asset synchronization.</p>
+</blockquote>
+<p>Concrete file links are anonymously readable. Directory listings and writes require the existing Dufs writer account. The browser directory page uses a ChatShare login session; CLI and HTTP/WebDAV clients use the same account through HTTP Basic/Digest authentication. See <a href="../security/">security boundaries</a>.</p>
+<h2 id="choose-a-role">Choose a role</h2>
+<table>
+<thead>
+<tr>
+<th>What you need</th>
+<th>Use</th>
+<th>Do not use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Upload or list files from a new laptop, workstation, or server</td>
+<td>Configure the remote client, then use <code>put</code>, <code>tree</code>, and <code>url</code></td>
+<td>Do not install Dufs or run <code>dufs init</code></td>
+</tr>
+<tr>
+<td>Run the share service and store the real files</td>
+<td>Deploy the server instance</td>
+<td>Do not copy the server data root onto a client</td>
+</tr>
+<tr>
+<td>Upload a large file in a browser</td>
+<td>Log into the directory page, then drag a file or choose it</td>
+<td>Do not treat 100% sent as completed</td>
+</tr>
+</tbody>
+</table>
+<h2 id="a-connect-to-an-existing-share-new-machine">A. Connect to an existing share (new machine)</h2>
+<h3 id="1-install-the-cli">1. Install the CLI</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>ChatShare
+chatshare<span class="w"> </span>--version
+</code></pre></div>
+<p>The base package includes the HTTP client used for remote uploads and directory queries. It does not require <code>ChatShare[server]</code> or a local Dufs runtime.</p>
+<h3 id="2-configure-the-writer-account">2. Configure the writer account</h3>
+<p>Never put the password in shell history, command-line arguments, URLs, or scripts. Store these three values in the active ChatEnv <code>chatshare</code> profile. The service administrator provides <code>&lt;share-url&gt;</code>; it is normally an HTTPS address. Use an internal HTTPS address only on a trusted network when the administrator explicitly provides it.</p>
+<div class="highlight"><pre><span></span><code>chatenv<span class="w"> </span>init<span class="w"> </span>-t<span class="w"> </span>chatshare<span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_BASE_URL=https://&lt;share-url&gt;'</span><span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_USERNAME=&lt;writer-name&gt;'</span><span class="w"> </span>-I
+<span class="nb">read</span><span class="w"> </span>-rsp<span class="w"> </span><span class="s2">"ChatShare writer password: "</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_PASSWORD=%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$CHATSHARE_DUFS_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>chatenv<span class="w"> </span>paste<span class="w"> </span>--stdin<span class="w"> </span>-y<span class="w"> </span>-I
+<span class="nb">unset</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CHATSHARE_DUFS_BASE_URL</code></td>
+<td>Base URL of the existing share, with no credentials, query, or fragment</td>
+</tr>
+<tr>
+<td><code>CHATSHARE_DUFS_USERNAME</code></td>
+<td>Dufs account allowed to write and list directories</td>
+</tr>
+<tr>
+<td><code>CHATSHARE_DUFS_PASSWORD</code></td>
+<td>Password for that account; stored through protected ChatEnv configuration</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-list-upload-and-retrieve-a-link">3. List, upload, and retrieve a link</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># List the root. Remote mode reads the configured service; it does not need instance.json.</span>
+chatshare<span class="w"> </span>tree
+
+<span class="c1"># List a directory.</span>
+chatshare<span class="w"> </span>tree<span class="w"> </span>videos
+
+<span class="c1"># Upload a file. An interactive terminal shows progress automatically;</span>
+<span class="c1"># --progress forces it on.</span>
+chatshare<span class="w"> </span>put<span class="w"> </span>--progress<span class="w"> </span>./clip.mov<span class="w"> </span>videos/2026/clip.mov
+
+<span class="c1"># Check that the file exists and print its public direct link.</span>
+chatshare<span class="w"> </span>url<span class="w"> </span>videos/2026/clip.mov
+
+<span class="c1"># Put machine-readable output before the subcommand; progress remains on stderr.</span>
+chatshare<span class="w"> </span>--json<span class="w"> </span>put<span class="w"> </span>--progress<span class="w"> </span>./clip.mov<span class="w"> </span>videos/2026/clip.mov
+</code></pre></div>
+<p>Remote <code>tree</code> lists the current contents of the selected directory. <code>put</code> checks the destination, creates missing parent directories one at a time, then streams a PUT request in 1 MiB chunks. Existing files are rejected by default; pass <code>--overwrite</code> explicitly to replace one. <code>url</code> uses authenticated HEAD to confirm that the target exists before returning its URL.</p>
+<p>If a new machine previously showed this error, it was missing remote-client configuration, not a request to initialize another Dufs service:</p>
+<div class="highlight"><pre><span></span><code>ChatShare Dufs instance is not initialized: .../instance.json
+</code></pre></div>
+<p>Configure ChatEnv as above. Afterwards <code>chatshare tree</code> contacts the configured service directly. When remote configuration is absent, the CLI explains which <code>CHATSHARE_DUFS_*</code> fields and setup command are missing.</p>
+<h3 id="4-large-files-and-progress">4. Large files and progress</h3>
+<ul>
+<li>The browser upload area immediately shows the file name, progress bar, transferred/total bytes, and speed. At 100% it says that the client is waiting for server confirmation; it shows success only after a 2xx response.</li>
+<li>On failure the page shows a reason and a Retry action. Retry first checks the remote byte count and resumes only when the offset is safe.</li>
+<li>CLI <code>--progress</code> streams the source instead of loading it all into memory; <code>--no-progress</code> suppresses terminal progress lines.</li>
+<li>The ChatShare gateway has no fixed upload deadline for streaming <code>PUT</code>/<code>PATCH</code> writes, so a large active upload is not cut off by a 30-second metadata deadline; waiting for the upstream response has a 120-second I/O idle timeout. Reverse proxies, network equipment, disk capacity, and browsers can still impose their own limits; only a real upload and integrity readback prove a specific environment's limit.</li>
+</ul>
+<h2 id="b-deploy-the-share-service-server-host-only">B. Deploy the share service (server host only)</h2>
+<p>This creates a managed local Dufs instance and belongs only on the host that stores shared files. Do not run these commands on a client machine.</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">"ChatShare[server]"</span>
+chatshare<span class="w"> </span>dufs<span class="w"> </span>install
+
+chatenv<span class="w"> </span>init<span class="w"> </span>-t<span class="w"> </span>chatshare<span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_BASE_URL=https://&lt;share-url&gt;'</span><span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_USERNAME=&lt;writer-name&gt;'</span><span class="w"> </span>-I
+<span class="nb">read</span><span class="w"> </span>-rsp<span class="w"> </span><span class="s2">"Dufs writer password: "</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_PASSWORD=%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$CHATSHARE_DUFS_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>chatenv<span class="w"> </span>paste<span class="w"> </span>--stdin<span class="w"> </span>-y<span class="w"> </span>-I
+<span class="nb">unset</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD
+
+chatshare<span class="w"> </span>dufs<span class="w"> </span>init
+chatshare<span class="w"> </span>dufs<span class="w"> </span>service<span class="w"> </span>install
+chatshare<span class="w"> </span>dufs<span class="w"> </span>start
+chatshare<span class="w"> </span>dufs<span class="w"> </span>status
+</code></pre></div>
+<p>The default instance lives under <code>~/.chatarch/chatshare/instances/default/</code>, and Dufs binds only to loopback. On the server, <code>chatshare put</code> atomically copies into the managed data root; <code>tree</code> and <code>url</code> inspect that local instance. Run the directory-login gateway with <code>chatshare serve</code>, then make a separate trusted HTTPS reverse-proxy change. Do not expose Dufs directly to the public network.</p>
+<p>After upgrading ChatShare on the server, run <code>chatshare dufs assets sync</code> to copy the bundled UI assets. This command only replaces managed static files; it does not reset accounts, server configuration, or shared data. <strong>Wait for all active uploads to finish</strong> before an operator restarts Dufs (which caches its index HTML at startup) and the deployed ChatShare gateway (which loads JS/CSS at startup). Read back the real directory page's asset version and choose a file in a browser to confirm that progress appears. Installing a new Python package or synchronizing static files alone does not prove that the live page changed. Client-only machines must not run this command.</p>
+<h2 id="httpwebdav-clients">HTTP/WebDAV clients</h2>
+<p>External programs can also upload through Dufs HTTP Basic/Digest authentication. The CLI is preferable for routine uploads and visible progress. When WebDAV compatibility is required, use Digest and put the password only in a temporary permission-restricted curl config:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">base_url</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>chatenv<span class="w"> </span>get<span class="w"> </span>CHATSHARE_DUFS_BASE_URL<span class="k">)</span><span class="s2">"</span>
+<span class="nv">writer_user</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>chatenv<span class="w"> </span>get<span class="w"> </span>CHATSHARE_DUFS_USERNAME<span class="k">)</span><span class="s2">"</span>
+<span class="nb">read</span><span class="w"> </span>-rsp<span class="w"> </span><span class="s2">"ChatShare writer password: "</span><span class="w"> </span>writer_password<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span>
+
+<span class="nb">umask</span><span class="w"> </span><span class="m">077</span>
+<span class="nv">curl_config</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">"</span>
+<span class="nb">trap</span><span class="w"> </span><span class="s1">'rm -f "$curl_config"'</span><span class="w"> </span>EXIT
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'user = "%s:%s"\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$writer_user</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$writer_password</span><span class="s2">"</span><span class="w"> </span>&gt;<span class="w"> </span><span class="s2">"</span><span class="nv">$curl_config</span><span class="s2">"</span>
+curl<span class="w"> </span>--digest<span class="w"> </span>--config<span class="w"> </span><span class="s2">"</span><span class="nv">$curl_config</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-T<span class="w"> </span>./clip.mov<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s2">"</span><span class="si">${</span><span class="nv">base_url</span><span class="p">%/</span><span class="si">}</span><span class="s2">/videos/clip.mov"</span>
+<span class="nb">unset</span><span class="w"> </span>writer_password
+</code></pre></div>
+<p>Anonymous GET of a concrete file URL needs no password, but a link is not a private capability token. Directories, JSON listings, uploads, and other management operations still require authentication.</p>
+<h2 id="operator-commands">Operator commands</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># Generated from the live Click registry</span>
+chatshare<span class="w"> </span>--tree
+chatshare<span class="w"> </span>--tree-brief
+
+<span class="c1"># Server-instance state and bounded access log</span>
+chatshare<span class="w"> </span>--json<span class="w"> </span>dufs<span class="w"> </span>status
+chatshare<span class="w"> </span>dufs<span class="w"> </span>logs<span class="w"> </span>--lines<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<p><code>dufs install</code>, <code>dufs init</code>, <code>dufs service install</code>, and <code>dufs start|stop|restart</code> are server-only. <code>put</code>, <code>tree</code>, and <code>url</code> use local mode when a local instance exists; without one they automatically use the configured remote service.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.indexes", "content.code.copy"], "search": "../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>

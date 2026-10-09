@@ -1,0 +1,812 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/quickstart/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../cli-tree/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.23">
+    
+    
+      
+        <title>快速开始 - ChatShare 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="ChatShare 文档" class="md-header__button md-logo" aria-label="ChatShare 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChatShare 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              快速开始
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/quickstart/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatShare" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatShare
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ChatShare 文档" class="md-nav__button md-logo" aria-label="ChatShare 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ChatShare 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatShare" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatShare
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    首页
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    快速开始
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    快速开始
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      选择入口
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a" class="md-nav__link">
+    <span class="md-ellipsis">
+      A. 连接已有分享服务（新机器）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="A. 连接已有分享服务（新机器）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 安装 CLI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 配置写入账号
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 列目录、上传并取回链接
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 大文件与进度语义
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b" class="md-nav__link">
+    <span class="md-ellipsis">
+      B. 部署分享服务（仅服务端主机）
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#httpwebdav" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP/WebDAV 客户端
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      运维命令
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    CLI 树
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dufs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dufs 运行时
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    安全与边界
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      选择入口
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a" class="md-nav__link">
+    <span class="md-ellipsis">
+      A. 连接已有分享服务（新机器）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="A. 连接已有分享服务（新机器）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 安装 CLI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. 配置写入账号
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 列目录、上传并取回链接
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 大文件与进度语义
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b" class="md-nav__link">
+    <span class="md-ellipsis">
+      B. 部署分享服务（仅服务端主机）
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#httpwebdav" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP/WebDAV 客户端
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      运维命令
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="_1">快速开始</h1>
+<p>ChatShare 有两种使用方式。<strong>绝大多数新电脑只需要连接已有分享服务</strong>：配置一次 ChatEnv 后直接上传、查看目录和取回链接，<strong>不要</strong>运行 <code>chatshare dufs init</code>。只有部署分享服务的运维主机才安装 Dufs、初始化实例并管理 systemd 服务。</p>
+<blockquote>
+<p>本页远端 CLI、上传进度及 <code>dufs assets sync</code> 需要 <code>ChatShare&gt;=0.2.8</code>。旧客户端先升级再配置远端；服务端升级还需同步网页资源。</p>
+</blockquote>
+<p>具体文件链接可匿名读取；目录列表和写入需要已有 Dufs 写入账号。浏览器目录页通过 ChatShare 登录会话工作；CLI 和 HTTP/WebDAV 客户端使用同一组账号的 HTTP Basic/Digest 鉴权。详见<a href="../security/">安全与边界</a>。</p>
+<h2 id="_2">选择入口</h2>
+<table>
+<thead>
+<tr>
+<th>你要做什么</th>
+<th>使用方式</th>
+<th>不要做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>在新电脑、工作站或另一台服务器上传/列目录</td>
+<td>配置远端客户端，然后用 <code>put</code>、<code>tree</code>、<code>url</code></td>
+<td>不要安装 Dufs 或执行 <code>dufs init</code></td>
+</tr>
+<tr>
+<td>运行分享服务、保存实际文件、管理 Dufs</td>
+<td>部署服务端实例</td>
+<td>不要把服务端数据目录复制到客户端</td>
+</tr>
+<tr>
+<td>在浏览器上传大文件</td>
+<td>登录目录页，拖入文件或点“选择文件”</td>
+<td>不要把“已发送 100%”误认为已完成</td>
+</tr>
+</tbody>
+</table>
+<h2 id="a">A. 连接已有分享服务（新机器）</h2>
+<h3 id="1-cli">1. 安装 CLI</h3>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>ChatShare
+chatshare<span class="w"> </span>--version
+</code></pre></div>
+<p>基础包已包含远端上传和目录查询所需的 HTTP 客户端；不需要 <code>ChatShare[server]</code>，也不需要本机 Dufs。</p>
+<h3 id="2">2. 配置写入账号</h3>
+<p>不要把密码写进 shell 历史、命令行参数、URL 或脚本。通过 ChatEnv active <code>chatshare</code> profile 保存以下三个值；<code>&lt;share-url&gt;</code> 应由服务管理员提供，通常是 HTTPS 地址。仅可信内部网络且服务管理员明确提供时，才使用内部 HTTPS 地址。</p>
+<div class="highlight"><pre><span></span><code>chatenv<span class="w"> </span>init<span class="w"> </span>-t<span class="w"> </span>chatshare<span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_BASE_URL=https://&lt;share-url&gt;'</span><span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_USERNAME=&lt;writer-name&gt;'</span><span class="w"> </span>-I
+<span class="nb">read</span><span class="w"> </span>-rsp<span class="w"> </span><span class="s2">"ChatShare writer password: "</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_PASSWORD=%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$CHATSHARE_DUFS_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>chatenv<span class="w"> </span>paste<span class="w"> </span>--stdin<span class="w"> </span>-y<span class="w"> </span>-I
+<span class="nb">unset</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD
+</code></pre></div>
+<p>配置只包含：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CHATSHARE_DUFS_BASE_URL</code></td>
+<td>已有分享服务的基础 URL，不带账号、查询串或片段</td>
+</tr>
+<tr>
+<td><code>CHATSHARE_DUFS_USERNAME</code></td>
+<td>允许写入/列目录的 Dufs 账号</td>
+</tr>
+<tr>
+<td><code>CHATSHARE_DUFS_PASSWORD</code></td>
+<td>该账号密码；ChatEnv 以受保护配置保存</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3">3. 列目录、上传并取回链接</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 列出根目录；远端模式只读取服务端，不要求本机 instance.json。</span>
+chatshare<span class="w"> </span>tree
+
+<span class="c1"># 列出一个目录。</span>
+chatshare<span class="w"> </span>tree<span class="w"> </span>videos
+
+<span class="c1"># 上传一个文件。交互终端会自动显示进度；--progress 可强制显示。</span>
+chatshare<span class="w"> </span>put<span class="w"> </span>--progress<span class="w"> </span>./clip.mov<span class="w"> </span>videos/2026/clip.mov
+
+<span class="c1"># 上传完成后，检查存在并打印公开直链。</span>
+chatshare<span class="w"> </span>url<span class="w"> </span>videos/2026/clip.mov
+
+<span class="c1"># 机器可读输出放在子命令前；进度仍写 stderr。</span>
+chatshare<span class="w"> </span>--json<span class="w"> </span>put<span class="w"> </span>--progress<span class="w"> </span>./clip.mov<span class="w"> </span>videos/2026/clip.mov
+</code></pre></div>
+<p>远端 <code>tree</code> 会列出所选目录的当前内容；<code>put</code> 会先检查目标、依次建立缺失父目录，然后以 1 MiB 分块流式 PUT 上传。默认拒绝覆盖已存在文件；需要替换时显式传 <code>--overwrite</code>。<code>url</code> 会认证检查目标文件存在后返回链接。</p>
+<p>如果新机器出现下面的错误，说明它还没有远端客户端配置，而不是要你初始化一个新 Dufs 服务：</p>
+<div class="highlight"><pre><span></span><code>ChatShare Dufs instance is not initialized: .../instance.json
+</code></pre></div>
+<p>当前版本应改为按本节配置 ChatEnv；完成后 <code>chatshare tree</code> 会直接访问已配置的服务。没有可用的远端配置时，CLI 会提示缺少的 <code>CHATSHARE_DUFS_*</code> 字段和初始化命令。</p>
+<h3 id="4">4. 大文件与进度语义</h3>
+<ul>
+<li>浏览器上传区会立即显示文件名、进度条、已传/总大小和速度；到 100% 后显示“已发送，等待服务器确认”，只有收到 2xx 响应才显示“上传完成”。</li>
+<li>失败时界面显示失败原因和“重试”；重试会先检查远端已接收长度，在安全范围内续传。</li>
+<li>CLI 的 <code>--progress</code> 使用流式读取，不把整个文件装入内存；<code>--no-progress</code> 可关闭终端进度行。</li>
+<li>ChatShare 网关对 <code>PUT</code>/<code>PATCH</code> 流式写入不设置固定上传总时限，因此持续传输的大文件不会被 30 秒元数据超时中断；等待上游响应的 I/O 空闲超时为 120 秒。反向代理、网络设备、磁盘容量和浏览器仍可能各自设有限制；只有实传和完整性回读能证明具体环境的上限。</li>
+</ul>
+<h2 id="b">B. 部署分享服务（仅服务端主机）</h2>
+<p>以下流程会创建本机受管 Dufs 实例，适用于真正保存分享文件的主机；客户端不要执行这些命令。</p>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span><span class="s2">"ChatShare[server]"</span>
+chatshare<span class="w"> </span>dufs<span class="w"> </span>install
+
+chatenv<span class="w"> </span>init<span class="w"> </span>-t<span class="w"> </span>chatshare<span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_BASE_URL=https://&lt;share-url&gt;'</span><span class="w"> </span>-I
+chatenv<span class="w"> </span><span class="nb">set</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_USERNAME=&lt;writer-name&gt;'</span><span class="w"> </span>-I
+<span class="nb">read</span><span class="w"> </span>-rsp<span class="w"> </span><span class="s2">"Dufs writer password: "</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span>
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'CHATSHARE_DUFS_PASSWORD=%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$CHATSHARE_DUFS_PASSWORD</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>chatenv<span class="w"> </span>paste<span class="w"> </span>--stdin<span class="w"> </span>-y<span class="w"> </span>-I
+<span class="nb">unset</span><span class="w"> </span>CHATSHARE_DUFS_PASSWORD
+
+chatshare<span class="w"> </span>dufs<span class="w"> </span>init
+chatshare<span class="w"> </span>dufs<span class="w"> </span>service<span class="w"> </span>install
+chatshare<span class="w"> </span>dufs<span class="w"> </span>start
+chatshare<span class="w"> </span>dufs<span class="w"> </span>status
+</code></pre></div>
+<p>默认实例位于 <code>~/.chatarch/chatshare/instances/default/</code>，Dufs 只监听 loopback。服务端本地执行 <code>chatshare put</code> 时会原子复制到受管数据目录；<code>tree</code> 和 <code>url</code> 读取本地实例。目录登录网关以 <code>chatshare serve</code> 运行，并由独立反向代理任务将可信 HTTPS 入口指向它；不要把 Dufs 直接暴露到公网。</p>
+<p>升级服务端 ChatShare 后执行 <code>chatshare dufs assets sync</code> 同步新页面资源；该命令只替换受管静态文件，不重置账号、服务配置或数据。<strong>等所有在途上传结束后</strong>，再由运维重启 Dufs（它在启动时缓存首页 HTML）与部署的 ChatShare 网关（它在启动时载入 JS/CSS）。回读实际目录页的资源版本，并用浏览器选择文件确认进度条出现；仅升级 Python 包或同步静态文件不足以证明页面已经更新。新机器客户端不执行这一步。</p>
+<h2 id="httpwebdav">HTTP/WebDAV 客户端</h2>
+<p>外部程序也可使用 Dufs HTTP Basic/Digest Auth 上传。CLI 更适合日常文件上传和可见进度；需要 WebDAV 兼容时使用 Digest，密码只写入临时、权限受限的 curl 配置文件：</p>
+<div class="highlight"><pre><span></span><code><span class="nv">base_url</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>chatenv<span class="w"> </span>get<span class="w"> </span>CHATSHARE_DUFS_BASE_URL<span class="k">)</span><span class="s2">"</span>
+<span class="nv">writer_user</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>chatenv<span class="w"> </span>get<span class="w"> </span>CHATSHARE_DUFS_USERNAME<span class="k">)</span><span class="s2">"</span>
+<span class="nb">read</span><span class="w"> </span>-rsp<span class="w"> </span><span class="s2">"ChatShare writer password: "</span><span class="w"> </span>writer_password<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span>
+
+<span class="nb">umask</span><span class="w"> </span><span class="m">077</span>
+<span class="nv">curl_config</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">"</span>
+<span class="nb">trap</span><span class="w"> </span><span class="s1">'rm -f "$curl_config"'</span><span class="w"> </span>EXIT
+<span class="nb">printf</span><span class="w"> </span><span class="s1">'user = "%s:%s"\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$writer_user</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="nv">$writer_password</span><span class="s2">"</span><span class="w"> </span>&gt;<span class="w"> </span><span class="s2">"</span><span class="nv">$curl_config</span><span class="s2">"</span>
+curl<span class="w"> </span>--digest<span class="w"> </span>--config<span class="w"> </span><span class="s2">"</span><span class="nv">$curl_config</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-T<span class="w"> </span>./clip.mov<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span><span class="s2">"</span><span class="si">${</span><span class="nv">base_url</span><span class="p">%/</span><span class="si">}</span><span class="s2">/videos/clip.mov"</span>
+<span class="nb">unset</span><span class="w"> </span>writer_password
+</code></pre></div>
+<p>匿名 <code>GET</code> 具体文件链接无需密码，但不要把链接当作私有能力令牌。目录、JSON 列表、上传和其他管理操作仍需鉴权。</p>
+<h2 id="_3">运维命令</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 真实注册命令树</span>
+chatshare<span class="w"> </span>--tree
+chatshare<span class="w"> </span>--tree-brief
+
+<span class="c1"># 服务端实例状态与受限 access log</span>
+chatshare<span class="w"> </span>--json<span class="w"> </span>dufs<span class="w"> </span>status
+chatshare<span class="w"> </span>dufs<span class="w"> </span>logs<span class="w"> </span>--lines<span class="w"> </span><span class="m">100</span>
+</code></pre></div>
+<p><code>dufs install</code>、<code>dufs init</code>、<code>dufs service install</code>、<code>dufs start|stop|restart</code> 只属于服务端。<code>put</code>、<code>tree</code>、<code>url</code> 会在检测到本机实例时使用本机模式；没有本机实例时自动使用已配置的远端服务。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.indexes", "content.code.copy"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
