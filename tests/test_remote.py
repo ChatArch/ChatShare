@@ -57,6 +57,8 @@ def test_remote_client_streams_file_after_preflight_and_emits_progress(tmp_path)
         if request.method == "MKCOL":
             return httpx.Response(201)
         if request.method == "PUT":
+            assert request.extensions["timeout"]["read"] == 120
+            assert request.extensions["timeout"]["write"] is None
             assert request.headers["content-length"] == str(source.stat().st_size)
             for chunk in request.stream:
                 received.extend(chunk)

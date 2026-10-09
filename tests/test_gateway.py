@@ -135,7 +135,7 @@ def test_gateway_upload_timeout_keeps_active_writes_open_but_bounds_metadata(met
     assert timeout.connect == 5
     assert timeout.pool == 30
     if method in {"PUT", "PATCH"}:
-        assert timeout.read is None
+        assert timeout.read == 120
         assert timeout.write is None
     else:
         assert timeout.read == 30

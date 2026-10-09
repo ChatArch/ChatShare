@@ -154,7 +154,7 @@ class RemoteClient:
             target_url,
             content=stream,
             headers={"content-length": str(stream.total)},
-            timeout=httpx.Timeout(None, connect=5, pool=30),
+            timeout=httpx.Timeout(120, connect=5, write=None, pool=30),
         )
         self._raise_for_status(response, "upload file")
         return {

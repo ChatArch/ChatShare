@@ -65,7 +65,7 @@ def _upstream_stream_timeout(method: str | None = None) -> httpx.Timeout:
     """Keep metadata bounded while allowing a large active upload to stream."""
 
     if method in {"PUT", "PATCH"}:
-        return httpx.Timeout(None, connect=5, pool=30)
+        return httpx.Timeout(120, connect=5, write=None, pool=30)
     return httpx.Timeout(30, connect=5, pool=30)
 
 

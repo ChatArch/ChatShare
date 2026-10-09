@@ -79,7 +79,7 @@ Configure ChatEnv as above. Afterwards `chatshare tree` contacts the configured 
 - The browser upload area immediately shows the file name, progress bar, transferred/total bytes, and speed. At 100% it says that the client is waiting for server confirmation; it shows success only after a 2xx response.
 - On failure the page shows a reason and a Retry action. Retry first checks the remote byte count and resumes only when the offset is safe.
 - CLI `--progress` streams the source instead of loading it all into memory; `--no-progress` suppresses terminal progress lines.
-- The ChatShare gateway leaves `PUT`/`PATCH` read and write timeouts open while data is actively streaming, so a large active upload is not cut off by a 30-second metadata deadline. Reverse proxies, network equipment, disk capacity, and browsers can still impose their own limits; only a real upload and integrity readback prove a specific environment's limit.
+- The ChatShare gateway has no fixed upload deadline for streaming `PUT`/`PATCH` writes, so a large active upload is not cut off by a 30-second metadata deadline; waiting for the upstream response has a 120-second I/O idle timeout. Reverse proxies, network equipment, disk capacity, and browsers can still impose their own limits; only a real upload and integrity readback prove a specific environment's limit.
 
 ## B. Deploy the share service (server host only)
 
