@@ -13,6 +13,7 @@ dependencies = [
     "click>=8.0,<9.0",
     "chatstyle>=0.2.0,<0.3.0",
     "chatenv>=0.2.10,<0.3.0",
+    "httpx>=0.28,<0.29",
 ]
 authors = [{name = "ChatArch", email = "1073853456@qq.com"}]
 keywords = ["chatshare", "chatarch", "cli"]

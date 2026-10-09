@@ -61,6 +61,14 @@ FILE_CSP = "sandbox allow-scripts allow-downloads; frame-ancestors *"
 ASSET_PREFIX = re.compile(r"/__dufs_v\d+\.\d+\.\d+__/")
 
 
+def _upstream_stream_timeout(method: str | None = None) -> httpx.Timeout:
+    """Keep metadata bounded while allowing a large active upload to stream."""
+
+    if method in {"PUT", "PATCH"}:
+        return httpx.Timeout(120, connect=5, write=None, pool=30)
+    return httpx.Timeout(30, connect=5, pool=30)
+
+
 @dataclass(repr=False)
 class DufsRelayContext:
     username: str
@@ -288,10 +296,10 @@ def create_app(
     )
     app.add_middleware(_InflightLimit, limit=max_inflight)
 
-    def client():
+    def client(method: str | None = None):
         return httpx.AsyncClient(
             transport=transport,
-            timeout=httpx.Timeout(30, connect=5),
+            timeout=_upstream_stream_timeout(method),
             follow_redirects=False,
             trust_env=False,
         )
@@ -638,7 +646,7 @@ def create_app(
             headers["authorization"] = explicit
         elif session_authorized:
             headers["authorization"] = context.authorization
-        connection = client()
+        connection = client(request.method)
         response = None
         transferred = False
         try:

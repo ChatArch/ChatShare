@@ -6,6 +6,7 @@
 |---|---|
 | 安装、初始化、服务管理 | 登录到主机的 ChatArch 用户 |
 | 本机 `put` 与 `url` | 同一 ChatArch 用户；不经过 HTTP |
+| 新机器远端 `put`、`tree` 与 `url` | active ChatEnv `chatshare` profile 中的 Dufs 写入账号；通过 HTTPS 或 loopback HTTP |
 | 已知具体文件 GET/HEAD/Range | 匿名客户端；保留跨站 PNG 嵌入 |
 | 目录 HTML/JSON、搜索、WebDAV 枚举、归档 | 网关浏览器会话或 Dufs 原生 Basic/Digest |
 | HTTP/WebDAV 上传/PUT | 持有共享 Dufs HTTP Auth 凭据的客户端 |
@@ -17,6 +18,7 @@
 ## 凭据
 
 - 默认 ChatEnv type：`chatshare`，关键字段：`CHATSHARE_DUFS_USERNAME`、`CHATSHARE_DUFS_PASSWORD`、`CHATSHARE_DUFS_BASE_URL`。
+- 远端 CLI 从 active profile 或受控进程环境读取这三个字段；它只接受不含 URL 内凭据、查询串或片段的 HTTPS base URL。HTTP 仅允许 loopback，客户端不创建新的实例或平行账号配置。
 - 默认密码变量名：`CHATSHARE_DUFS_PASSWORD`；CLI 接收变量名，不接收密码值参数。
 - Dufs 需要在启动时读取账号规则，因此密码会存在于 `config.yaml`；该文件以 `0600` 写入。
 - 网关登录通过 ChatLogin 异步后端调用 numeric loopback 上的 Dufs 原生 CHECKAUTH + Basic 验证凭据。浏览器只获得 ChatLogin 生成的随机 HttpOnly、SameSite=Strict、Path=/ 会话 cookie 与 `/_chatshare/session` 返回的每会话 `csrf_token`；公网 base URL 为 HTTPS 时设置 Secure。鉴权材料仅短暂保留于服务端私有 relay context，按 session digest 索引，不写入文件、不进入 Principal 或公开 session JSON、不建立第二套账号数据库。
@@ -37,7 +39,7 @@
 
 - ChatArch 管理目录默认 `0700`，凭据与状态文件默认 `0600`。
 - `put` 拒绝绝对目标、`.`、`..`、空组件和根目录逃逸。
-- 发布使用同文件系统临时文件和原子替换；未指定 `--overwrite` 时拒绝覆盖。
+- 本机发布使用同文件系统临时文件和原子替换；未指定 `--overwrite` 时拒绝覆盖。远端发布先做认证 HEAD 预检并使用分块 PUT，但 Dufs 未证实提供跨独立写入者的原子 create-only 条件写入，不能把预检宣称为全局并发保护。
 - Dufs 的 `allow-symlink` 与 `allow-delete` 默认关闭。
 
 ## 明确不提供
@@ -52,9 +54,9 @@
 
 ## 网关运行与限制
 
-安装 `ChatShare[server]==0.2.7`。登录系统由应用自身实现，Nginx 等反向代理只转发，不需要 `auth_basic` 或 `auth_request`。`chatshare serve` 前台监听 `127.0.0.1:5001`，支持 `--bind ::1`、`--port` 和重复 `--allowed-host proxy.internal`。可导入 `create_app(ChatSharePaths.from_home())` 创建 ASGI 应用。非 server CLI 不导入 FastAPI/httpx/uvicorn。root、端口及公网 origin 来自已有实例状态；不添加平行 endpoint/password 环境变量，公网 URL 必须是无子路径的 HTTP(S) origin。
+安装 `ChatShare[server]`。登录系统由应用自身实现，Nginx 等反向代理只转发，不需要 `auth_basic` 或 `auth_request`。`chatshare serve` 前台监听 `127.0.0.1:5001`，支持 `--bind ::1`、`--port` 和重复 `--allowed-host proxy.internal`。可导入 `create_app(ChatSharePaths.from_home())` 创建 ASGI 应用。非 server CLI 不导入 FastAPI/httpx/uvicorn。root、端口及公网 origin 来自已有实例状态；不添加平行 endpoint/password 环境变量，公网 URL 必须是无子路径的 HTTP(S) origin。
 
-- 单进程/单 worker；默认会话绝对 TTL 3600 秒、最多 256 个会话、全局滚动 60 秒最多 30 次登录、最多 64 个在途请求。登录 JSON 上限 4096 字节、用户名 128 字符、密码 1024 字符，读取超时 10 秒；上游连接超时 5 秒、I/O 超时 30 秒。容量不足返回 429/503。全局限速可能影响其他用户，应由外部代理增加客户端限速。
+- 单进程/单 worker；默认会话绝对 TTL 3600 秒、最多 256 个会话、全局滚动 60 秒最多 30 次登录、最多 64 个在途请求。登录 JSON 上限 4096 字节、用户名 128 字符、密码 1024 字符，读取超时 10 秒；上游连接超时 5 秒，普通元数据/读取 I/O 超时 30 秒。认证 `PUT`/`PATCH` 保持流式写入且不设上传总时限，等待上游响应的 I/O 空闲超时为 120 秒，连接池等待上限为 30 秒。容量不足返回 429/503。全局限速可能影响其他用户，应由外部代理增加客户端限速。
 - Host 只接受公网 hostname、loopback 与显式 allowed-host；不信任 forwarded headers，不启用 CORS。代理必须保留配置的公网 Origin；登录/登出和 cookie 写入必须带该 Origin 与 `X-CSRF-Token: <session csrf_token>`，拒绝 null/foreign origin 和跨站 Fetch Metadata。原生显式鉴权客户端不需要此 header。
 - 登录 `next` 目标必须是安全相对路径字符串。显式畸形值会在凭据验证、会话签发和私有 relay context 替换前被拒绝；缺失 `next` 时沿用查询值或 `/`。
 - 匿名仅允许 managed root 内普通文件及 `raw`、`download`、`cache`、`token` 查询键；token 不能获取目录权限。保守拒绝不合法/歧义百分号编码、控制字符、反斜杠、路径穿越、重复分隔符和 symlink 逃逸，包括双重编码和文件名中的字面百分号。

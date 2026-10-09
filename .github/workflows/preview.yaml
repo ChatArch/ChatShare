@@ -10,6 +10,12 @@ permissions:
   contents: write
   pull-requests: write
 
+# Both workflows write gh-pages; serialize them so deploy never overwrites a preview.
+concurrency:
+  group: chatshare-pages
+  cancel-in-progress: false
+  queue: max
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

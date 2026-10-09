@@ -51,6 +51,25 @@ def test_publish_file_uses_source_name_and_returns_digest_and_url(tmp_path):
     assert "sharing-test-secret" not in str(result)
 
 
+def test_publish_file_reports_streaming_progress(tmp_path):
+    paths = ready_paths(tmp_path)
+    source = tmp_path / "large.bin"
+    source.write_bytes(b"x" * (2 * 1024 * 1024 + 17))
+    updates = []
+
+    result = publish_file(paths, source, progress=updates.append)
+
+    assert result["size"] == source.stat().st_size
+    assert updates[0].source == source.resolve()
+    assert updates[0].transferred == 0
+    assert updates[0].total == source.stat().st_size
+    assert updates[-1].transferred == source.stat().st_size
+    assert updates[-1].total == source.stat().st_size
+    assert [update.transferred for update in updates] == sorted(
+        update.transferred for update in updates
+    )
+
+
 def test_publish_nested_destination_and_url_quotes_each_segment(tmp_path):
     paths = ready_paths(tmp_path, base_url="https://share.example.test/files/")
     source = tmp_path / "input.bin"

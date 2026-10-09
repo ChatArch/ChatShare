@@ -7,8 +7,8 @@
   <noscript>
     <meta http-equiv="refresh" content="0; url=?noscript">
   </noscript>
-  <link rel="icon" type="image/x-icon" href="__ASSETS_PREFIX__favicon.ico?v=chatshare-0.2.4-homefix">
-  <link rel="stylesheet" href="__ASSETS_PREFIX__index.css?v=chatshare-0.2.4-homefix">
+  <link rel="icon" type="image/x-icon" href="__ASSETS_PREFIX__favicon.ico?v=chatshare-upload-progress-v1">
+  <link rel="stylesheet" href="__ASSETS_PREFIX__index.css?v=chatshare-upload-progress-v1">
 </head>
 
 <body>
@@ -116,14 +116,17 @@
         <button type="button" class="upload-panel-button">选择文件</button>
       </div>
       <div class="empty-folder hidden"></div>
-      <table class="uploaders-table hidden">
-        <thead>
-          <tr>
-            <th class="cell-name" colspan="2">Name</th>
-            <th class="cell-status">Progress</th>
-          </tr>
-        </thead>
-      </table>
+      <div class="uploaders-scroll">
+        <table class="uploaders-table hidden">
+          <thead>
+            <tr>
+              <th class="cell-name" colspan="2">文件</th>
+              <th class="cell-status">上传进度</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <table class="paths-table hidden">
         <thead>
         </thead>
@@ -157,7 +160,7 @@
     </div>
   </div>
   <template id="index-data">__INDEX_DATA__</template>
-  <script src="__ASSETS_PREFIX__index.js?v=chatshare-0.2.4-homefix"></script>
+  <script src="__ASSETS_PREFIX__index.js?v=chatshare-upload-progress-v1"></script>
 </body>
 
 </html>

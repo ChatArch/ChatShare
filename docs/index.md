@@ -1,6 +1,6 @@
 # ChatShare
 
-ChatShare 把 Dufs 收进 ChatArch 的用户级目录和操作边界中：CLI 负责可信安装、配置、服务生命周期和本机文件发布，Dufs 负责 HTTP/WebDAV 文件服务。
+ChatShare 把 Dufs 收进 ChatArch 的用户级目录和操作边界中：CLI 负责可信安装、配置、服务生命周期，以及从新机器安全连接已有分享服务后的流式上传和目录查询；Dufs 负责 HTTP/WebDAV 文件服务。
 
 <div class="grid cards" markdown>
 
@@ -8,7 +8,7 @@ ChatShare 把 Dufs 收进 ChatArch 的用户级目录和操作边界中：CLI �
 
     ---
 
-    从安装 ChatShare、获取 Dufs 到发布第一个文件。
+    从新机器连接已有服务，或在服务端部署 Dufs，再发布第一个文件。
 
     [进入快速开始](quickstart.md)
 
@@ -45,7 +45,7 @@ ChatShare 把 Dufs 收进 ChatArch 的用户级目录和操作边界中：CLI �
 | 二进制选择与校验 | 根据平台选择 release asset，验证 GitHub `sha256` digest | 提供官方 release asset |
 | 配置与状态 | 管理 `~/.chatarch/chatshare/` 下的状态 | 读取生成的 YAML 配置 |
 | 服务生命周期 | Linux `systemd --user` | 前台文件服务进程 |
-| 文件发布 | 原子复制到受控根目录并生成 URL | 通过 HTTP/WebDAV 提供读取与上传 |
+| 文件发布与查询 | 本机原子复制，或向已配置远端流式上传、列目录和生成 URL | 通过 HTTP/WebDAV 提供读取与上传 |
 | 鉴权 | 安全采集和保存共享凭据 | HTTP Digest Auth 路径权限 |
 
 ## 不在当前范围

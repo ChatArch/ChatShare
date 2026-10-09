@@ -126,6 +126,22 @@ def login(client):
     )
 
 
+@pytest.mark.parametrize("method", ["PUT", "PATCH", "GET", "HEAD", "CHECKAUTH"])
+def test_gateway_upload_timeout_keeps_active_writes_open_but_bounds_metadata(method):
+    from chatshare.gateway import _upstream_stream_timeout
+
+    timeout = _upstream_stream_timeout(method)
+
+    assert timeout.connect == 5
+    assert timeout.pool == 30
+    if method in {"PUT", "PATCH"}:
+        assert timeout.read == 120
+        assert timeout.write is None
+    else:
+        assert timeout.read == 30
+        assert timeout.write == 30
+
+
 @pytest.mark.parametrize("method", ["GET", "HEAD"])
 @pytest.mark.parametrize(
     "path",

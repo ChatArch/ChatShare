@@ -138,7 +138,7 @@ def test_init_uses_custom_root_base_url_and_password_env(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "bind", ["0.0.0.0", "::", "192.168.1.2", "10.0.0.7", "example.test"]
+    "bind", ["0.0.0.0", "::", "192.0.2.2", "198.51.100.7", "example.test"]
 )
 def test_init_rejects_non_loopback_bind(bind, tmp_path):
     paths = ChatSharePaths.from_home(tmp_path / "chatarch")

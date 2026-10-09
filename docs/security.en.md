@@ -6,6 +6,7 @@
 |---|---|
 | Install, initialize, and manage service | The ChatArch user logged into the host |
 | Local `put` and `url` | The same ChatArch user; no HTTP request |
+| Remote `put`, `tree`, and `url` from a new machine | Dufs writer account in the active ChatEnv `chatshare` profile; HTTPS or loopback HTTP |
 | Known concrete file GET/HEAD/Range | Anonymous, including cross-site PNG embeds |
 | Directory HTML/JSON, search, WebDAV enumeration, archives | Gateway browser session or native Dufs Basic/Digest |
 | HTTP/WebDAV upload | A client holding the shared Dufs HTTP Auth credential |
@@ -16,6 +17,8 @@ This matrix applies only through `chatshare serve`. Direct Dufs still has its or
 
 ## Credentials
 
+- The default ChatEnv type is `chatshare`; its fields are `CHATSHARE_DUFS_USERNAME`, `CHATSHARE_DUFS_PASSWORD`, and `CHATSHARE_DUFS_BASE_URL`.
+- The remote CLI reads those fields from the active profile or controlled process environment. It accepts an HTTPS base URL without URL credentials, query, or fragment; HTTP is loopback-only. It does not create another instance or parallel account configuration.
 - Default password variable: `CHATSHARE_DUFS_PASSWORD`.
 - The CLI accepts an environment-variable name, never a password-value option.
 - Dufs must read the account rule at startup, so the password exists in `config.yaml`; the file is written with mode `0600`.
@@ -37,7 +40,7 @@ This matrix applies only through `chatshare serve`. Direct Dufs still has its or
 
 - ChatArch-managed directories default to mode `0700`; credential and state files default to `0600`.
 - `put` rejects absolute destinations, `.`, `..`, empty components, and root escapes.
-- Publication uses a same-filesystem temporary file and atomic replacement. Existing files require explicit `--overwrite`.
+- Local publication uses same-filesystem temporary files and atomic replacement; existing files require explicit `--overwrite`. Remote publication preflights with authenticated HEAD and streams PUT, but Dufs has no proven atomic create-only write across independent writers, so the preflight is not a global concurrency guarantee.
 - Dufs `allow-symlink` and `allow-delete` are disabled by default.
 
 ## Explicitly unsupported
@@ -52,9 +55,9 @@ Any of these capabilities requires a product and state-model extension; it must 
 
 ## Gateway operation and limits
 
-Install `ChatShare[server]==0.2.7`. Login and authorization belong to the application; Nginx or other reverse proxies only forward, without `auth_basic` or `auth_request`. `chatshare serve` runs in the foreground on `127.0.0.1:5001`; `--bind ::1`, `--port` and repeated `--allowed-host proxy.internal` are available. `create_app(ChatSharePaths.from_home())` is the importable ASGI factory. Server dependencies are imported only by `serve`/the gateway module. Existing managed state supplies the root, port and public origin; no parallel endpoint/password environment variables are introduced. Public URLs must be HTTP(S) origins without a subpath.
+Install `ChatShare[server]`. Login and authorization belong to the application; Nginx or other reverse proxies only forward, without `auth_basic` or `auth_request`. `chatshare serve` runs in the foreground on `127.0.0.1:5001`; `--bind ::1`, `--port` and repeated `--allowed-host proxy.internal` are available. `create_app(ChatSharePaths.from_home())` is the importable ASGI factory. Server dependencies are imported only by `serve`/the gateway module. Existing managed state supplies the root, port and public origin; no parallel endpoint/password environment variables are introduced. Public URLs must be HTTP(S) origins without a subpath.
 
-- Run one process/worker. Defaults: 3,600-second absolute sessions, 256 sessions, 30 login attempts per rolling 60 seconds globally, 64 active HTTP requests, 4,096-byte login JSON, 128-character usernames and 1,024-character passwords. Login bodies time out after 10 seconds; upstream operations have 5-second connect/30-second I/O timeouts. Capacity failures are 429/503. Global rate limiting is deliberately bounded but can affect other users during abuse; the external proxy should add client-specific limits.
+- Run one process/worker. Defaults: 3,600-second absolute sessions, 256 sessions, 30 login attempts per rolling 60 seconds globally, 64 active HTTP requests, 4,096-byte login JSON, 128-character usernames and 1,024-character passwords. Login bodies time out after 10 seconds; upstream connects time out after 5 seconds and ordinary metadata/read I/O after 30 seconds. Authenticated streaming `PUT`/`PATCH` has no fixed upload deadline; waiting for the upstream response has a 120-second I/O idle timeout and a 30-second pool wait. Capacity failures are 429/503. Global rate limiting is deliberately bounded but can affect other users during abuse; the external proxy should add client-specific limits.
 - Proxy TLS must preserve the configured public Origin. Allowed Host defaults to the public hostname and loopback, plus exact `--allowed-host` values. Forwarded headers never establish authority; wildcard hosts and CORS are not enabled. Login/logout and cookie writes require the configured Origin and `X-CSRF-Token: <session csrf_token>`, rejecting null/foreign origins and cross-site Fetch Metadata. Native explicit auth clients need no CSRF header.
 - Login `next` targets must be strings containing safe relative paths. Explicit malformed values are rejected before credential verification, session issuance or private relay context replacement; a missing `next` falls back to the query value or `/`.
 - Anonymous reads require a regular file inside the managed root and only `raw`, `download`, `cache` or `token` query keys. `token` cannot grant directory authority. Invalid/ambiguous percent encodings, control characters, backslashes, traversal, repeated path separators and symlink escapes are rejected conservatively, including double-encoded paths and literal percent filenames.

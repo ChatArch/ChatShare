@@ -260,6 +260,7 @@ class Uploader {
     this.uploaded = 0;
     this.uploadOffset = 0;
     this.lastUptime = 0;
+    this.finished = false;
     this.name = [...pathParts, file.name].join("/");
     this.idx = Uploader.globalIdx++;
     this.file = file;
@@ -269,7 +270,12 @@ class Uploader {
   upload() {
     const { idx, name, url } = this;
     const encodedName = encodedStr(name);
-    $uploadersTable.insertAdjacentHTML("beforeend", `
+    let $uploadBody = $uploadersTable.querySelector("tbody");
+    if (!$uploadBody) {
+      $uploadersTable.insertAdjacentHTML("beforeend", "<tbody></tbody>");
+      $uploadBody = $uploadersTable.querySelector("tbody");
+    }
+    $uploadBody.insertAdjacentHTML("beforeend", `
   <tr id="upload${idx}" class="uploader">
     <td class="path cell-icon">
       ${getPathSvg()}
@@ -282,7 +288,7 @@ class Uploader {
     $uploadersTable.classList.remove("hidden");
     $emptyFolder.classList.add("hidden");
     this.$uploadStatus = document.getElementById(`uploadStatus${idx}`);
-    this.$uploadStatus.innerHTML = '-';
+    this.renderProgress(this.uploadOffset, "排队中");
     this.$uploadStatus.addEventListener("click", e => {
       const nodeId = e.target.id;
       const matches = /^retry(\d+)$/.exec(nodeId);
@@ -299,8 +305,11 @@ class Uploader {
   ajax() {
     const { url } = this;
 
+    this.finished = false;
     this.uploaded = 0;
     this.lastUptime = Date.now();
+    this.lastProgressRendered = false;
+    this.renderProgress(this.uploadOffset, "上传中");
 
     const ajax = new XMLHttpRequest();
     ajax.upload.addEventListener("progress", e => this.progress(e), false);
@@ -315,58 +324,98 @@ class Uploader {
         }
       }
     })
-    ajax.addEventListener("error", () => this.fail(), false);
-    ajax.addEventListener("abort", () => this.fail(), false);
-    const credentials = getStoredCredentials();
-    if (this.uploadOffset > 0) {
-      openWithCredentials(ajax, "PATCH", url, credentials);
-      ajax.setRequestHeader("X-Update-Range", "append");
-      ajax.send(this.file.slice(this.uploadOffset));
-    } else {
-      openWithCredentials(ajax, "PUT", url, credentials);
-      ajax.send(this.file);
-      // setTimeout(() => ajax.abort(), 3000);
+    ajax.addEventListener("error", () => this.fail("网络连接中断，请检查连接后重试"), false);
+    ajax.addEventListener("abort", () => this.fail("上传已中断，可重试"), false);
+    ajax.addEventListener("timeout", () => this.fail("上传超时"), false);
+    try {
+      const credentials = getStoredCredentials();
+      if (this.uploadOffset > 0) {
+        openWithCredentials(ajax, "PATCH", url, credentials);
+        ajax.setRequestHeader("X-Update-Range", "append");
+        ajax.send(this.file.slice(this.uploadOffset));
+      } else {
+        openWithCredentials(ajax, "PUT", url, credentials);
+        ajax.send(this.file);
+      }
+    } catch (error) {
+      this.fail(error?.message || "无法读取文件或启动上传");
     }
   }
 
   async retry() {
-    const { url } = this;
-    let res = await authRequest("HEAD", url);
-    let uploadOffset = 0;
-    if (res.status == 200) {
-      let value = res.headers.get("content-length");
-      uploadOffset = parseInt(value) || 0;
+    if (!this.finished || this.retrying) return;
+    this.retrying = true;
+    try {
+      const res = await authRequest("HEAD", this.url);
+      if (res.status !== 200 && res.status !== 404) {
+        throw new Error(`${res.status} ${res.statusText}`);
+      }
+      const value = res.headers.get("content-length");
+      const offset = res.status === 200 ? Number(value) : 0;
+      if ((res.status === 200 && (value == null || value === "")) ||
+          !Number.isSafeInteger(offset) || offset < 0 || offset > this.file.size) {
+        throw new Error("远端文件大小不匹配，请重新选择文件");
+      }
+      this.uploadOffset = offset;
+      this.finished = false;
+      this.renderProgress(offset, "排队中");
+      Uploader.queues.push(this);
+      Uploader.runQueue();
+    } catch (error) {
+      this.renderFailure(error?.message || "无法检查续传位置");
+    } finally {
+      this.retrying = false;
     }
-    this.uploadOffset = uploadOffset;
-    this.ajax();
+  }
+
+  renderProgress(sent, phase, speedText = "") {
+    const total = this.file.size;
+    const transferred = Math.min(total, Math.max(0, sent));
+    const percent = total ? transferred / total * 100 : 100;
+    const [sentValue, sentUnit] = formatFileSize(transferred);
+    const [totalValue, totalUnit] = formatFileSize(total);
+    this.$uploadStatus.innerHTML = `
+      <div class="upload-progress-label"><span>${phase}</span><strong>${formatPercent(percent)}</strong></div>
+      <progress max="100" value="${percent}" aria-label="${encodedStr(this.name).replace(/"/g, "&quot;").replace(/'/g, "&#39;")} 上传进度"></progress>
+      <div class="upload-progress-detail">${sentValue} ${sentUnit} / ${totalValue} ${totalUnit}${speedText ? ` · ${speedText}` : ""}</div>`;
   }
 
   progress(event) {
+    if (this.finished) return;
     const now = Date.now();
     const elapsed = now - this.lastUptime;
-    if (elapsed < 300) return; // throttle update for safari
-    const speed = (event.loaded - this.uploaded) / elapsed * 1000;
-    const [speedValue, speedUnit] = formatFileSize(speed);
-    const speedText = `${speedValue} ${speedUnit}/s`;
-    const progress = formatPercent(((event.loaded + this.uploadOffset) / this.file.size) * 100);
-    const duration = formatDuration((event.total - event.loaded) / speed);
-    this.$uploadStatus.innerHTML = `<span style="width: 80px;">${speedText}</span><span style="margin-left: 5px;">${progress} ${duration}</span>`;
-    this.uploaded = event.loaded;
+    const loaded = Math.min(Math.max(0, event.loaded), this.file.size - this.uploadOffset);
+    const transferred = this.uploadOffset + loaded;
+    if (elapsed < 300 && this.lastProgressRendered && loaded < this.file.size - this.uploadOffset) return;
+    let speedText = "";
+    if (elapsed > 0 && loaded > this.uploaded) {
+      const [speedValue, speedUnit] = formatFileSize((loaded - this.uploaded) / elapsed * 1000);
+      speedText = `${speedValue} ${speedUnit}/s`;
+    }
+    this.renderProgress(transferred, transferred >= this.file.size ? "已发送，等待服务器确认" : "上传中", speedText);
+    this.uploaded = loaded;
     this.lastUptime = now;
+    this.lastProgressRendered = true;
   }
 
   complete() {
-    const $uploadStatusNew = this.$uploadStatus.cloneNode(true);
-    $uploadStatusNew.innerHTML = `✓`;
-    this.$uploadStatus.parentNode.replaceChild($uploadStatusNew, this.$uploadStatus);
-    this.$uploadStatus = null;
+    if (this.finished) return;
+    this.finished = true;
+    this.renderProgress(this.file.size, "上传完成");
     failUploaders.delete(this.idx);
     Uploader.runnings--;
     Uploader.runQueue();
   }
 
+  renderFailure(reason) {
+    const safeReason = encodedStr(reason);
+    this.$uploadStatus.innerHTML = `<span class="upload-failed">上传失败${safeReason ? `：${safeReason}` : ""}</span> <button type="button" class="retry-btn" id="retry${this.idx}">重试</button>`;
+  }
+
   fail(reason = "") {
-    this.$uploadStatus.innerHTML = `<span style="width: 20px;" title="${reason}">✗</span><span class="retry-btn" id="retry${this.idx}" title="Retry">↻</span>`;
+    if (this.finished) return;
+    this.finished = true;
+    this.renderFailure(reason);
     failUploaders.set(this.idx, this);
     Uploader.runnings--;
     Uploader.runQueue();

@@ -9,8 +9,19 @@ ChatShare does not modify Dufs source. It combines official release assets, conf
 | Layer | Responsibility |
 |---|---|
 | Dufs | HTTP/WebDAV, directory UI, HTTP Digest Auth, uploads, and reads |
-| ChatShare | Release selection and integrity, ChatArch paths, configuration, web assets, systemd user lifecycle, and file publication |
+| ChatShare | Release selection and integrity, ChatArch paths, configuration, web assets, systemd user lifecycle, and local or configured-remote publication/directory queries |
 | Reverse proxy | TLS, trusted Host enforcement, external ingress, and request limits; outside this CLI |
+
+## Client mode
+
+A new machine without `~/.chatarch/chatshare/instances/default/instance.json` does not have a server fault. If its active ChatEnv `chatshare` profile has `CHATSHARE_DUFS_BASE_URL`, `CHATSHARE_DUFS_USERNAME`, and `CHATSHARE_DUFS_PASSWORD`, `chatshare put`, `tree`, and `url` automatically use the remote Dufs HTTP client:
+
+- `put` authenticates to preflight the destination, creates missing parent directories one `MKCOL` at a time, then uploads with a `Content-Length` 1 MiB streaming PUT. It never aggregates the whole file in memory and does not claim unverified atomic create-only behavior across independent writers.
+- `tree` requests `?json` for the selected directory with Basic Auth; the existing gateway/Dufs policy protects the directory listing itself.
+- `url` uses authenticated HEAD before returning a concrete-file link built from the configured base URL.
+- HTTP requires HTTPS by default; HTTP is allowed only for loopback `localhost`/`127.0.0.1`/`::1`. A base URL cannot contain URL credentials, a query, or a fragment.
+
+Client mode does not install Dufs, create a local data root, register remote hosts, or alter the remote service. When a local server instance exists, the same commands keep their managed-local behavior. See [Quick Start](quickstart.en.md) for configuration.
 
 ## Layout
 

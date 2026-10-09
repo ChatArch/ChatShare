@@ -9,8 +9,19 @@ ChatShare 不修改 Dufs 源码。它把官方 release asset、配置、定制 U
 | 层 | 责任 |
 |---|---|
 | Dufs | HTTP/WebDAV、目录展示、HTTP Digest Auth、上传与读取 |
-| ChatShare | release 选择和校验、ChatArch 路径、配置、页面 assets、systemd 用户生命周期、文件发布 |
+| ChatShare | release 选择和校验、ChatArch 路径、配置、页面 assets、systemd 用户生命周期、本地或已配置远端的文件发布与目录查询 |
 | 反向代理 | TLS、可信 Host、外部入口与请求限制；不在当前 CLI 中 |
+
+## 客户端模式
+
+没有 `~/.chatarch/chatshare/instances/default/instance.json` 的新机器不是服务端故障。只要 active ChatEnv `chatshare` profile 配置了 `CHATSHARE_DUFS_BASE_URL`、`CHATSHARE_DUFS_USERNAME` 与 `CHATSHARE_DUFS_PASSWORD`，`chatshare put`、`tree` 和 `url` 自动改用远端 Dufs HTTP 客户端：
+
+- `put` 先认证检查目标，逐级 `MKCOL` 建立缺失父目录，再用带 `Content-Length` 的 1 MiB 流式 PUT 上传；不在内存聚合整个文件，也不会承诺未验证的原子跨客户端 create-only 语义。
+- `tree` 对选定目录发起带 Basic Auth 的 `?json` 请求；远端目录列表本身受现有网关/Dufs 鉴权保护。
+- `url` 认证 `HEAD` 目标后才返回基于配置 base URL 的具体文件链接。
+- HTTP 默认要求 HTTPS；仅 loopback `localhost`/`127.0.0.1`/`::1` 可使用 HTTP。base URL 不接受 URL 内凭据、查询串或片段。
+
+客户端模式不安装 Dufs、不创建本机 data root、不注册远程主机，也不改变远端服务。服务端实例存在时，同一命令保留本地受管模式。完整配置见[快速开始](quickstart.md)。
 
 ## 目录布局
 

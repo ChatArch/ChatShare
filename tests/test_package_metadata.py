@@ -8,6 +8,7 @@ def test_chatarch_internal_dependencies_are_bounded_for_release():
     assert '"click>=8.0,<9.0"' in text
     assert '"chatstyle>=0.2.0,<0.3.0"' in text
     assert '"chatenv>=0.2.10,<0.3.0"' in text
+    assert '"httpx>=0.28,<0.29"' in text
     assert '[project.entry-points."chatenv.configs"]' in text
     assert 'chatshare = "chatshare.config"' in text
     assert '"chatshare.assets.dufs"' in text
@@ -60,6 +61,35 @@ def test_development_guide_documents_shared_tree_runtime():
     assert "chatenv>=0.2.10,<0.3.0" in text
     assert "add_tree_option()" in text
     assert "--tree-brief" in text
+
+
+def test_remote_setup_examples_quote_shell_metavariable_placeholders() -> None:
+    for relative_path in (
+        "README.md",
+        "README.en.md",
+        "docs/quickstart.md",
+        "docs/quickstart.en.md",
+    ):
+        text = Path(relative_path).read_text(encoding="utf-8")
+        assert "chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I" not in text
+        assert "chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I" not in text
+        assert "chatenv set 'CHATSHARE_DUFS_BASE_URL=https://<share-url>' -I" in text
+        assert "chatenv set 'CHATSHARE_DUFS_USERNAME=<writer-name>' -I" in text
+
+
+def test_docs_workflows_serialize_pages_writes_and_preserve_preview() -> None:
+    preview = Path(".github/workflows/preview.yaml").read_text(encoding="utf-8")
+    deploy = Path(".github/workflows/deploy.yaml").read_text(encoding="utf-8")
+
+    for workflow in (preview, deploy):
+        assert "group: chatshare-pages" in workflow
+        assert "cancel-in-progress: false" in workflow
+        assert "queue: max" in workflow
+    assert "mike deploy dev -p --allow-empty" in preview
+    assert "mkdocs build --strict" in deploy
+    assert "git worktree add --detach" in deploy
+    assert "for name in dev versions.json" in deploy
+    assert "mkdocs gh-deploy --force" not in deploy
 
 
 def test_ci_runs_installed_cli_and_distribution_gates():

@@ -1,6 +1,6 @@
 # ChatShare
 
-ChatShare places Dufs inside ChatArch-owned paths and operational boundaries. The CLI owns trusted installation, configuration, service lifecycle, and local file publication; Dufs owns HTTP/WebDAV file serving.
+ChatShare places Dufs inside ChatArch-owned paths and operational boundaries. The CLI owns trusted installation, configuration, service lifecycle, and streaming upload/directory queries from a new machine securely connected to an existing share; Dufs owns HTTP/WebDAV file serving.
 
 <div class="grid cards" markdown>
 
@@ -8,7 +8,7 @@ ChatShare places Dufs inside ChatArch-owned paths and operational boundaries. Th
 
     ---
 
-    Install ChatShare, acquire Dufs, and publish the first file.
+    Connect a new machine to an existing share, or deploy Dufs on the server, then publish the first file.
 
     [Open Quick Start](quickstart.md)
 
@@ -45,7 +45,7 @@ ChatShare places Dufs inside ChatArch-owned paths and operational boundaries. Th
 | Binary selection and integrity | Selects the release asset and verifies its GitHub `sha256` digest | Publishes official release assets |
 | Configuration and state | Owns state under `~/.chatarch/chatshare/` | Reads generated YAML configuration |
 | Service lifecycle | Linux `systemd --user` | Foreground file-server process |
-| File publication | Atomically copies into the managed root and builds a URL | Serves files and accepts HTTP/WebDAV uploads |
+| File publication and queries | Copies locally with atomic replacement, or streams to a configured remote, lists directories, and builds URLs | Serves files and accepts HTTP/WebDAV uploads |
 | Authentication | Collects and stores the shared credential safely | HTTP Digest Auth path permissions |
 
 ## Out of scope
