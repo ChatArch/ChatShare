@@ -8,7 +8,7 @@
 
 # ChatShare
 
-ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](https://github.com/sigoden/dufs)，提供可审计的二进制安装、配置、用户级服务生命周期，以及本机文件/目录导入、分享目录树查看与直达 URL 生成。
+ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](https://github.com/sigoden/dufs)，提供可审计的服务端运行时安装、配置、用户级服务生命周期，以及**新机器连接已有分享服务后的流式上传、目录列表和直达 URL 生成**。
 
 ## 安全默认值
 
@@ -27,27 +27,27 @@ chatshare serve --allowed-host proxy.internal
 - 删除和符号链接访问默认关闭。
 - Linux 生命周期使用 `systemd --user`，不使用 `kill`、`pkill` 或不受控后台进程。
 
-## 最短流程
+## 最短流程：新机器连接已有分享服务
+
+新机器不要执行 `chatshare dufs install` 或 `chatshare dufs init`。配置写入账号后，`put`、`tree` 和 `url` 自动走远端模式：
 
 ```bash
 uv tool install ChatShare
-chatshare dufs install
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
-chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
-read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
+chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
+chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
+read -rsp "ChatShare writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
-chatshare dufs init
-chatshare dufs service install
-chatshare dufs start
-printf 'hello from ChatShare\n' > hello-share.txt
-chatshare put ./hello-share.txt examples/hello-share.txt
-chatshare tree examples
-chatshare url examples/hello-share.txt
+
+chatshare tree
+chatshare put --progress ./video.mov videos/video.mov
+chatshare url videos/video.mov
 ```
 
-运行 `chatshare --tree` 可读取 ChatStyle 从 Click 注册表生成的完整实时命令树；`chatshare tree <prefix>` 查看已发布分享目录的实际文件树；`chatshare --tree-brief` 显示省略参数签名的同一命令面。隐藏兼容入口不会出现在产品树中。
+浏览器上传会显示文件名、字节进度、速度及“等待服务器确认”阶段；CLI `--progress` 同样以流式方式显示进度。已有本机实例的服务端仍使用本机发布模式。完整的客户端配置、HTTP/WebDAV 鉴权、大文件边界与服务端部署说明见[快速开始](docs/quickstart.md)。
+
+运行 `chatshare --tree` 可读取 ChatStyle 从 Click 注册表生成的完整实时命令树；`chatshare tree <prefix>` 会列出本机受管实例或已配置远端服务中的目录内容；`chatshare --tree-brief` 显示省略参数签名的同一命令面。隐藏兼容入口不会出现在产品树中。
 
 ## 文档
 

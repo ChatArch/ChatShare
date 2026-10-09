@@ -6,6 +6,8 @@ import hashlib
 import os
 import re
 import tempfile
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote
 
@@ -14,6 +16,18 @@ from chatshare.errors import ChatShareError
 from chatshare.paths import ChatSharePaths
 
 _WINDOWS_DRIVE = re.compile(r"^[A-Za-z]:/")
+
+
+@dataclass(frozen=True)
+class PublishProgress:
+    """One streaming-copy checkpoint for a local ChatShare publication."""
+
+    source: Path
+    transferred: int
+    total: int
+
+
+ProgressCallback = Callable[[PublishProgress], None]
 
 
 def _relative_parts(value: Path | str) -> tuple[str, ...]:
@@ -83,12 +97,16 @@ def _publish_regular_file(
     parts: tuple[str, ...],
     *,
     overwrite: bool,
+    progress: ProgressCallback | None = None,
 ) -> dict[str, object]:
     if not source_path.is_file():
         raise ChatShareError(
             f"Share source must be an existing regular file: {source_path}"
         )
     source_resolved = source_path.resolve()
+    total = source_resolved.stat().st_size
+    if progress is not None:
+        progress(PublishProgress(source=source_resolved, transferred=0, total=total))
     _, target = _managed_target(state, parts)
     if target.is_symlink():
         raise ChatShareError(f"Share destination must not be a symlink: {target}")
@@ -111,7 +129,7 @@ def _publish_regular_file(
 
     temporary: Path | None = None
     digest = hashlib.sha256()
-    size = 0
+    transferred = 0
     try:
         descriptor, temp_name = tempfile.mkstemp(
             prefix=f".{target.name}.", dir=target.parent
@@ -127,7 +145,15 @@ def _publish_regular_file(
                     break
                 output.write(chunk)
                 digest.update(chunk)
-                size += len(chunk)
+                transferred += len(chunk)
+                if progress is not None:
+                    progress(
+                        PublishProgress(
+                            source=source_resolved,
+                            transferred=transferred,
+                            total=total,
+                        )
+                    )
             output.flush()
             os.fsync(output.fileno())
         temporary.chmod(0o600)
@@ -158,7 +184,7 @@ def _publish_regular_file(
         "overwritten": existed,
         "path": relative_text,
         "sha256": digest.hexdigest(),
-        "size": size,
+        "size": transferred,
         "source": str(source_resolved),
         "url": _url_for(state, parts),
     }
@@ -170,6 +196,7 @@ def publish_file(
     destination: Path | str | None = None,
     *,
     overwrite: bool = False,
+    progress: ProgressCallback | None = None,
 ) -> dict[str, object]:
     source_path = Path(source).expanduser()
     if not source_path.is_file():
@@ -179,7 +206,7 @@ def publish_file(
     relative = source_path.name if destination is None else destination
     parts = _relative_parts(relative)
     state = load_instance_state(paths)
-    return _publish_regular_file(state, source_path, parts, overwrite=overwrite)
+    return _publish_regular_file(state, source_path, parts, overwrite=overwrite, progress=progress)
 
 
 def _collect_directory_upload(
@@ -261,6 +288,7 @@ def publish_directory(
     destination: Path | str | None = None,
     *,
     overwrite: bool = False,
+    progress: ProgressCallback | None = None,
 ) -> dict[str, object]:
     source_path = Path(source).expanduser()
     if not source_path.is_dir():
@@ -281,7 +309,7 @@ def publish_directory(
     overwritten_files = 0
     for file_path, file_parts in files:
         result = _publish_regular_file(
-            state, file_path, file_parts, overwrite=overwrite
+            state, file_path, file_parts, overwrite=overwrite, progress=progress
         )
         if result["overwritten"]:
             overwritten_files += 1
@@ -306,13 +334,24 @@ def publish_path(
     destination: Path | str | None = None,
     *,
     overwrite: bool = False,
+    progress: ProgressCallback | None = None,
 ) -> dict[str, object]:
     source_path = Path(source).expanduser()
     if source_path.is_dir():
         return publish_directory(
-            paths, source_path, destination, overwrite=overwrite
+            paths,
+            source_path,
+            destination,
+            overwrite=overwrite,
+            progress=progress,
         )
-    return publish_file(paths, source_path, destination, overwrite=overwrite)
+    return publish_file(
+        paths,
+        source_path,
+        destination,
+        overwrite=overwrite,
+        progress=progress,
+    )
 
 
 def _tree_entry_type(path: Path) -> str:

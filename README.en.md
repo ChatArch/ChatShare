@@ -8,7 +8,7 @@
 
 # ChatShare
 
-ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs](https://github.com/sigoden/dufs), with auditable binary installation, configuration, user-service lifecycle, local file/directory import, share-tree inspection, and direct URL generation.
+ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs](https://github.com/sigoden/dufs), with auditable server-runtime installation, configuration, user-service lifecycle, and **streaming upload, directory listing, and direct URL generation from a new machine connected to an existing share**.
 
 ## Secure defaults
 
@@ -27,27 +27,27 @@ The gateway defaults to `127.0.0.1:5001`, reads the existing instance root, loop
 - Delete and external-symlink access are disabled by default.
 - Linux lifecycle uses `systemd --user`; ChatShare does not use `kill`, `pkill`, or an unmanaged background process.
 
-## Shortest workflow
+## Shortest workflow: connect a new machine to an existing share
+
+Do not run `chatshare dufs install` or `chatshare dufs init` on a new client. After configuring a writer account, `put`, `tree`, and `url` automatically use remote mode:
 
 ```bash
 uv tool install ChatShare
-chatshare dufs install
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
-chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
-read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
+chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
+chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
+read -rsp "ChatShare writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
-chatshare dufs init
-chatshare dufs service install
-chatshare dufs start
-printf 'hello from ChatShare\n' > hello-share.txt
-chatshare put ./hello-share.txt examples/hello-share.txt
-chatshare tree examples
-chatshare url examples/hello-share.txt
+
+chatshare tree
+chatshare put --progress ./video.mov videos/video.mov
+chatshare url videos/video.mov
 ```
 
-Run `chatshare --tree` for the full live command tree that ChatStyle generates from the Click registry. `chatshare tree <prefix>` inspects the actual published share tree, and `chatshare --tree-brief` shows the command surface without parameter signatures. Hidden compatibility entries are excluded from the product tree.
+Browser uploads show a file name, byte progress, speed, and a server-confirmation phase; CLI `--progress` does the same with streaming reads. A host with an existing local instance retains local publication mode. See [Quick Start](docs/quickstart.en.md) for client configuration, HTTP/WebDAV authentication, large-file boundaries, and service deployment.
+
+Run `chatshare --tree` for the full live command tree that ChatStyle generates from the Click registry. `chatshare tree <prefix>` lists a directory from the local managed instance or configured remote server, and `chatshare --tree-brief` shows the command surface without parameter signatures. Hidden compatibility entries are excluded from the product tree.
 
 ## Documentation
 

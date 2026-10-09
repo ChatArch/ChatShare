@@ -8,6 +8,7 @@ def test_chatarch_internal_dependencies_are_bounded_for_release():
     assert '"click>=8.0,<9.0"' in text
     assert '"chatstyle>=0.2.0,<0.3.0"' in text
     assert '"chatenv>=0.2.10,<0.3.0"' in text
+    assert '"httpx>=0.28,<0.29"' in text
     assert '[project.entry-points."chatenv.configs"]' in text
     assert 'chatshare = "chatshare.config"' in text
     assert '"chatshare.assets.dufs"' in text

@@ -81,11 +81,14 @@ def test_tree_option_renders_registered_product_tree_and_hides_legacy_hello():
     assert "--home" in result.output
     assert "--json" in result.output
     assert "├── dufs" in result.output
+    assert "│   ├── assets" in result.output
+    assert "│   │   └── sync" in result.output
     assert "│   ├── install" in result.output
     assert "│   ├── init" in result.output
     assert "│   ├── service" in result.output
     assert "│   │   └── install" in result.output
-    assert "├── put <SOURCE> [DESTINATION] [--overwrite]" in result.output
+    assert "├── put <SOURCE> [DESTINATION]" in result.output
+    assert "--progress" in result.output
     assert "├── tree [PREFIX]" in result.output
     assert "└── url <PATH>" in result.output
     assert "hello" not in result.output
@@ -100,9 +103,9 @@ def test_tree_brief_renders_same_surface_without_signatures():
     )
     assert "dufs" in result.output
     assert "service" in result.output
-    assert "put  # Publish a local file or directory" in result.output
-    assert "tree  # Print the managed share tree" in result.output
-    assert "url  # Build a direct URL" in result.output
+    assert "put  # Publish locally when initialized, otherwise to configured ChatShare" in result.output
+    assert "tree  # List a local managed tree or the configured remote directory" in result.output
+    assert "url  # Get a local managed or configured remote file URL" in result.output
     for signature in ("SOURCE", "[DESTINATION]", "[--overwrite]", "[--lines LINES]"):
         assert signature not in result.output
     assert "hello" not in result.output
@@ -133,6 +136,7 @@ def test_dufs_help_exposes_documented_command_tree():
 
     assert result.exit_code == 0, result.output
     for command in [
+        "assets",
         "install",
         "init",
         "service",
@@ -147,6 +151,58 @@ def test_dufs_help_exposes_documented_command_tree():
     service = invoke(["dufs", "service", "--help"])
     assert service.exit_code == 0, service.output
     assert "install" in service.output
+
+
+def test_dufs_asset_sync_requires_instance_and_preserves_config(tmp_path):
+    from chatshare.dufs.config import init_instance
+    from chatshare.paths import ChatSharePaths
+
+    home = tmp_path / "chatarch"
+    missing = invoke(["--home", str(home), "dufs", "assets", "sync"])
+    assert missing.exit_code != 0
+    assert "not initialized" in missing.output
+    assert not (home / "chatshare").exists()
+
+    paths = ChatSharePaths.from_home(home)
+    init_instance(paths, environ={"CHATSHARE_DUFS_PASSWORD": "test-only-password"})
+    config_before = paths.config_file.read_bytes()
+    state_before = paths.state_file.read_bytes()
+    js = paths.dufs_assets_dir / "index.js"
+    js.write_bytes(b"stale-asset")
+
+    result = invoke(["--home", str(home), "--json", "dufs", "assets", "sync"])
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.output)["files"] == [
+        "index.html", "index.css", "index.js", "favicon.ico"
+    ]
+    assert js.read_bytes() != b"stale-asset"
+    assert paths.config_file.read_bytes() == config_before
+    assert paths.state_file.read_bytes() == state_before
+
+
+def test_forced_progress_is_line_buffered_when_not_a_terminal(monkeypatch, tmp_path):
+    import io
+    import sys
+
+    from chatshare.cli import CliContext, _progress_callback
+    from chatshare.paths import ChatSharePaths
+    from chatshare.sharing import PublishProgress
+
+    output = io.StringIO()
+    monkeypatch.setattr(sys, "stderr", output)
+    times = iter([10.0, 11.0, 12.1])
+    monkeypatch.setattr("chatshare.cli.time.monotonic", lambda: next(times))
+    callback = _progress_callback(
+        CliContext(paths=ChatSharePaths.from_home(tmp_path), json_output=True), True
+    )
+    assert callback is not None
+    for transferred in (0, 5, 10):
+        callback(PublishProgress(source=tmp_path / "clip.mov", transferred=transferred, total=10))
+    lines = output.getvalue().splitlines()
+    assert len(lines) == 2
+    assert "0.00%" in lines[0] and "100.00%" in lines[1]
+    assert "\r" not in output.getvalue()
 
 
 def test_version_and_hidden_hello_compatibility():
@@ -376,6 +432,10 @@ def test_put_tree_and_url_commands_delegate(monkeypatch, tmp_path):
     url_calls = []
     source = tmp_path / "source.txt"
     source.write_text("data")
+    home = tmp_path / "home"
+    state_file = home / "chatshare" / "instances" / "default" / "instance.json"
+    state_file.parent.mkdir(parents=True)
+    state_file.write_text("{}")
     monkeypatch.setattr(
         sharing,
         "publish_path",
@@ -414,7 +474,7 @@ def test_put_tree_and_url_commands_delegate(monkeypatch, tmp_path):
     )
     assert put.exit_code == 0, put.output
     assert json.loads(put.output)["path"] == "nested/item.txt"
-    assert put_calls[0][1:] == (source, "nested/item.txt", {"overwrite": True})
+    assert put_calls[0][1:] == (source, "nested/item.txt", {"overwrite": True, "progress": None})
 
     tree = invoke(["--home", str(tmp_path / "home"), "tree", "nested"])
     assert tree.exit_code == 0, tree.output

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import sys
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -62,6 +64,45 @@ def _emit(context: CliContext, value: dict[str, Any]) -> None:
         click.echo(f"{key}: {rendered}")
 
 
+def _progress_callback(context: CliContext, requested: bool | None) -> Callable[[Any], None] | None:
+    """Render bounded local or remote file-copy checkpoints on stderr."""
+
+    enabled = (not context.json_output and sys.stderr.isatty()) if requested is None else requested
+    if not enabled:
+        return None
+    last_rendered = 0.0
+    terminal = sys.stderr.isatty()
+    interval = 0.25 if terminal else 2.0
+
+    def report(update: Any) -> None:
+        nonlocal last_rendered
+        now = time.monotonic()
+        if update.transferred < update.total and now - last_rendered < interval:
+            return
+        last_rendered = now
+        total = update.total
+        percent = 100.0 if total == 0 else update.transferred / total * 100
+        text = (
+            f"Uploading {update.source.name}: {percent:6.2f}% "
+            f"({update.transferred}/{total} bytes)"
+        )
+        click.echo(("\r" if terminal else "") + text, nl=not terminal, err=True)
+        if terminal and update.transferred >= total:
+            click.echo(err=True)
+
+    return report
+
+
+def _uses_local_instance(context: CliContext) -> bool:
+    return context.paths.state_file.is_file()
+
+
+def _remote_client(context: CliContext) -> Any:
+    from chatshare.remote import RemoteClient, load_remote_settings
+
+    return RemoteClient(load_remote_settings(context.paths.chatarch_home))
+
+
 @click.group(name="chatshare", context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--home",
@@ -86,6 +127,22 @@ def main(context: click.Context, home: Path | None, json_output: bool) -> None:
 @main.group()
 def dufs() -> None:
     """Manage the local Dufs runtime, configuration, and user service."""
+
+
+@dufs.group("assets")
+def dufs_assets() -> None:
+    """Manage the existing instance's web UI assets without reinitializing it."""
+
+
+@dufs_assets.command("sync")
+@click.pass_obj
+def sync_assets_command(context: CliContext) -> None:
+    """Copy bundled web UI assets; restart Dufs later to refresh cached HTML."""
+    from chatshare.dufs.config import load_instance_state, sync_dufs_assets
+
+    _execute(lambda: load_instance_state(context.paths))
+    result = _execute(lambda: sync_dufs_assets(context.paths))
+    _emit(context, result)
 
 
 @main.command("serve")
@@ -277,25 +334,44 @@ def logs_command(context: CliContext, lines: int) -> None:
 @click.option(
     "--overwrite", is_flag=True, help="Atomically replace an existing destination."
 )
+@click.option(
+    "--progress/--no-progress",
+    default=None,
+    help="Show or suppress streaming copy progress on stderr.",
+)
 @click.pass_obj
 def put_command(
     context: CliContext,
     source: Path,
     destination: str | None,
     overwrite: bool,
+    progress: bool | None,
 ) -> None:
-    """Publish a local file or directory; writes managed share data."""
+    """Publish locally when initialized, otherwise to configured ChatShare."""
 
-    from chatshare.sharing import publish_path
+    callback = _progress_callback(context, progress)
+    if _uses_local_instance(context):
+        from chatshare.sharing import publish_path
 
-    result = _execute(
-        lambda: publish_path(
-            context.paths,
-            source,
-            destination,
-            overwrite=overwrite,
+        result = _execute(
+            lambda: publish_path(
+                context.paths,
+                source,
+                destination,
+                overwrite=overwrite,
+                progress=callback,
+            )
         )
-    )
+    else:
+        client = _execute(lambda: _remote_client(context))
+        result = _execute(
+            lambda: client.publish_file(
+                source,
+                destination,
+                overwrite=overwrite,
+                progress=callback,
+            )
+        )
     _emit(context, result)
 
 
@@ -303,11 +379,15 @@ def put_command(
 @click.argument("prefix", required=False)
 @click.pass_obj
 def tree_command(context: CliContext, prefix: str | None) -> None:
-    """Print the managed share tree under an optional prefix; no writes."""
+    """List a local managed tree or the configured remote directory."""
 
-    from chatshare.sharing import build_share_tree
+    if _uses_local_instance(context):
+        from chatshare.sharing import build_share_tree
 
-    result = _execute(lambda: build_share_tree(context.paths, prefix))
+        result = _execute(lambda: build_share_tree(context.paths, prefix))
+    else:
+        client = _execute(lambda: _remote_client(context))
+        result = _execute(lambda: client.list_directory(prefix))
     _emit(context, result)
 
 
@@ -315,11 +395,15 @@ def tree_command(context: CliContext, prefix: str | None) -> None:
 @click.argument("path")
 @click.pass_obj
 def url_command(context: CliContext, path: str) -> None:
-    """Build a direct URL for an existing managed file; no writes."""
+    """Get a local managed or configured remote file URL."""
 
-    from chatshare.sharing import build_file_url
+    if _uses_local_instance(context):
+        from chatshare.sharing import build_file_url
 
-    result = _execute(lambda: build_file_url(context.paths, path))
+        result = _execute(lambda: build_file_url(context.paths, path))
+    else:
+        client = _execute(lambda: _remote_client(context))
+        result = _execute(lambda: client.build_file_url(path))
     _emit(context, result)
 
 

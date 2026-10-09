@@ -1,168 +1,140 @@
 # Quick Start
 
-The initialization workflow below describes native Dufs. Do not reinitialize an existing instance for directory login: install `ChatShare[server]==0.2.7`, run `chatshare serve`, then point the reverse proxy at the application. The application owns login, sessions and authorization; the proxy only forwards. Known files remain public, while directories, search, archives and writes require authentication. See [security boundaries](security.en.md). Installing only the base package omits the optional server dependencies.
+ChatShare has two roles. **Most new machines only connect to an existing share**: configure ChatEnv once, then upload, list a directory, and retrieve links. Do **not** run `chatshare dufs init` on those clients. Only the host that stores the files installs Dufs, initializes an instance, and manages its systemd service.
 
-## Choose an entry point
+Concrete file links are anonymously readable. Directory listings and writes require the existing Dufs writer account. The browser directory page uses a ChatShare login session; CLI and HTTP/WebDAV clients use the same account through HTTP Basic/Digest authentication. See [security boundaries](security.en.md).
 
-<div class="grid cards" markdown>
+## Choose a role
 
--   **Install the tool and runtime**
+| What you need | Use | Do not use |
+| --- | --- | --- |
+| Upload or list files from a new laptop, workstation, or server | Configure the remote client, then use `put`, `tree`, and `url` | Do not install Dufs or run `dufs init` |
+| Run the share service and store the real files | Deploy the server instance | Do not copy the server data root onto a client |
+| Upload a large file in a browser | Log into the directory page, then drag a file or choose it | Do not treat 100% sent as completed |
 
-    Install ChatShare through the existing ChatArch Python tool environment, then let ChatShare install a pinned Dufs release.
+## A. Connect to an existing share (new machine)
 
--   **Initialize a safe config**
-
-    Store writer credentials in ChatEnv and generate a loopback-only Dufs config with anonymous reads, authenticated writes, and delete disabled.
-
--   **Start the service**
-
-    Linux uses `systemd --user`; ChatShare does not create a system unit or unmanaged background process.
-
--   **Share, then retrieve**
-
-    `chatshare put` publishes a local file or directory, `chatshare tree` inspects the published directory structure, `chatshare url` retrieves the public URL for an already-published path, and anonymous `curl` or a browser can download it.
-
-</div>
-
-## Install
-
-Use the existing ChatArch Python package flow for a released version:
+### 1. Install the CLI
 
 ```bash
 uv tool install ChatShare
 chatshare --version
 ```
 
-For an unreleased review build, pin the install to a reviewed Git ref:
+The base package includes the HTTP client used for remote uploads and directory queries. It does not require `ChatShare[server]` or a local Dufs runtime.
 
-```bash
-uv tool install --from "git+https://github.com/ChatArch/ChatShare.git@<reviewed-ref>" ChatShare
-```
+### 2. Configure the writer account
 
-Install Dufs. The default is the ChatShare-validated `v0.46.0`; the CLI does not silently follow `latest`:
-
-```bash
-chatshare dufs install
-```
-
-## Initialize
-
-Do not pass the password as a CLI argument. Service deployments should store the writer credential in the active ChatEnv `chatshare` profile. ChatShare reads `CHATSHARE_DUFS_USERNAME`, `CHATSHARE_DUFS_PASSWORD`, and `CHATSHARE_DUFS_BASE_URL` from ChatEnv:
+Never put the password in shell history, command-line arguments, URLs, or scripts. Store these three values in the active ChatEnv `chatshare` profile. The service administrator provides `<share-url>`; it is normally an HTTPS address. Use an internal HTTPS address only on a trusted network when the administrator explicitly provides it.
 
 ```bash
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://share.example -I
-chatenv set CHATSHARE_DUFS_USERNAME=chatshare -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
+chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
+read -rsp "ChatShare writer password: " CHATSHARE_DUFS_PASSWORD && echo
+printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
+unset CHATSHARE_DUFS_PASSWORD
+```
+
+| Field | Purpose |
+| --- | --- |
+| `CHATSHARE_DUFS_BASE_URL` | Base URL of the existing share, with no credentials, query, or fragment |
+| `CHATSHARE_DUFS_USERNAME` | Dufs account allowed to write and list directories |
+| `CHATSHARE_DUFS_PASSWORD` | Password for that account; stored through protected ChatEnv configuration |
+
+### 3. List, upload, and retrieve a link
+
+```bash
+# List the root. Remote mode reads the configured service; it does not need instance.json.
+chatshare tree
+
+# List a directory.
+chatshare tree videos
+
+# Upload a file. An interactive terminal shows progress automatically;
+# --progress forces it on.
+chatshare put --progress ./clip.mov videos/2026/clip.mov
+
+# Check that the file exists and print its public direct link.
+chatshare url videos/2026/clip.mov
+
+# Put machine-readable output before the subcommand; progress remains on stderr.
+chatshare --json put --progress ./clip.mov videos/2026/clip.mov
+```
+
+Remote `tree` lists the current contents of the selected directory. `put` checks the destination, creates missing parent directories one at a time, then streams a PUT request in 1 MiB chunks. Existing files are rejected by default; pass `--overwrite` explicitly to replace one. `url` uses authenticated HEAD to confirm that the target exists before returning its URL.
+
+If a new machine previously showed this error, it was missing remote-client configuration, not a request to initialize another Dufs service:
+
+```text
+ChatShare Dufs instance is not initialized: .../instance.json
+```
+
+Configure ChatEnv as above. Afterwards `chatshare tree` contacts the configured service directly. When remote configuration is absent, the CLI explains which `CHATSHARE_DUFS_*` fields and setup command are missing.
+
+### 4. Large files and progress
+
+- The browser upload area immediately shows the file name, progress bar, transferred/total bytes, and speed. At 100% it says that the client is waiting for server confirmation; it shows success only after a 2xx response.
+- On failure the page shows a reason and a Retry action. Retry first checks the remote byte count and resumes only when the offset is safe.
+- CLI `--progress` streams the source instead of loading it all into memory; `--no-progress` suppresses terminal progress lines.
+- The ChatShare gateway leaves `PUT`/`PATCH` read and write timeouts open while data is actively streaming, so a large active upload is not cut off by a 30-second metadata deadline. Reverse proxies, network equipment, disk capacity, and browsers can still impose their own limits; only a real upload and integrity readback prove a specific environment's limit.
+
+## B. Deploy the share service (server host only)
+
+This creates a managed local Dufs instance and belongs only on the host that stores shared files. Do not run these commands on a client machine.
+
+```bash
+uv tool install "ChatShare[server]"
+chatshare dufs install
+
+chatenv init -t chatshare -I
+chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
+chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
+
 chatshare dufs init
-```
-
-Defaults:
-
-- Root: `~/.chatarch/chatshare/instances/default/data/`
-- Config: `~/.chatarch/chatshare/instances/default/config.yaml`
-- Listener: `127.0.0.1:5000`
-- Writer username: `CHATSHARE_DUFS_USERNAME` from ChatEnv, defaulting to `chatshare`
-- Anonymous browse, download, inline view, search, archive, and hash enabled
-- HTTP/WebDAV upload or `PUT` requires Dufs HTTP Auth; the web UI shows the ChatShare login dialog and sends an explicit auth header instead of relying on the browser's default auth prompt
-- The directory page provides a drag-and-drop upload zone and a "Choose files" button; dropped files enter the upload queue directly, opening the ChatShare login dialog first when needed
-- Delete, CORS, and external symlinks disabled
-
-## Install and start the user service
-
-```bash
 chatshare dufs service install
 chatshare dufs start
 chatshare dufs status
 ```
 
-Enable login-time startup explicitly:
+The default instance lives under `~/.chatarch/chatshare/instances/default/`, and Dufs binds only to loopback. On the server, `chatshare put` atomically copies into the managed data root; `tree` and `url` inspect that local instance. Run the directory-login gateway with `chatshare serve`, then make a separate trusted HTTPS reverse-proxy change. Do not expose Dufs directly to the public network.
 
-```bash
-chatshare dufs service install --enable
-```
+After upgrading ChatShare on the server, run `chatshare dufs assets sync` to copy the bundled UI assets. This command only replaces managed static files; it does not reset accounts, server configuration, or shared data. **Wait for all active uploads to finish** before an operator restarts Dufs (which caches its index HTML at startup) and the deployed ChatShare gateway (which loads JS/CSS at startup). Read back the real directory page's asset version and choose a file in a browser to confirm that progress appears. Installing a new Python package or synchronizing static files alone does not prove that the live page changed. Client-only machines must not run this command.
 
-`start`, `stop`, and `restart` delegate to `systemctl --user`. macOS supports installation, initialization, and file publication, but this version does not provide launchd lifecycle commands.
+## HTTP/WebDAV clients
 
-## Complete example: share, then retrieve
-
-This example shows the full loop: prepare a file, publish it, inspect the share tree, retrieve the URL again, and download it anonymously.
-
-```bash
-# 1. Prepare a local file.
-printf 'hello from ChatShare\n' > hello-share.txt
-
-# 2. Publish it to a relative path below the managed share root.
-#    This is a local operator action: it atomically copies the file into
-#    ~/.chatarch/chatshare/.../data/.
-chatshare --json put ./hello-share.txt examples/hello-share.txt
-
-# 3. Inspect the actual server-side tree for the published directory.
-chatshare tree examples
-
-# 4. If you later only know the in-share path, retrieve the public URL again.
-chatshare --json url examples/hello-share.txt
-
-# 5. Read the public URL anonymously; no username or password is needed.
-curl -fsSL https://share.example/examples/hello-share.txt
-```
-
-`chatshare put`, `chatshare tree`, and `chatshare url` are different commands:
-
-| Command | What it does | Writes share data |
-| --- | --- | --- |
-| `chatshare put SOURCE [DEST]` | Copies a local file or directory into the managed share root and returns the URL for `DEST`; directory uploads preserve relative paths recursively | Yes |
-| `chatshare tree [DEST]` | Reads the actual tree under the managed share root or a subdirectory | No |
-| `chatshare url DEST` | Checks that `DEST` already exists under the managed share root, then builds the URL from `CHATSHARE_DUFS_BASE_URL` | No |
-
-Use `chatshare url` when:
-
-- a file was already published with `chatshare put` and you want to print the link again;
-- another controlled process placed a file directly under the managed `data/` directory and you want a link for it;
-- automation needs to convert a stable relative path into a public URL.
-
-It does not copy, upload, or create files. If the target file does not exist, it fails.
-
-## Complete example: HTTP PUT requires authentication
-
-Through `chatshare serve`, concrete-file downloads remain anonymous while directory browsing requires login. Network-side HTTP/WebDAV `PUT` still supports the original Dufs HTTP Digest Auth. The example below keeps the secret in ChatEnv and a temporary curl config, not in argv, URLs, or logs:
+External programs can also upload through Dufs HTTP Basic/Digest authentication. The CLI is preferable for routine uploads and visible progress. When WebDAV compatibility is required, use Digest and put the password only in a temporary permission-restricted curl config:
 
 ```bash
 base_url="$(chatenv get CHATSHARE_DUFS_BASE_URL)"
 writer_user="$(chatenv get CHATSHARE_DUFS_USERNAME)"
-writer_password="$(chatenv get CHATSHARE_DUFS_PASSWORD)"
+read -rsp "ChatShare writer password: " writer_password && echo
 
-printf 'hello through authenticated HTTP PUT\n' > hello-http-put.txt
-
-# Anonymous PUT should return 401.
-curl -sS -o /dev/null -w '%{http_code}\n' \
-  -T ./hello-http-put.txt \
-  "${base_url%/}/hello-http-put.txt"
-
-# Authenticated PUT uses Digest Auth; the secret does not enter argv.
 umask 077
 curl_config="$(mktemp)"
 trap 'rm -f "$curl_config"' EXIT
 printf 'user = "%s:%s"\n' "$writer_user" "$writer_password" > "$curl_config"
 curl --digest --config "$curl_config" \
-  -T ./hello-http-put.txt \
-  "${base_url%/}/hello-http-put.txt"
-
+  -T ./clip.mov \
+  "${base_url%/}/videos/clip.mov"
 unset writer_password
-curl -fsSL "${base_url%/}/hello-http-put.txt"
 ```
 
-If you are publishing from the service host, prefer `chatshare put`. Use HTTP/WebDAV `PUT` + Digest Auth only for network clients that need write access.
+Anonymous GET of a concrete file URL needs no password, but a link is not a private capability token. Directories, JSON listings, uploads, and other management operations still require authentication.
 
-## Automation output
-
-Place global `--json` before the subcommand:
+## Operator commands
 
 ```bash
+# Generated from the live Click registry
+chatshare --tree
+chatshare --tree-brief
+
+# Server-instance state and bounded access log
 chatshare --json dufs status
-chatshare --json put ./report.pdf reports/report.pdf
-chatshare --json tree reports
-chatshare --json url reports/report.pdf
+chatshare dufs logs --lines 100
 ```
+
+`dufs install`, `dufs init`, `dufs service install`, and `dufs start|stop|restart` are server-only. `put`, `tree`, and `url` use local mode when a local instance exists; without one they automatically use the configured remote service.

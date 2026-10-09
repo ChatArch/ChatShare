@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- 新机器的 `put`、`tree`、`url` 在没有本机 Dufs `instance.json` 时自动使用 active ChatEnv `chatshare` profile 中已配置的远端分享服务；远端上传以 1 MiB 分块流式读取，不把文件聚合进内存。
+- `chatshare put --progress` 提供终端流式进度；浏览器上传区显示文件名、原生进度条、已传/总量、速度、服务端确认和失败重试状态；网络中断/超时会显示明确原因，窄屏页面将进度条完整保留在视口内。
+- 网关保留认证 `PUT`/`PATCH` 的流式读写，不施加固定读写总时限，同时继续为普通元数据和读取请求保持有界超时。
+- 新增 `chatshare dufs assets sync`，升级服务端时只同步网页资源；页面在旧版 HTML 下也可创建上传进度表，完整更新需待上传结束后重启 Dufs 和网关。
+- 重写中英文 Quick Start，明确区分新机器连接已有服务与服务端部署，涵盖 ChatEnv 鉴权配置、目录查询、大文件行为及 HTTP/WebDAV 边界。
+
 ## 0.2.7
 
 - 网关保留无请求体 GET/HEAD 的原始传输语义，不再额外附加空分块请求体，修复并发下载大文件时 Dufs 响应被截断的问题。
