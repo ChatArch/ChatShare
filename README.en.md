@@ -36,8 +36,8 @@ Do not run `chatshare dufs install` or `chatshare dufs init` on a new client. Af
 ```bash
 uv tool install ChatShare
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
-chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
+chatenv set 'CHATSHARE_DUFS_BASE_URL=https://<share-url>' -I
+chatenv set 'CHATSHARE_DUFS_USERNAME=<writer-name>' -I
 read -rsp "ChatShare writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD

@@ -31,8 +31,8 @@ Never put the password in shell history, command-line arguments, URLs, or script
 
 ```bash
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
-chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
+chatenv set 'CHATSHARE_DUFS_BASE_URL=https://<share-url>' -I
+chatenv set 'CHATSHARE_DUFS_USERNAME=<writer-name>' -I
 read -rsp "ChatShare writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD
@@ -90,8 +90,8 @@ uv tool install "ChatShare[server]"
 chatshare dufs install
 
 chatenv init -t chatshare -I
-chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I
-chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I
+chatenv set 'CHATSHARE_DUFS_BASE_URL=https://<share-url>' -I
+chatenv set 'CHATSHARE_DUFS_USERNAME=<writer-name>' -I
 read -rsp "Dufs writer password: " CHATSHARE_DUFS_PASSWORD && echo
 printf 'CHATSHARE_DUFS_PASSWORD=%s\n' "$CHATSHARE_DUFS_PASSWORD" | chatenv paste --stdin -y -I
 unset CHATSHARE_DUFS_PASSWORD

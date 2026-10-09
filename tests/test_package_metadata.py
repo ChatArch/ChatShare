@@ -63,6 +63,20 @@ def test_development_guide_documents_shared_tree_runtime():
     assert "--tree-brief" in text
 
 
+def test_remote_setup_examples_quote_shell_metavariable_placeholders() -> None:
+    for relative_path in (
+        "README.md",
+        "README.en.md",
+        "docs/quickstart.md",
+        "docs/quickstart.en.md",
+    ):
+        text = Path(relative_path).read_text(encoding="utf-8")
+        assert "chatenv set CHATSHARE_DUFS_BASE_URL=https://<share-url> -I" not in text
+        assert "chatenv set CHATSHARE_DUFS_USERNAME=<writer-name> -I" not in text
+        assert "chatenv set 'CHATSHARE_DUFS_BASE_URL=https://<share-url>' -I" in text
+        assert "chatenv set 'CHATSHARE_DUFS_USERNAME=<writer-name>' -I" in text
+
+
 def test_docs_workflows_serialize_pages_writes_and_preserve_preview() -> None:
     preview = Path(".github/workflows/preview.yaml").read_text(encoding="utf-8")
     deploy = Path(".github/workflows/deploy.yaml").read_text(encoding="utf-8")
@@ -70,6 +84,7 @@ def test_docs_workflows_serialize_pages_writes_and_preserve_preview() -> None:
     for workflow in (preview, deploy):
         assert "group: chatshare-pages" in workflow
         assert "cancel-in-progress: false" in workflow
+        assert "queue: max" in workflow
     assert "mike deploy dev -p --allow-empty" in preview
     assert "mkdocs build --strict" in deploy
     assert "git worktree add --detach" in deploy
