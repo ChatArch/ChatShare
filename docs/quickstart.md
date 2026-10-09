@@ -2,7 +2,7 @@
 
 ChatShare 有两种使用方式。**绝大多数新电脑只需要连接已有分享服务**：配置一次 ChatEnv 后直接上传、查看目录和取回链接，**不要**运行 `chatshare dufs init`。只有部署分享服务的运维主机才安装 Dufs、初始化实例并管理 systemd 服务。
 
-> 发布状态：本页新机器远端 CLI 与浏览器进度属于 `Unreleased`；现有服务已安装的本地候选包与 PyPI `0.2.7` 不同。下文 `uv tool install ChatShare` 获取这些新能力的步骤须待下一版正式发布后执行。
+> 本页远端 CLI、上传进度及 `dufs assets sync` 需要 `ChatShare>=0.2.8`。旧客户端先升级再配置远端；服务端升级还需同步网页资源。
 
 具体文件链接可匿名读取；目录列表和写入需要已有 Dufs 写入账号。浏览器目录页通过 ChatShare 登录会话工作；CLI 和 HTTP/WebDAV 客户端使用同一组账号的 HTTP Basic/Digest 鉴权。详见[安全与边界](security.md)。
 

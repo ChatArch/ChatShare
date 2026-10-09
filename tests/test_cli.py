@@ -208,7 +208,7 @@ def test_forced_progress_is_line_buffered_when_not_a_terminal(monkeypatch, tmp_p
 def test_version_and_hidden_hello_compatibility():
     version = invoke(["--version"])
     assert version.exit_code == 0
-    assert "0.2.7" in version.output
+    assert "0.2.8" in version.output
 
     hello = invoke(["hello", "Alice", "-I"])
     assert hello.exit_code == 0

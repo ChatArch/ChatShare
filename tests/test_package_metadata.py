@@ -63,6 +63,20 @@ def test_development_guide_documents_shared_tree_runtime():
     assert "--tree-brief" in text
 
 
+def test_docs_workflows_serialize_pages_writes_and_preserve_preview() -> None:
+    preview = Path(".github/workflows/preview.yaml").read_text(encoding="utf-8")
+    deploy = Path(".github/workflows/deploy.yaml").read_text(encoding="utf-8")
+
+    for workflow in (preview, deploy):
+        assert "group: chatshare-pages" in workflow
+        assert "cancel-in-progress: false" in workflow
+    assert "mike deploy dev -p --allow-empty" in preview
+    assert "mkdocs build --strict" in deploy
+    assert "git worktree add --detach" in deploy
+    assert "for name in dev versions.json" in deploy
+    assert "mkdocs gh-deploy --force" not in deploy
+
+
 def test_ci_runs_installed_cli_and_distribution_gates():
     text = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
 

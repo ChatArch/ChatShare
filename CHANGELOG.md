@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.8
 
 - 新机器的 `put`、`tree`、`url` 在没有本机 Dufs `instance.json` 时自动使用 active ChatEnv `chatshare` profile 中已配置的远端分享服务；远端上传以 1 MiB 分块流式读取，不把文件聚合进内存。
 - `chatshare put --progress` 提供终端流式进度；浏览器上传区显示文件名、原生进度条、已传/总量、速度、服务端确认和失败重试状态；网络中断/超时会显示明确原因，窄屏页面将进度条完整保留在视口内。

@@ -10,14 +10,14 @@
 
 ChatShare is the ChatArch-managed file-sharing CLI. Its current backend is [Dufs](https://github.com/sigoden/dufs), with auditable server-runtime installation, configuration, user-service lifecycle, and **streaming upload, directory listing, and direct URL generation from a new machine connected to an existing share**.
 
-> Release status: the new remote CLI and browser upload progress are `Unreleased`. A locally installed candidate on the existing server is not the PyPI release. PyPI `0.2.7` does not include these features; the remote workflow using `uv tool install ChatShare` below requires the next official release.
+> Version `0.2.8` adds the remote CLI, visible browser upload progress, and independent web-asset synchronization. Upgrade older `0.2.7` clients first; a server upgrade also requires synchronizing web assets.
 
 ## Secure defaults
 
 Version `0.2.6` adds application-owned directory login through the `server` extra. `chatshare serve` owns the login page, sessions and directory authorization; the reverse proxy only forwards traffic.
 
 ```bash
-python -m pip install "ChatShare[server]==0.2.7"
+python -m pip install "ChatShare[server]==0.2.8"
 chatshare serve --allowed-host proxy.internal
 ```
 

@@ -2,7 +2,7 @@
 
 ChatShare has two roles. **Most new machines only connect to an existing share**: configure ChatEnv once, then upload, list a directory, and retrieve links. Do **not** run `chatshare dufs init` on those clients. Only the host that stores the files installs Dufs, initializes an instance, and manages its systemd service.
 
-> Release status: the remote CLI and browser progress in this guide are `Unreleased`. The existing server runs a local candidate that differs from PyPI `0.2.7`; the `uv tool install ChatShare` workflow below will provide these features only after the next official release.
+> The remote CLI, upload progress, and `dufs assets sync` described here require `ChatShare>=0.2.8`. Upgrade older clients before configuring remote access; server upgrades also require web-asset synchronization.
 
 Concrete file links are anonymously readable. Directory listings and writes require the existing Dufs writer account. The browser directory page uses a ChatShare login session; CLI and HTTP/WebDAV clients use the same account through HTTP Basic/Digest authentication. See [security boundaries](security.en.md).
 
