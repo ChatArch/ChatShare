@@ -10,6 +10,8 @@
 
 ChatShare 是 ChatArch 管理的文件分享 CLI。当前后端固定为 [Dufs](https://github.com/sigoden/dufs)，提供可审计的服务端运行时安装、配置、用户级服务生命周期，以及**新机器连接已有分享服务后的流式上传、目录列表和直达 URL 生成**。
 
+> 发布状态：新机器远端 CLI 和浏览器上传进度仍在 `Unreleased` 分支；已安装在现有服务上的本地候选包不等于 PyPI 发布版。PyPI `0.2.7` 尚无这些新功能，下方 `uv tool install ChatShare` 的远端流程需待新版本正式发布后使用。
+
 ## 安全默认值
 
 从 `0.2.6` 起，安装 `server` 可选依赖即可使用应用内目录登录系统。登录页、会话和目录权限由 `chatshare serve` 负责；反向代理只转发，不承担鉴权。
