@@ -501,7 +501,7 @@
 <p>After signing in to a directory through <code>chatshare serve</code>, two Chinese-first controls are available:</p>
 <ul>
 <li><strong>从链接下载 (Download from link)</strong> accepts one direct HTTP/HTTPS file URL and a relative destination. The destination starts at the current directory; append a file name before submitting. A job ID is returned immediately. The page reports queued, downloading, committing, completed, failed, cancelled, or restart-interrupted state, real bytes, known/unknown total, and speed. Reloading retains job history.</li>
-<li><strong>分享当前目录 (Share current directory)</strong> creates an independent link for an existing writable directory. The link is a 256-bit bearer capability: anyone holding it can browse that directory and descendants. Send it only to trusted recipients and revoke it when finished.</li>
+<li><strong>分享当前目录 (Share current directory)</strong> creates an independent link for an existing writable directory. The <code>/s/&lt;short-code&gt;/</code> link uses an unguessable 128-bit capability; legacy long URLs remain valid. Anyone holding it can browse that directory and descendants. Send it only to trusted recipients and revoke it when finished.</li>
 </ul>
 <p>Capability visitors get read-only directory browsing—no search, zip, upload, management, or job access. Directory navigation remains under the capability route, while file anchors always retain the original URI. Revocation immediately closes browsing but does not revoke already-public concrete file URLs.</p>
 <h2 id="api">API</h2>
