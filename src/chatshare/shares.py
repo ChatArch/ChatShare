@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import re
@@ -11,6 +13,15 @@ from pathlib import Path
 
 
 TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{43}$")
+SHORT_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]{22}$")
+
+
+def short_code(token: str) -> str:
+    """Stable 128-bit alias; retain the stored token and legacy addresses."""
+    if not isinstance(token, str) or not TOKEN_RE.fullmatch(token):
+        raise ShareError("Share not found")
+    digest = hashlib.sha256(token.encode("ascii")).digest()[:16]
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
 
 
 class ShareError(Exception):
@@ -131,9 +142,14 @@ class ShareStore:
         return dict(removed)
 
     def resolve(self, token: str, descendant: str) -> dict:
-        if not TOKEN_RE.fullmatch(token):
+        if not isinstance(token, str):
             raise ShareError("Share not found")
-        item = next((value for value in self.shares.values() if secrets.compare_digest(value["token"], token)), None)
+        if TOKEN_RE.fullmatch(token):
+            item = next((value for value in self.shares.values() if secrets.compare_digest(value["token"], token)), None)
+        elif SHORT_TOKEN_RE.fullmatch(token):
+            item = next((value for value in self.shares.values() if secrets.compare_digest(short_code(value["token"]), token)), None)
+        else:
+            raise ShareError("Share not found")
         if item is None:
             raise ShareError("Share not found")
         if descendant:

@@ -93,6 +93,7 @@ def test_download_and_share_apis_are_session_csrf_owner_scoped_and_capability_is
     app = create_app(root=root, upstream="http://127.0.0.1:5000", public_url="https://share.example", transport=httpx.MockTransport(upstream), download_service=downloads, share_store=shares)
     alice = Client(app)
     bob = Client(app)
+    visitor = Client(app)
     try:
         alice_csrf = login(alice, "alice")
         bob_csrf = login(bob, "bob")
@@ -106,14 +107,19 @@ def test_download_and_share_apis_are_session_csrf_owner_scoped_and_capability_is
         shared = alice.request("POST", "/_chatshare/shares", headers={"Origin": "https://share.example", "X-CSRF-Token": alice_csrf}, json={"directory": "/docs/"})
         assert shared.status_code == 201
         item = shared.json()
+        assert item["url"].startswith("/s/") and len(item["url"].split("/")[2]) == 22
+        legacy = "/_chatshare/share/" + shares.list("alice")[0]["token"] + "/"
+        assert alice.request("GET", legacy).status_code == 200
         assert bob.request("DELETE", f"/_chatshare/shares/{item['id']}", headers={"Origin": "https://share.example", "X-CSRF-Token": bob_csrf}).status_code == 404
-        page = alice.request("GET", item["url"])
+        page = visitor.request("GET", item["url"])
         assert page.status_code == 200
+        assert "只读浏览" not in page.text
+        assert "访问凭证" not in page.text and "可信的人" not in page.text
         assert 'href="/docs/manual.pdf"' in page.text
         assert f'href="{item["url"]}sub/"' in page.text
         assert "上传" not in page.text and "搜索" not in page.text and "zip" not in page.text
         assert alice.request("GET", item["url"] + "sub/").status_code == 200
-        assert alice.request("GET", item["url"] + "../").status_code in {400, 404}
+        assert visitor.request("GET", item["url"] + "../").status_code in {400, 401, 403, 404}
         assert alice.request("GET", item["url"] + "?q=secret").status_code == 404
         assert alice.request("POST", item["url"]).status_code == 404
         assert alice.request("DELETE", f"/_chatshare/shares/{item['id']}", headers={"Origin": "https://share.example", "X-CSRF-Token": alice_csrf}).status_code == 204
@@ -128,6 +134,27 @@ def test_download_and_share_apis_are_session_csrf_owner_scoped_and_capability_is
     finally:
         alice.close()
         bob.close()
+        visitor.close()
+
+
+def test_short_share_namespace_preserves_original_file_uris(tmp_path):
+    root = tmp_path / "data"
+    folder = root / "s" / ("A" * 22)
+    folder.mkdir(parents=True)
+    (folder / "original.txt").write_bytes(b"unchanged")
+
+    def upstream(request):
+        assert request.url.path == "/s/" + "A" * 22 + "/original.txt"
+        return httpx.Response(200, content=b"unchanged", headers={"content-disposition": 'inline; filename="original.txt"'})
+
+    app = create_app(root=root, upstream="http://127.0.0.1:5000", public_url="https://share.example", transport=httpx.MockTransport(upstream))
+    client = Client(app)
+    try:
+        response = client.request("GET", "/s/" + "A" * 22 + "/original.txt")
+        assert response.status_code == 200
+        assert response.content == b"unchanged"
+    finally:
+        client.close()
 
 
 def test_share_creation_fails_closed_for_missing_or_wrong_owner_directory(tmp_path):

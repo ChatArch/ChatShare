@@ -52,6 +52,28 @@ def test_share_store_is_owner_scoped_persistent_bounded_and_uses_256_bit_tokens(
         loaded.resolve(first["token"], "")
 
 
+def test_short_share_code_keeps_legacy_tokens_and_revokes_both(tmp_path):
+    from chatshare.shares import short_code
+    import base64
+
+    store = ShareStore(tmp_path / "shares")
+    run(store.start())
+    item = run(store.create("alice", "/docs/"))
+    code = short_code(item["token"])
+    assert len(code) == 22
+    assert len(base64.urlsafe_b64decode(code + "==")) == 16
+    assert store.resolve(code, "sub/")["directory"] == "/docs/sub/"
+    assert store.resolve(item["token"], "")["id"] == item["id"]
+    loaded = ShareStore(tmp_path / "shares")
+    run(loaded.start())
+    assert short_code(loaded.list("alice")[0]["token"]) == code
+    assert loaded.resolve(code, "")["id"] == item["id"]
+    run(loaded.revoke("alice", item["id"]))
+    for identifier in (code, item["token"]):
+        with pytest.raises(ShareError):
+            loaded.resolve(identifier, "")
+
+
 def test_share_store_rejects_symlink_root_and_malformed_metadata(tmp_path):
     actual = tmp_path / "actual"
     actual.mkdir()

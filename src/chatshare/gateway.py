@@ -40,7 +40,7 @@ from starlette.responses import (
 from chatshare.dufs.config import load_instance_state
 from chatshare.downloads import DownloadError, DownloadService
 from chatshare.paths import ChatSharePaths
-from chatshare.shares import ShareError, ShareStore, normalize_directory
+from chatshare.shares import SHORT_TOKEN_RE, ShareError, ShareStore, normalize_directory, short_code
 
 COOKIE = "chatshare_session"
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
@@ -536,7 +536,7 @@ def create_app(
         if not isinstance(entries, list) or len(entries) > 1000:
             raise ShareError("Shared directory listing is invalid")
         rows = []
-        prefix = f"/_chatshare/share/{token}/" + descendant
+        prefix = f"/s/{token}/" + descendant
         for item in entries:
             if not isinstance(item, dict) or set(item).isdisjoint({"name", "path_type"}):
                 raise ShareError("Shared directory entry is invalid")
@@ -553,8 +553,7 @@ def create_app(
             else:
                 raise ShareError("Shared directory entry type is unsupported")
             rows.append(f'<li><a href="{escape(href, quote=True)}">{label}</a></li>')
-        title = escape(directory)
-        return "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>共享目录</title><link rel=\"stylesheet\" href=\"/_chatshare/assets/manage.css?v=downloads-shares-v1\"></head><body class=\"share-page\"><main><h1>共享目录</h1><p>只读浏览：" + title + "</p><p class=\"warning\">此链接是访问凭证，请仅发送给可信的人。</p><ul>" + "".join(rows) + "</ul></main></body></html>"
+        return "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>共享目录</title><link rel=\"stylesheet\" href=\"/_chatshare/assets/manage.css?v=downloads-shares-v1\"></head><body class=\"share-page\"><main><h1>共享目录</h1><ul>" + "".join(rows) + "</ul></main></body></html>"
 
     async def denied(request):
         if (
@@ -608,12 +607,13 @@ def create_app(
                 media_type=types[name],
                 headers=PRIVATE_HEADERS,
             )
-        if path.startswith("/_chatshare/share/"):
+        if path.startswith("/_chatshare/share/") or path.startswith("/s/"):
             if request.method not in {"GET", "HEAD"} or request.scope["query_string"]:
                 return error(404)
             if share_store is None:
                 return error(404)
-            remainder = path.removeprefix("/_chatshare/share/")
+            prefix = "/s/" if path.startswith("/s/") else "/_chatshare/share/"
+            remainder = path.removeprefix(prefix)
             token, separator, descendant = remainder.partition("/")
             if not separator or (descendant and not descendant.endswith("/")):
                 return error(404)
@@ -622,7 +622,7 @@ def create_app(
                 status, payload = await dufs_json(shared["directory"])
                 if status != 200:
                     return error(404)
-                content = public_share_html(token, descendant, shared["directory"], payload)
+                content = public_share_html(short_code(shared["token"]), descendant, shared["directory"], payload)
             except ShareError:
                 return error(404)
             return HTMLResponse(
@@ -695,7 +695,7 @@ def create_app(
                         return error(503)
                     values = []
                     for item in share_store.list(owner):
-                        item["url"] = f"/_chatshare/share/{item['token']}/"
+                        item["url"] = f"/s/{short_code(item['token'])}/"
                         values.append(item)
                     return JSONResponse({"shares": values}, headers=PRIVATE_HEADERS)
                 if path == "/_chatshare/shares" and request.method == "POST":
@@ -708,7 +708,7 @@ def create_app(
                     if not await exact_permission(owner, directory, context, directory=True):
                         return error(403)
                     item = await share_store.create(owner, directory)
-                    item["url"] = f"/_chatshare/share/{item['token']}/"
+                    item["url"] = f"/s/{short_code(item['token'])}/"
                     return JSONResponse(item, status_code=201, headers=PRIVATE_HEADERS)
                 if path.startswith("/_chatshare/shares/") and request.method == "DELETE":
                     if share_store is None:
@@ -1001,6 +1001,10 @@ def create_app(
                 or any(part in {".", ".."} for part in decoded.split("/"))
             ):
                 return error(400)
+            if decoded.startswith("/s/") and decoded.endswith("/"):
+                short_token = decoded.removeprefix("/s/").partition("/")[0]
+                if SHORT_TOKEN_RE.fullmatch(short_token):
+                    return await gateway_endpoint(request, decoded)
             if decoded.startswith("/_chatshare/"):
                 return await gateway_endpoint(request, decoded)
             candidate = (root / decoded.lstrip("/")).resolve()
