@@ -1,0 +1,17 @@
+#chatshare-manage { margin: 1rem auto; max-width: 1100px; padding: 1rem; border: 1px solid #d8e2dc; border-radius: .8rem; }
+.chatshare-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: .65rem 0 1rem; }
+.chatshare-actions button, #chatshare-manage button { border: 1px solid #23853d; background: #fff; color: #176e30; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; padding: .6rem 1rem; }
+#chatshare-manage button { margin: .25rem .5rem .25rem 0; }
+.chatshare-actions button:hover, #chatshare-manage button:hover { background: #edf6ef; }
+#chatshare-manage button:disabled { opacity: .6; cursor: progress; }
+#chatshare-manage form { display: grid; gap: .65rem; margin: .75rem 0; max-width: 44rem; }
+#chatshare-manage input { min-width: 0; padding: .65rem .8rem; border: 1px solid #b9ccbf; border-radius: .6rem; font: inherit; }
+.chatshare-job, .chatshare-share { padding: .7rem 0; border-top: 1px solid #e5ece7; overflow-wrap: anywhere; }
+.chatshare-job progress { display: block; width: 100%; max-width: 34rem; height: .65rem; margin: .55rem 0; accent-color: #21863d; }
+.chatshare-share > a { display: block; margin-bottom: .3rem; color: #176e30; }
+.chatshare-job > a { color: #176e30; }
+.chatshare-error { color: #9b2226; }
+#chatshare-manage .warning, .share-page .warning { color: #79551a; font-size: .9rem; }
+.share-page { font: 16px/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; }
+.share-page li { margin: .6rem 0; }
+@media (max-width: 640px) { #chatshare-manage { padding: .85rem; } .chatshare-actions { gap: .5rem; } }

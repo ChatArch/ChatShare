@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import base64
+from contextlib import asynccontextmanager
+from html import escape
 import ipaddress
 import json
 import re
@@ -36,7 +38,9 @@ from starlette.responses import (
 )
 
 from chatshare.dufs.config import load_instance_state
+from chatshare.downloads import DownloadError, DownloadService
 from chatshare.paths import ChatSharePaths
+from chatshare.shares import ShareError, ShareStore, normalize_directory
 
 COOKIE = "chatshare_session"
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
@@ -222,10 +226,14 @@ def create_app(
     max_sessions: int = 256,
     login_limit: int = 30,
     max_inflight: int = 64,
+    download_service: DownloadService | None = None,
+    share_store: ShareStore | None = None,
 ):
     """Create an ASGI app; explicit settings/transport provide an offline test seam."""
+    effective_paths = paths
     if root is None or upstream is None or public_url is None:
-        state = load_instance_state(paths or ChatSharePaths.from_home())
+        effective_paths = paths or ChatSharePaths.from_home()
+        state = load_instance_state(effective_paths)
         root = state.root
         host = "[::1]" if state.bind == "::1" else "127.0.0.1"
         upstream = f"http://{host}:{state.port}"
@@ -282,7 +290,25 @@ def create_app(
     csrf_bootstraps: dict[str, CsrfBootstrap] = {}
     state_lock = anyio.Lock()
     attempts: list[float] = []
-    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+    if effective_paths is not None:
+        download_service = download_service or DownloadService(
+            base=effective_paths.downloads_dir, share_root=root
+        )
+        share_store = share_store or ShareStore(effective_paths.shares_dir)
+
+    @asynccontextmanager
+    async def lifespan(application):
+        try:
+            if download_service is not None:
+                await download_service.start()
+            if share_store is not None:
+                await share_store.start()
+            yield
+        finally:
+            if download_service is not None:
+                await download_service.close()
+
+    app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.add_middleware(
         _ExactTrustedHost,
         allowed_hosts=[
@@ -446,6 +472,84 @@ def create_app(
     def error(status):
         return Response(status_code=status, headers=PRIVATE_HEADERS)
 
+    async def json_body(request, limit=16384):
+        body = bytearray()
+        with anyio.fail_after(10):
+            async for chunk in request.stream():
+                if len(body) + len(chunk) > limit:
+                    raise OverflowError
+                body.extend(chunk)
+        if request.headers.get("content-type", "").split(";")[0] != "application/json":
+            raise TypeError
+        value = json.loads(body)
+        if not isinstance(value, dict):
+            raise ValueError
+        return value
+
+    async def dufs_json(path, authorization=None):
+        headers = {"authorization": authorization} if authorization else {}
+        headers["accept"] = "application/json"
+        async with client() as connection:
+            async with connection.stream("GET", upstream + path + "?json", headers=headers) as response:
+                if response.status_code != 200:
+                    return response.status_code, None
+                body = bytearray()
+                async for chunk in response.aiter_bytes():
+                    if len(body) + len(chunk) > 2 * 1024 * 1024:
+                        return 502, None
+                    body.extend(chunk)
+        try:
+            payload = json.loads(body)
+        except (ValueError, UnicodeError):
+            return 502, None
+        return 200, payload
+
+    async def exact_permission(owner, target, context, *, directory):
+        try:
+            uri = normalize_directory(target) if directory else "/" + "/".join(
+                quote(part, safe="") for part in target.split("/")
+            ) + "/"
+        except (ShareError, ValueError):
+            return False
+        try:
+            status, payload = await dufs_json(uri, context.authorization)
+        except (httpx.HTTPError, TimeoutError):
+            return False
+        return bool(
+            status == 200
+            and isinstance(payload, dict)
+            and payload.get("user") == owner
+            and payload.get("allow_upload") is True
+            and payload.get("dir_exists") is directory
+        )
+
+    def public_share_html(token, descendant, directory, payload):
+        if not isinstance(payload, dict) or payload.get("dir_exists") is not True:
+            raise ShareError("Shared directory listing is unavailable")
+        entries = payload.get("paths")
+        if not isinstance(entries, list) or len(entries) > 1000:
+            raise ShareError("Shared directory listing is invalid")
+        rows = []
+        prefix = f"/_chatshare/share/{token}/" + descendant
+        for item in entries:
+            if not isinstance(item, dict) or set(item).isdisjoint({"name", "path_type"}):
+                raise ShareError("Shared directory entry is invalid")
+            name, kind = item.get("name"), item.get("path_type")
+            if not isinstance(name, str) or not name or name in {".", ".."} or any(character in name for character in "/\\%") or any(ord(character) < 32 for character in name):
+                raise ShareError("Shared directory entry is unsafe")
+            label = escape(name)
+            encoded = quote(name, safe="")
+            if kind == "Dir":
+                href = prefix + encoded + "/"
+                label += "/"
+            elif kind == "File":
+                href = directory + encoded
+            else:
+                raise ShareError("Shared directory entry type is unsupported")
+            rows.append(f'<li><a href="{escape(href, quote=True)}">{label}</a></li>')
+        title = escape(directory)
+        return "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>共享目录</title><link rel=\"stylesheet\" href=\"/_chatshare/assets/manage.css?v=downloads-shares-v1\"></head><body class=\"share-page\"><main><h1>共享目录</h1><p>只读浏览：" + title + "</p><p class=\"warning\">此链接是访问凭证，请仅发送给可信的人。</p><ul>" + "".join(rows) + "</ul></main></body></html>"
+
     async def denied(request):
         if (
             request.method in {"GET", "HEAD"}
@@ -487,6 +591,8 @@ def create_app(
                 "favicon.ico": "image/x-icon",
                 "login.js": "text/javascript",
                 "login.css": "text/css",
+                "manage.js": "text/javascript",
+                "manage.css": "text/css",
             }
             if name not in types:
                 return error(404)
@@ -495,6 +601,27 @@ def create_app(
                 content if request.method == "GET" else b"",
                 media_type=types[name],
                 headers=PRIVATE_HEADERS,
+            )
+        if path.startswith("/_chatshare/share/"):
+            if request.method not in {"GET", "HEAD"} or request.scope["query_string"]:
+                return error(404)
+            if share_store is None:
+                return error(404)
+            remainder = path.removeprefix("/_chatshare/share/")
+            token, separator, descendant = remainder.partition("/")
+            if not separator or (descendant and not descendant.endswith("/")):
+                return error(404)
+            try:
+                shared = share_store.resolve(token, descendant)
+                status, payload = await dufs_json(shared["directory"])
+                if status != 200:
+                    return error(404)
+                content = public_share_html(token, descendant, shared["directory"], payload)
+            except ShareError:
+                return error(404)
+            return HTMLResponse(
+                content if request.method == "GET" else "",
+                headers={**PRIVATE_HEADERS, "content-security-policy": "default-src 'none'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'"},
             )
         if path == "/_chatshare/login" and request.method in {"GET", "HEAD"}:
             next_url = _safe_next(request.query_params.get("next", "/"))
@@ -527,6 +654,74 @@ def create_app(
                     path="/",
                 )
             return response
+        if path.startswith("/_chatshare/downloads") or path.startswith("/_chatshare/shares"):
+            current, context = await session(request)
+            if not current or not context:
+                return await denied(request)
+            owner = context.username
+            if request.method not in SAFE_METHODS and not await ensure_csrf(request):
+                return error(403)
+            try:
+                if path == "/_chatshare/downloads" and request.method == "GET":
+                    if download_service is None:
+                        return error(503)
+                    return JSONResponse({"jobs": download_service.list(owner)}, headers=PRIVATE_HEADERS)
+                if path == "/_chatshare/downloads" and request.method == "POST":
+                    if download_service is None:
+                        return error(503)
+                    payload = await json_body(request)
+                    if set(payload) != {"url", "target"} or not all(isinstance(payload[key], str) for key in payload):
+                        return error(400)
+                    async def permission(user, target):
+                        return await exact_permission(user, target, context, directory=False)
+                    job = await download_service.create(owner, payload["url"], payload["target"], permission)
+                    return JSONResponse(job, status_code=202, headers=PRIVATE_HEADERS)
+                if path.startswith("/_chatshare/downloads/"):
+                    identifier = path.removeprefix("/_chatshare/downloads/")
+                    if not identifier or "/" in identifier or download_service is None:
+                        return error(404)
+                    if request.method == "GET":
+                        return JSONResponse(download_service.get(owner, identifier), headers=PRIVATE_HEADERS)
+                    if request.method == "DELETE":
+                        return JSONResponse(await download_service.cancel(owner, identifier), headers=PRIVATE_HEADERS)
+                if path == "/_chatshare/shares" and request.method == "GET":
+                    if share_store is None:
+                        return error(503)
+                    values = []
+                    for item in share_store.list(owner):
+                        item["url"] = f"/_chatshare/share/{item['token']}/"
+                        values.append(item)
+                    return JSONResponse({"shares": values}, headers=PRIVATE_HEADERS)
+                if path == "/_chatshare/shares" and request.method == "POST":
+                    if share_store is None:
+                        return error(503)
+                    payload = await json_body(request)
+                    if set(payload) != {"directory"} or not isinstance(payload["directory"], str):
+                        return error(400)
+                    directory = normalize_directory(payload["directory"])
+                    if not await exact_permission(owner, directory, context, directory=True):
+                        return error(403)
+                    item = await share_store.create(owner, directory)
+                    item["url"] = f"/_chatshare/share/{item['token']}/"
+                    return JSONResponse(item, status_code=201, headers=PRIVATE_HEADERS)
+                if path.startswith("/_chatshare/shares/") and request.method == "DELETE":
+                    if share_store is None:
+                        return error(503)
+                    identifier = path.removeprefix("/_chatshare/shares/")
+                    if not identifier or "/" in identifier:
+                        return error(404)
+                    await share_store.revoke(owner, identifier)
+                    return Response(status_code=204, headers=PRIVATE_HEADERS)
+                return error(405)
+            except OverflowError:
+                return error(413)
+            except TypeError:
+                return error(415)
+            except (ValueError, json.JSONDecodeError):
+                return error(400)
+            except (DownloadError, ShareError) as exc:
+                status = 404 if "owner" in str(exc) or "not found" in str(exc) else 409
+                return JSONResponse({"error": str(exc)}, status_code=status, headers=PRIVATE_HEADERS)
         if (
             path not in {"/_chatshare/login", "/_chatshare/logout"}
             or request.method != "POST"
@@ -622,7 +817,7 @@ def create_app(
         )
         return response
 
-    async def proxy(request, raw_target, current, context, concrete):
+    async def proxy(request, raw_target, current, context, concrete, decoded_path):
         explicit = request.headers.get("authorization")
         authenticated = bool(explicit or current)
         session_authorized = bool(current and not explicit and not concrete)
@@ -742,6 +937,8 @@ def create_app(
                 html = html.replace(
                     "<head>", '<head><meta name="chatshare-gateway" content="1">', 1
                 )
+                controls = '<section id="chatshare-manage" data-directory="' + escape(decoded_path, quote=True) + '"><button type="button" id="chatshare-download-open">从链接下载</button><button type="button" id="chatshare-share-create">分享当前目录</button><div id="chatshare-downloads"></div><div id="chatshare-shares"></div></section><link rel="stylesheet" href="/_chatshare/assets/manage.css?v=downloads-shares-v1"><script src="/_chatshare/assets/manage.js?v=downloads-shares-v1" defer></script>'
+                html = html.replace("</body>", controls + "</body>", 1)
                 selected.pop("content-length", None)
                 selected.pop("content-encoding", None)
                 selected.pop("etag", None)
@@ -843,6 +1040,7 @@ def create_app(
                 current,
                 context,
                 concrete,
+                decoded,
             )
         except (ValueError, UnicodeError, OSError):
             return error(400)

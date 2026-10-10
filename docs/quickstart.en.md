@@ -127,6 +127,10 @@ unset writer_password
 
 Anonymous GET of a concrete file URL needs no password, but a link is not a private capability token. Directories, JSON listings, uploads, and other management operations still require authentication.
 
+## Web download jobs and directory shares
+
+After signing in through the gateway, **从链接下载** lets the server import a public HTTP/HTTPS direct file. Enter a relative file destination, initially rooted at the current directory; the page shows state, real bytes, known/unknown total, and cancellation. **分享当前目录** creates a revocable read-only bearer capability for the current directory and descendants, without search, zip, upload, or job authority. See [Download Jobs and Directory Shares](downloads.en.md) for APIs, defaults, and revocation semantics.
+
 ## Operator commands
 
 ```bash

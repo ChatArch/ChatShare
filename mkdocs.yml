@@ -32,6 +32,7 @@ plugins:
             CLI 树: CLI Tree
             Dufs 运行时: Dufs Runtime
             安全与边界: Security and Boundaries
+            下载任务与目录分享: Download Jobs and Directory Shares
 markdown_extensions:
   - attr_list
   - md_in_html
@@ -54,4 +55,5 @@ nav:
   - 快速开始: quickstart.md
   - CLI 树: cli-tree.md
   - Dufs 运行时: dufs.md
+  - 下载任务与目录分享: downloads.md
   - 安全与边界: security.md

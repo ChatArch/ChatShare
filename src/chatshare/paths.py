@@ -69,6 +69,14 @@ class ChatSharePaths:
         return self.instance_dir / "logs"
 
     @property
+    def downloads_dir(self) -> Path:
+        return self.base / "downloads"
+
+    @property
+    def shares_dir(self) -> Path:
+        return self.base / "shares"
+
+    @property
     def access_log(self) -> Path:
         return self.logs_dir / "access.log"
 

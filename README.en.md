@@ -49,6 +49,8 @@ chatshare url videos/video.mov
 
 Browser uploads show a file name, byte progress, speed, and a server-confirmation phase; CLI `--progress` does the same with streaming reads. A host with an existing local instance retains local publication mode. See [Quick Start](docs/quickstart.en.md) for client configuration, HTTP/WebDAV authentication, large-file boundaries, and service deployment.
 
+The signed-in directory page also provides [download jobs and directory shares](docs/downloads.en.md): the server can safely import a public HTTP/HTTPS direct file, and owners can issue revocable high-entropy read-only directory links. A directory share URL is itself a bearer capability; files retain their original public URIs.
+
 Run `chatshare --tree` for the full live command tree that ChatStyle generates from the Click registry. `chatshare tree <prefix>` lists a directory from the local managed instance or configured remote server, and `chatshare --tree-brief` shows the command surface without parameter signatures. Hidden compatibility entries are excluded from the product tree.
 
 ## Documentation
@@ -56,6 +58,7 @@ Run `chatshare --tree` for the full live command tree that ChatStyle generates f
 - [Quick Start](https://arch.gh.wzhecnu.cn/ChatShare/en/quickstart/)
 - [CLI Tree](https://arch.gh.wzhecnu.cn/ChatShare/en/cli-tree/)
 - [Dufs Runtime](https://arch.gh.wzhecnu.cn/ChatShare/en/dufs/)
+- [Download Jobs and Directory Shares](https://arch.gh.wzhecnu.cn/ChatShare/en/downloads/)
 - [Security and Boundaries](https://arch.gh.wzhecnu.cn/ChatShare/en/security/)
 
 See [`DEVELOP.md`](DEVELOP.md) and [`AGENTS.md`](AGENTS.md) for development conventions.

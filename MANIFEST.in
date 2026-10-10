@@ -1,2 +1,3 @@
 include tests/code-tests/gateway-ui.cjs
 include tests/code-tests/upload-progress.cjs
+include tests/code-tests/downloads-shares.cjs

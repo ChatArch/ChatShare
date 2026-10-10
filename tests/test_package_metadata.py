@@ -31,14 +31,18 @@ def test_gateway_uses_shared_login_ui_dependency_without_packaged_copy():
     assert '"chatshare.assets.gateway"' not in text
     assert "ChatLogin[ui]>=0.1.3,<0.2.0" in text
     assert "include tests/code-tests/gateway-ui.cjs" in Path("MANIFEST.in").read_text()
+    assert "include tests/code-tests/downloads-shares.cjs" in Path("MANIFEST.in").read_text()
 
 
 def test_packaged_dufs_assets_include_chatshare_login_dialog():
     asset_root = resources.files("chatshare.assets.dufs")
     index_html = asset_root.joinpath("index.html").read_text(encoding="utf-8")
     index_js = asset_root.joinpath("index.js").read_text(encoding="utf-8")
+    manage_js = asset_root.joinpath("manage.js").read_text(encoding="utf-8")
 
     assert asset_root.joinpath("favicon.ico").is_file()
+    assert asset_root.joinpath("manage.css").is_file()
+    assert "downloads-shares-v1" in index_html
     assert "login-dialog" in index_html
     assert "upload-panel" in index_html
     assert "auth-menu" in index_html
@@ -52,6 +56,8 @@ def test_packaged_dufs_assets_include_chatshare_login_dialog():
     assert "basicAuthHeader" in index_js
     assert "LOGOUT" not in index_js
     assert "openWithCredentials" in index_js
+    assert "/_chatshare/downloads" in manage_js
+    assert "/_chatshare/shares" in manage_js
 
 
 def test_development_guide_documents_shared_tree_runtime():

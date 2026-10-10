@@ -49,6 +49,8 @@ chatshare url videos/video.mov
 
 浏览器上传会显示文件名、字节进度、速度及“等待服务器确认”阶段；CLI `--progress` 同样以流式方式显示进度。已有本机实例的服务端仍使用本机发布模式。完整的客户端配置、HTTP/WebDAV 鉴权、大文件边界与服务端部署说明见[快速开始](docs/quickstart.md)。
 
+登录后的目录页还支持[下载任务与目录分享](docs/downloads.md)：服务器可从公共 HTTP/HTTPS 直链安全下载到当前目录，也可创建可撤销的高熵只读目录链接。目录分享链接本身是 bearer capability；文件仍使用原始公开 URI。
+
 运行 `chatshare --tree` 可读取 ChatStyle 从 Click 注册表生成的完整实时命令树；`chatshare tree <prefix>` 会列出本机受管实例或已配置远端服务中的目录内容；`chatshare --tree-brief` 显示省略参数签名的同一命令面。隐藏兼容入口不会出现在产品树中。
 
 ## 文档
@@ -56,6 +58,7 @@ chatshare url videos/video.mov
 - [快速开始](https://arch.gh.wzhecnu.cn/ChatShare/quickstart/)
 - [CLI 树](https://arch.gh.wzhecnu.cn/ChatShare/cli-tree/)
 - [Dufs 运行时](https://arch.gh.wzhecnu.cn/ChatShare/dufs/)
+- [下载任务与目录分享](https://arch.gh.wzhecnu.cn/ChatShare/downloads/)
 - [安全与边界](https://arch.gh.wzhecnu.cn/ChatShare/security/)
 
 开发约定见 [`DEVELOP.md`](DEVELOP.md) 与 [`AGENTS.md`](AGENTS.md)。
