@@ -514,7 +514,7 @@
 </ul>
 <p>Download JSON is <code>{"url":"https://…","target":"directory/file"}</code>; share JSON is <code>{"directory":"/directory/"}</code>. Admission and final publication each query real Dufs metadata for the exact target, expected user, and <code>allow_upload</code>; share creation requires the exact directory to exist. No CLI command is added.</p>
 <h2 id="defaults-and-storage">Defaults and storage</h2>
-<p>The worker pool uses concurrency 2, at most 20 active jobs, a 20 GiB file maximum, 5-second connect timeout, 30-second download-idle timeout, and 5 redirects. Up to 200 status records are retained. Private <code>downloads/</code> and <code>shares/</code> state lives under the effective <code>ChatSharePaths.base</code>, with <code>0700</code> directories and <code>0600</code> metadata. URL query/path secrets and writer credentials are never persisted. Deployment storage must place private staging and the share root on one filesystem for atomic no-overwrite publication.</p>
+<p>The worker pool uses concurrency 2, at most 20 active jobs, a 20 GiB file maximum, 5-second connect timeout, 30-second download-idle timeout, a 24-hour total execution deadline excluding queue time, and 5 redirects. Up to 200 status records are retained. Private <code>downloads/</code> and <code>shares/</code> state lives under the effective <code>ChatSharePaths.base</code>, with <code>0700</code> directories and <code>0600</code> metadata. URL query/path secrets and writer credentials are never persisted. Deployment storage must place private staging and the share root on one filesystem for atomic no-overwrite publication.</p>
 
 
 

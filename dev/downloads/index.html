@@ -514,7 +514,7 @@
 </ul>
 <p>下载创建体为 <code>{"url":"https://…","target":"目录/文件名"}</code>；分享创建体为 <code>{"directory":"/目录/"}</code>。服务在接纳任务与最终提交前都向真实 Dufs 查询精确目标路径的当前用户及 <code>allow_upload</code>；分享创建要求精确目录已存在。CLI 命令树没有新增入口。</p>
 <h2 id="_2">默认边界</h2>
-<p>下载 worker 并发 2，最多 20 个活动任务，单文件 20 GiB，连接超时 5 秒，读取空闲超时 30 秒，最多 5 次重定向。状态最多保留 200 条。私有状态位于有效 <code>ChatSharePaths.base</code> 下的 <code>downloads/</code> 与 <code>shares/</code>，目录为 <code>0700</code>、元数据为 <code>0600</code>；URL 查询/路径秘密和写入凭据不会持久化。部署存储必须让私有暂存与分享根位于同一文件系统，以便无覆盖原子发布。</p>
+<p>下载 worker 并发 2，最多 20 个活动任务，单文件 20 GiB，连接超时 5 秒，读取空闲超时 30 秒，任务开始执行后总时限 24 小时（不含排队时间），最多 5 次重定向。状态最多保留 200 条。私有状态位于有效 <code>ChatSharePaths.base</code> 下的 <code>downloads/</code> 与 <code>shares/</code>，目录为 <code>0700</code>、元数据为 <code>0600</code>；URL 查询/路径秘密和写入凭据不会持久化。部署存储必须让私有暂存与分享根位于同一文件系统，以便无覆盖原子发布。</p>
 
 
 
