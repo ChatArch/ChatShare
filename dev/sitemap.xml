@@ -2,70 +2,84 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/deven/"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/cli-tree/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/cli-tree/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/deven/cli-tree/"/>
     </url>
     <url>
+        <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/downloads/</loc>
+        <lastmod>2026-10-10</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/downloads/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/deven/downloads/"/>
+    </url>
+    <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/dufs/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/dufs/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/deven/dufs/"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/quickstart/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/quickstart/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/deven/quickstart/"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/security/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/security/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/deven/security/"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/en/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/dev"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/en/cli-tree/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/cli-tree/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/devcli-tree/"/>
     </url>
     <url>
+        <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/en/downloads/</loc>
+        <lastmod>2026-10-10</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/downloads/"/>
+        <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/devdownloads/"/>
+    </url>
+    <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/en/dufs/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/dufs/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/devdufs/"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/en/quickstart/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/quickstart/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/devquickstart/"/>
     </url>
     <url>
         <loc>https://arch.gh.wzhecnu.cn/ChatShare/dev/en/security/</loc>
-        <lastmod>2026-10-09</lastmod>
+        <lastmod>2026-10-10</lastmod>
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/security/"/>
         <xhtml:link rel="alternate" hreflang="zh" href="https://arch.gh.wzhecnu.cn/ChatShare/devsecurity/"/>

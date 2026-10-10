@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatShare/dev/en/security/">
       
       
-        <link rel="prev" href="../dufs/">
+        <link rel="prev" href="../downloads/">
       
       
       
@@ -329,6 +329,28 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../downloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Download Jobs and Directory Shares
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -412,6 +434,15 @@
   <a href="#filesystem" class="md-nav__link">
     <span class="md-ellipsis">
       Filesystem
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#url-imports-and-directory-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL imports and directory capabilities
     </span>
   </a>
   
@@ -506,6 +537,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#url-imports-and-directory-capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL imports and directory capabilities
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#explicitly-unsupported" class="md-nav__link">
     <span class="md-ellipsis">
       Explicitly unsupported
@@ -573,6 +613,14 @@
 <td>Gateway browser session or native Dufs Basic/Digest</td>
 </tr>
 <tr>
+<td>Read-only listing of an explicitly shared directory and descendants</td>
+<td>Visitor holding its 256-bit bearer capability</td>
+</tr>
+<tr>
+<td>URL jobs and directory-share management</td>
+<td>ChatLogin browser owner + CSRF, with exact-path Dufs write revalidation</td>
+</tr>
+<tr>
 <td>HTTP/WebDAV upload</td>
 <td>A client holding the shared Dufs HTTP Auth credential</td>
 </tr>
@@ -614,6 +662,13 @@
 <li><code>put</code> rejects absolute destinations, <code>.</code>, <code>..</code>, empty components, and root escapes.</li>
 <li>Local publication uses same-filesystem temporary files and atomic replacement; existing files require explicit <code>--overwrite</code>. Remote publication preflights with authenticated HEAD and streams PUT, but Dufs has no proven atomic create-only write across independent writers, so the preflight is not a global concurrency guarantee.</li>
 <li>Dufs <code>allow-symlink</code> and <code>allow-delete</code> are disabled by default.</li>
+<li>URL imports first write a private <code>0600</code> object under <code>ChatSharePaths.base/downloads/staging</code>. Only after length, 20 GiB maximum, and SHA-256 checks does fd-relative same-filesystem hardlink publication create a no-overwrite destination. Parent/final symlinks are rejected. Staging and the served root must share a filesystem.</li>
+</ul>
+<h2 id="url-imports-and-directory-capabilities">URL imports and directory capabilities</h2>
+<ul>
+<li>Every URL hop permits only HTTP/HTTPS default ports, without URL credentials, control characters, or fragments. Every DNS answer must be public. The connection is pinned to a validated IP while preserving the original Host and HTTPS SNI/certificate identity. Proxy environment is ignored, and ChatShare Cookie/Authorization is never sent to a source.</li>
+<li>Full signed URLs and writer credentials exist only in memory; status and persistence contain only a safe source hostname. Restart marks unfinished jobs <code>interrupted</code>, removes private partials, and never silently resumes with persisted credentials.</li>
+<li>A directory token is authority, not a public identifier. Its page renders only bounded Dufs directory entries: directory anchors stay under the token route and file anchors return to original URIs. Revocation does not change the existing anonymous concrete-file semantics.</li>
 </ul>
 <h2 id="explicitly-unsupported">Explicitly unsupported</h2>
 <ul>
