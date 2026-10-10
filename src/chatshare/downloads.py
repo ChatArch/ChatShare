@@ -46,6 +46,7 @@ class DownloadLimits:
     max_file_size: int = 20 * 1024**3
     connect_timeout: float = 5
     idle_timeout: float = 30
+    total_timeout: float = 24 * 3600
     redirect_limit: int = 5
     chunk_size: int = 64 * 1024
     max_jobs: int = 200
@@ -535,6 +536,16 @@ class DownloadService:
         url, permission = self._private[identifier]
         cancel = self._cancel[identifier]
         stage = self.staging / f"{identifier}.part"
+        execution = asyncio.current_task()
+        expired = False
+
+        def expire() -> None:
+            nonlocal expired
+            expired = True
+            if execution is not None:
+                execution.cancel()
+
+        deadline = asyncio.get_running_loop().call_later(self.limits.total_timeout, expire)
         try:
             if cancel.is_set():
                 raise asyncio.CancelledError
@@ -608,7 +619,10 @@ class DownloadService:
                 )
                 await self._persist()
         except asyncio.CancelledError:
-            if cancel.is_set():
+            if expired:
+                job.update(state="failed", error="Download exceeded its total time limit", updated_at=self.clock())
+                await self._persist()
+            elif cancel.is_set():
                 job.update(state="cancelled", error=None, updated_at=self.clock())
                 await self._persist()
             else:
@@ -621,6 +635,7 @@ class DownloadService:
             job.update(state="failed", error="Download failed safely", updated_at=self.clock())
             await self._persist()
         finally:
+            deadline.cancel()
             stage.unlink(missing_ok=True)
             self._private.pop(identifier, None)
 

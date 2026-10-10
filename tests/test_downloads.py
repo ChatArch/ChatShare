@@ -222,6 +222,37 @@ def test_stream_failures_clean_private_partial_and_publish_nothing(tmp_path, sou
     assert list((tmp_path / "private/staging").iterdir()) == []
 
 
+def test_total_deadline_stops_non_idle_trickle_and_releases_worker(tmp_path):
+    class TrickleSource:
+        async def stream(self, target, limits, cancel):
+            yield {"status": 200, "length": None}
+            while True:
+                await asyncio.sleep(0.01)
+                yield b"x"
+
+    service = make_service(tmp_path, TrickleSource(), concurrency=1, total_timeout=0.2, idle_timeout=2)
+
+    async def scenario():
+        await service.start()
+        try:
+            first = await service.create("alice", "https://files.example/trickle", "slow.bin", allow)
+            await asyncio.wait_for(service.join(), timeout=1)
+            failed = service.get("alice", first["id"])
+            assert failed["state"] == "failed"
+            assert "total" in failed["error"].lower()
+            assert failed["transferred"] > 0
+            assert not (tmp_path / "share/slow.bin").exists()
+            assert list((tmp_path / "private/staging").iterdir()) == []
+            service.source = FakeSource([b"ok"], length=2)
+            second = await service.create("alice", "https://files.example/next", "next.bin", allow)
+            await asyncio.wait_for(service.join(), timeout=1)
+            assert service.get("alice", second["id"])["state"] == "completed"
+        finally:
+            await service.close()
+
+    run(scenario())
+
+
 def test_owner_visibility_namespace_conflicts_queue_bound_and_commit_revalidation(tmp_path):
     gate_calls = []
 
