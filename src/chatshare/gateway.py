@@ -124,8 +124,14 @@ def _headers(headers, excluded=()):
     connection = {
         part.strip().lower() for part in headers.get("connection", "").split(",")
     }
+    # HTTPX may infer UTF-8, while ASGI response builders encode strings as
+    # Latin-1. Keep upstream header bytes intact across that boundary.
     return {
-        name: value
+        name: (
+            value.encode(headers.encoding).decode("latin-1")
+            if isinstance(headers, httpx.Headers)
+            else value
+        )
         for name, value in headers.items()
         if name.lower() not in HOP_HEADERS | connection | set(excluded)
     }
