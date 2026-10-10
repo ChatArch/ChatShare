@@ -398,6 +398,15 @@
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
+      网页下载任务与目录分享
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
       运维命令
     </span>
   </a>
@@ -447,6 +456,28 @@
   
   <span class="md-ellipsis">
     Dufs 运行时
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    下载任务与目录分享
     
   </span>
   
@@ -584,6 +615,15 @@
       
         <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      网页下载任务与目录分享
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       运维命令
     </span>
@@ -744,7 +784,9 @@ curl<span class="w"> </span>--digest<span class="w"> </span>--config<span class=
 <span class="nb">unset</span><span class="w"> </span>writer_password
 </code></pre></div>
 <p>匿名 <code>GET</code> 具体文件链接无需密码，但不要把链接当作私有能力令牌。目录、JSON 列表、上传和其他管理操作仍需鉴权。</p>
-<h2 id="_3">运维命令</h2>
+<h2 id="_3">网页下载任务与目录分享</h2>
+<p>通过网关登录目录页后，“从链接下载”可让服务器导入公共 HTTP/HTTPS 直链；目标填写相对文件路径，默认从当前目录开始。页面会持续显示状态、真实字节、已知或未知总量及取消按钮。“分享当前目录”生成可撤销的只读 bearer capability；它能浏览当前目录和子目录，但没有搜索、zip、上传或任务权限。完整 API、默认限制和撤销语义见<a href="../downloads/">下载任务与目录分享</a>。</p>
+<h2 id="_4">运维命令</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># 真实注册命令树</span>
 chatshare<span class="w"> </span>--tree
 chatshare<span class="w"> </span>--tree-brief

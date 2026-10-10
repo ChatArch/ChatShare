@@ -396,6 +396,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#web-download-jobs-and-directory-shares" class="md-nav__link">
+    <span class="md-ellipsis">
+      Web download jobs and directory shares
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#operator-commands" class="md-nav__link">
     <span class="md-ellipsis">
       Operator commands
@@ -447,6 +456,28 @@
   
   <span class="md-ellipsis">
     Dufs Runtime
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../downloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Download Jobs and Directory Shares
     
   </span>
   
@@ -577,6 +608,15 @@
   <a href="#httpwebdav-clients" class="md-nav__link">
     <span class="md-ellipsis">
       HTTP/WebDAV clients
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#web-download-jobs-and-directory-shares" class="md-nav__link">
+    <span class="md-ellipsis">
+      Web download jobs and directory shares
     </span>
   </a>
   
@@ -744,6 +784,8 @@ curl<span class="w"> </span>--digest<span class="w"> </span>--config<span class=
 <span class="nb">unset</span><span class="w"> </span>writer_password
 </code></pre></div>
 <p>Anonymous GET of a concrete file URL needs no password, but a link is not a private capability token. Directories, JSON listings, uploads, and other management operations still require authentication.</p>
+<h2 id="web-download-jobs-and-directory-shares">Web download jobs and directory shares</h2>
+<p>After signing in through the gateway, <strong>从链接下载</strong> lets the server import a public HTTP/HTTPS direct file. Enter a relative file destination, initially rooted at the current directory; the page shows state, real bytes, known/unknown total, and cancellation. <strong>分享当前目录</strong> creates a revocable read-only bearer capability for the current directory and descendants, without search, zip, upload, or job authority. See <a href="../downloads/">Download Jobs and Directory Shares</a> for APIs, defaults, and revocation semantics.</p>
 <h2 id="operator-commands">Operator commands</h2>
 <div class="highlight"><pre><span></span><code><span class="c1"># Generated from the live Click registry</span>
 chatshare<span class="w"> </span>--tree

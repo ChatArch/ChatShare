@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatShare/security/">
       
       
-        <link rel="prev" href="../dufs/">
+        <link rel="prev" href="../downloads/">
       
       
       
@@ -329,6 +329,28 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../downloads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    下载任务与目录分享
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -412,6 +434,15 @@
   <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       文件系统
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#url-capability" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL 下载与目录 capability
     </span>
   </a>
   
@@ -506,6 +537,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#url-capability" class="md-nav__link">
+    <span class="md-ellipsis">
+      URL 下载与目录 capability
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       明确不提供
@@ -573,6 +613,14 @@
 <td>网关浏览器会话或 Dufs 原生 Basic/Digest</td>
 </tr>
 <tr>
+<td>明确分享目录及子目录的只读列表</td>
+<td>持有 256-bit 目录 bearer capability 的访客</td>
+</tr>
+<tr>
+<td>URL 下载任务和目录分享管理</td>
+<td>ChatLogin 浏览器会话所有者 + CSRF；Dufs 精确路径写权限复核</td>
+</tr>
+<tr>
 <td>HTTP/WebDAV 上传/PUT</td>
 <td>持有共享 Dufs HTTP Auth 凭据的客户端</td>
 </tr>
@@ -613,6 +661,13 @@
 <li><code>put</code> 拒绝绝对目标、<code>.</code>、<code>..</code>、空组件和根目录逃逸。</li>
 <li>本机发布使用同文件系统临时文件和原子替换；未指定 <code>--overwrite</code> 时拒绝覆盖。远端发布先做认证 HEAD 预检并使用分块 PUT，但 Dufs 未证实提供跨独立写入者的原子 create-only 条件写入，不能把预检宣称为全局并发保护。</li>
 <li>Dufs 的 <code>allow-symlink</code> 与 <code>allow-delete</code> 默认关闭。</li>
+<li>URL 下载先写入 <code>ChatSharePaths.base/downloads/staging</code> 私有 <code>0600</code> 文件，校验长度、20 GiB 上限和 SHA-256 后才用 fd-relative、无覆盖的同文件系统 hardlink 原子发布；父目录与最终目标不得是 symlink。部署必须让暂存和分享根位于同一文件系统。</li>
+</ul>
+<h2 id="url-capability">URL 下载与目录 capability</h2>
+<ul>
+<li>每个 URL 跳转都只允许默认端口的 HTTP/HTTPS，无 URL 凭据、控制字符或 fragment；解析出的所有地址都必须是公网地址。连接固定到已验证 IP，同时保留原 Host 与 HTTPS SNI/证书身份；不读取代理环境变量，也不会把 ChatShare Cookie/Authorization 发给来源站。</li>
+<li>完整签名 URL 和写入凭据只存在内存；状态和响应只包含安全来源 hostname。重启把未完成任务标为 <code>interrupted</code> 并删除其私有 partial，不会使用持久凭据静默续传。</li>
+<li>目录 token 是访问权限，不是普通可公开索引的 ID。公开页面只渲染 Dufs 返回的受限目录条目；目录链接保留在 token 路径，文件链接回到原 URI。撤销不改变具体文件原有匿名读取语义。</li>
 </ul>
 <h2 id="_6">明确不提供</h2>
 <ul>
