@@ -4,7 +4,7 @@ import subprocess
 import pytest
 
 
-@pytest.mark.parametrize("script", ["gateway-ui.cjs", "upload-progress.cjs"])
+@pytest.mark.parametrize("script", ["gateway-ui.cjs", "upload-progress.cjs", "downloads-shares.cjs"])
 def test_gateway_and_native_ui_javascript_contracts(script):
     node = shutil.which("node")
     if node is None:

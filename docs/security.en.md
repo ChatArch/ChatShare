@@ -9,6 +9,8 @@
 | Remote `put`, `tree`, and `url` from a new machine | Dufs writer account in the active ChatEnv `chatshare` profile; HTTPS or loopback HTTP |
 | Known concrete file GET/HEAD/Range | Anonymous, including cross-site PNG embeds |
 | Directory HTML/JSON, search, WebDAV enumeration, archives | Gateway browser session or native Dufs Basic/Digest |
+| Read-only listing of an explicitly shared directory and descendants | Visitor holding its 256-bit bearer capability |
+| URL jobs and directory-share management | ChatLogin browser owner + CSRF, with exact-path Dufs write revalidation |
 | HTTP/WebDAV upload | A client holding the shared Dufs HTTP Auth credential |
 | HTTP delete | Disabled by default |
 | Cleanup, expiry, and per-file revocation | Not implemented |
@@ -42,6 +44,13 @@ This matrix applies only through `chatshare serve`. Direct Dufs still has its or
 - `put` rejects absolute destinations, `.`, `..`, empty components, and root escapes.
 - Local publication uses same-filesystem temporary files and atomic replacement; existing files require explicit `--overwrite`. Remote publication preflights with authenticated HEAD and streams PUT, but Dufs has no proven atomic create-only write across independent writers, so the preflight is not a global concurrency guarantee.
 - Dufs `allow-symlink` and `allow-delete` are disabled by default.
+- URL imports first write a private `0600` object under `ChatSharePaths.base/downloads/staging`. Only after length, 20 GiB maximum, and SHA-256 checks does fd-relative same-filesystem hardlink publication create a no-overwrite destination. Parent/final symlinks are rejected. Staging and the served root must share a filesystem.
+
+## URL imports and directory capabilities
+
+- Every URL hop permits only HTTP/HTTPS default ports, without URL credentials, control characters, or fragments. Every DNS answer must be public. The connection is pinned to a validated IP while preserving the original Host and HTTPS SNI/certificate identity. Proxy environment is ignored, and ChatShare Cookie/Authorization is never sent to a source.
+- Full signed URLs and writer credentials exist only in memory; status and persistence contain only a safe source hostname. Restart marks unfinished jobs `interrupted`, removes private partials, and never silently resumes with persisted credentials.
+- A directory token is authority, not a public identifier. Its page renders only bounded Dufs directory entries: directory anchors stay under the token route and file anchors return to original URIs. Revocation does not change the existing anonymous concrete-file semantics.
 
 ## Explicitly unsupported
 

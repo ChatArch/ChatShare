@@ -37,6 +37,8 @@ def test_url_policy_rejects_secrets_unsafe_ports_fragments_and_private_answers()
         "http://[::1]/a",
         "http://[::ffff:127.0.0.1]/a",
         "http://[2002:7f00:1::]/a",
+        "http://[64:ff9b::7f00:1]/a",
+        "http://[64:ff9b:1::1]/a",
         "http://[fe80::1]/a",
         "http://169.254.169.254/latest/meta-data/",
     ):
@@ -59,6 +61,32 @@ def test_url_policy_requires_every_dns_answer_to_be_public_and_returns_safe_labe
     assert target.port == 443
     assert target.ips == (ipaddress.ip_address("93.184.216.34"), ipaddress.ip_address("2606:2800:220:1:248:1893:25c8:1946"))
     assert "secret" not in repr(target)
+
+
+def test_httpx_source_pins_numeric_peer_but_preserves_host_and_tls_identity():
+    seen = []
+
+    class Stream(__import__("httpx").AsyncByteStream):
+        async def __aiter__(self):
+            yield b"abc"
+
+    async def handler(request):
+        seen.append(request)
+        return __import__("httpx").Response(200, headers={"content-length": "3"}, stream=Stream())
+
+    target = ResolvedTarget(
+        "https://files.example/path?secret=x", "https", "files.example", 443,
+        "/path?secret=x", "files.example", (ipaddress.ip_address("93.184.216.34"),),
+    )
+
+    async def scenario():
+        source = PinnedHTTPSource(lambda: __import__("httpx").MockTransport(handler))
+        return [item async for item in source.stream(target, DownloadLimits(), asyncio.Event())]
+
+    assert run(scenario()) == [{"status": 200, "length": 3, "location": None}, b"abc"]
+    assert seen[0].url.host == "93.184.216.34"
+    assert seen[0].headers["host"] == "files.example"
+    assert seen[0].extensions["sni_hostname"] == "files.example"
 
 
 def test_target_path_rejects_ambiguous_and_unsafe_names():
@@ -91,6 +119,16 @@ def test_atomic_publish_is_no_overwrite_and_rejects_symlink_parent(tmp_path):
     with pytest.raises(DownloadError):
         atomic_publish(third, root, ("link", "file.bin"))
     assert not (outside / "file.bin").exists()
+
+
+def test_atomic_publish_rolls_back_a_link_when_directory_sync_fails(tmp_path, monkeypatch):
+    root = tmp_path / "root"; root.mkdir()
+    stage = tmp_path / "stage"; stage.write_bytes(b"complete")
+    monkeypatch.setattr(os, "fsync", lambda descriptor: (_ for _ in ()).throw(OSError("test sync failure")))
+    with pytest.raises(DownloadError, match="publish"):
+        atomic_publish(stage, root, ("file.bin",))
+    assert stage.read_bytes() == b"complete"
+    assert not (root / "file.bin").exists()
 
 
 class FakeSource:
@@ -238,7 +276,7 @@ def test_cancel_and_restart_recovery_have_terminal_truthful_states(tmp_path):
     private.mkdir(mode=0o700)
     (private / "staging").mkdir(mode=0o700)
     (private / "staging/orphan.part").write_bytes(b"partial")
-    (private / "jobs.json").write_text(json.dumps({"jobs": [{"id": "j1", "owner": "alice", "state": "downloading", "target": "x", "source_host": "example.com", "transferred": 1, "total": None, "sha256": None, "error": None, "created_at": 1, "updated_at": 1}]}))
+    (private / "jobs.json").write_text(json.dumps({"schema": 1, "jobs": [{"id": "j1", "owner": "alice", "state": "downloading", "target": "x", "source_host": "example.com", "transferred": 1, "total": None, "sha256": None, "error": None, "created_at": 1, "updated_at": 1, "started_at": 1}]}))
     recovered = DownloadService(base=private, share_root=tmp_path / "other-share", source=FakeSource([]), resolver=public_resolver)
     run(recovered.start())
     assert recovered.get("alice", "j1")["state"] == "interrupted"
@@ -256,7 +294,10 @@ def test_real_pinned_http_source_rejects_negative_chunk_framing():
             writer.close()
             await writer.wait_closed()
 
-        server = await asyncio.start_server(handle, "127.0.0.1", 0)
+        try:
+            server = await asyncio.start_server(handle, "127.0.0.1", 0)
+        except OSError as exc:
+            pytest.skip(f"loopback bind unavailable in test sandbox: {exc}")
         try:
             port = server.sockets[0].getsockname()[1]
             # Explicit low-level fixture target; production resolves and rejects
@@ -282,3 +323,7 @@ def test_runtime_root_symlink_is_rejected(tmp_path):
     service = DownloadService(base=link, share_root=tmp_path / "share", source=FakeSource([]), resolver=public_resolver)
     with pytest.raises(DownloadError, match="symlink"):
         run(service.start())
+
+    nested = DownloadService(base=link / "nested", share_root=tmp_path / "share2", source=FakeSource([]), resolver=public_resolver)
+    with pytest.raises(DownloadError, match="symlink"):
+        run(nested.start())

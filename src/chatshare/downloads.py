@@ -6,24 +6,37 @@ import asyncio
 import hashlib
 import ipaddress
 import json
+import math
 import os
+import re
 import secrets
 import socket
-import ssl
 import stat
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, Callable
-from urllib.parse import quote, urljoin, urlsplit
+from urllib.parse import urljoin, urlsplit
+
+import httpx
 
 
 TERMINAL_STATES = {"completed", "failed", "cancelled", "interrupted"}
 ACTIVE_STATES = {"queued", "downloading", "committing"}
+_NAT64_WKP = ipaddress.ip_network("64:ff9b::/96")
+_NAT64_LOCAL = ipaddress.ip_network("64:ff9b:1::/48")
 
 
 class DownloadError(Exception):
     """A safe, user-displayable download failure."""
+
+
+def _reject_symlink_components(path: Path, label: str) -> None:
+    current = Path(path.anchor)
+    for component in path.absolute().parts[1:]:
+        current /= component
+        if current.is_symlink():
+            raise DownloadError(f"{label} contains a symlink")
 
 
 @dataclass(frozen=True)
@@ -38,11 +51,14 @@ class DownloadLimits:
     max_jobs: int = 200
 
     def __post_init__(self):
-        if any(
-            isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0
-            for value in asdict(self).values()
-        ):
-            raise ValueError("Download limits must be positive numbers")
+        integer_names = {"concurrency", "max_pending", "max_file_size", "redirect_limit", "chunk_size", "max_jobs"}
+        for name, value in asdict(self).items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                raise ValueError("Download limits must be positive finite numbers")
+            if name in integer_names and not isinstance(value, int):
+                raise ValueError(f"{name} must be a positive integer")
+        if self.max_jobs < self.max_pending:
+            raise ValueError("max_jobs must retain every possible active job")
 
 
 @dataclass(frozen=True, repr=False)
@@ -75,6 +91,10 @@ def _is_public(address: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
             return False
         if address.teredo is not None and any(not item.is_global for item in address.teredo):
             return False
+        if address in _NAT64_LOCAL:
+            return False
+        if address in _NAT64_WKP and not ipaddress.IPv4Address(address.packed[-4:]).is_global:
+            return False
     return True
 
 
@@ -82,6 +102,7 @@ async def resolve_public_target(
     url: str,
     *,
     resolver: Callable[[str, int], Awaitable[list[str]]] = _system_resolver,
+    timeout: float = 5,
 ) -> ResolvedTarget:
     if not isinstance(url, str) or not url or len(url) > 8192:
         raise DownloadError("Source URL is invalid")
@@ -105,10 +126,14 @@ async def resolve_public_target(
     if not hostname or any(character.isspace() for character in hostname):
         raise DownloadError("Source hostname is invalid")
     try:
+        hostname = hostname.encode("idna").decode("ascii")
+    except UnicodeError as exc:
+        raise DownloadError("Source hostname is invalid") from exc
+    try:
         literal = ipaddress.ip_address(hostname)
     except ValueError:
         try:
-            answers = await resolver(hostname, expected_port)
+            answers = await asyncio.wait_for(resolver(hostname, expected_port), timeout)
         except (OSError, asyncio.TimeoutError) as exc:
             raise DownloadError("Source hostname could not be resolved") from exc
         if not answers:
@@ -137,7 +162,7 @@ async def resolve_public_target(
 def validate_target_path(value: str) -> tuple[str, ...]:
     if not isinstance(value, str) or not value or len(value.encode("utf-8")) > 4096:
         raise DownloadError("Target path is required")
-    if value.startswith("/") or "\\" in value or "%" in value:
+    if value.startswith("/") or "\\" in value or "%" in value or re.match(r"^[A-Za-z]:", value):
         raise DownloadError("Target path is ambiguous or absolute")
     if any(ord(character) < 32 or ord(character) == 127 for character in value):
         raise DownloadError("Target path contains control characters")
@@ -152,6 +177,7 @@ def atomic_publish(stage: Path, root: Path, parts: tuple[str, ...]) -> None:
 
     validate_target_path("/".join(parts))
     try:
+        _reject_symlink_components(root, "Share root")
         if root.is_symlink():
             raise DownloadError("Share root must not be a symlink")
         root.mkdir(parents=True, exist_ok=True)
@@ -172,157 +198,109 @@ def atomic_publish(stage: Path, root: Path, parts: tuple[str, ...]) -> None:
                 next_fd = os.open(component, flags, dir_fd=directory_fd)
                 os.close(directory_fd)
                 directory_fd = next_fd
+            linked = False
             try:
-                os.link(
-                    stage,
-                    parts[-1],
-                    dst_dir_fd=directory_fd,
-                    follow_symlinks=False,
-                )
-            except FileExistsError as exc:
-                raise DownloadError("Target already exists") from exc
-            os.fsync(directory_fd)
+                try:
+                    os.link(
+                        stage,
+                        parts[-1],
+                        dst_dir_fd=directory_fd,
+                        follow_symlinks=False,
+                    )
+                    linked = True
+                except FileExistsError as exc:
+                    raise DownloadError("Target already exists") from exc
+                os.fsync(directory_fd)
+            except Exception:
+                if linked:
+                    try:
+                        os.unlink(parts[-1], dir_fd=directory_fd)
+                    except OSError:
+                        pass
+                raise
         finally:
             os.close(directory_fd)
-        stage.unlink()
+        try:
+            stage.unlink()
+        except OSError:
+            pass
     except DownloadError:
         raise
     except (OSError, ValueError) as exc:
-        raise DownloadError(f"Unable to publish target safely: {exc}") from exc
+        raise DownloadError("Unable to publish target safely") from exc
 
 
 class PinnedHTTPSource:
-    """Small HTTP/1.1 streaming client whose socket uses an already validated IP."""
+    """HTTPX streaming client connected to a validated numeric address."""
 
-    async def _line(self, reader: asyncio.StreamReader, timeout: float) -> bytes:
-        try:
-            line = await asyncio.wait_for(reader.readline(), timeout)
-        except asyncio.TimeoutError as exc:
-            raise DownloadError("Source download idle timeout") from exc
-        if len(line) > 8192:
-            raise DownloadError("Source response header is too large")
-        return line
+    def __init__(self, transport_factory=None):
+        self.transport_factory = transport_factory or (lambda: httpx.AsyncHTTPTransport(retries=0))
 
     async def stream(
         self, target: ResolvedTarget, limits: DownloadLimits, cancel: asyncio.Event
     ) -> AsyncIterator[dict | bytes]:
-        context = ssl.create_default_context() if target.scheme == "https" else None
-        reader = writer = None
+        response = None
+        connection = None
         last_error: Exception | None = None
         for address in target.ips:
+            host = f"[{address}]" if address.version == 6 else str(address)
+            numeric_url = f"{target.scheme}://{host}:{target.port}{target.request_target}"
+            connection = httpx.AsyncClient(
+                transport=self.transport_factory(),
+                timeout=httpx.Timeout(
+                    limits.idle_timeout,
+                    connect=limits.connect_timeout,
+                    pool=limits.connect_timeout,
+                ),
+                follow_redirects=False,
+                trust_env=False,
+            )
             try:
-                reader, writer = await asyncio.wait_for(
-                    asyncio.open_connection(
-                        str(address),
-                        target.port,
-                        ssl=context,
-                        server_hostname=target.hostname if context else None,
-                        limit=128 * 1024,
-                    ),
-                    limits.connect_timeout,
+                request = connection.build_request(
+                    "GET",
+                    numeric_url,
+                    headers={
+                        "Host": target.hostname,
+                        "User-Agent": "ChatShare/URL-download",
+                        "Accept": "*/*",
+                        "Accept-Encoding": "identity",
+                    },
                 )
+                # HTTP Core uses this for TLS SNI and certificate hostname
+                # verification while the request URL remains a pinned IP.
+                request.extensions["sni_hostname"] = target.hostname.encode("idna").decode("ascii")
+                response = await connection.send(request, stream=True)
                 break
-            except (OSError, asyncio.TimeoutError) as exc:
+            except httpx.HTTPError as exc:
                 last_error = exc
-        if reader is None or writer is None:
+                await connection.aclose()
+                connection = None
+        if response is None or connection is None:
             raise DownloadError("Unable to connect to source") from last_error
         try:
-            host = target.hostname
-            if ":" in host:
-                host = f"[{host}]"
-            request = (
-                f"GET {target.request_target} HTTP/1.1\r\n"
-                f"Host: {host}\r\n"
-                "User-Agent: ChatShare/URL-download\r\n"
-                "Accept: */*\r\n"
-                "Accept-Encoding: identity\r\n"
-                "Connection: close\r\n\r\n"
-            ).encode("ascii")
-            writer.write(request)
-            await asyncio.wait_for(writer.drain(), limits.idle_timeout)
-            status_line = await self._line(reader, limits.idle_timeout)
+            content_encoding = response.headers.get("content-encoding", "identity").lower()
+            if content_encoding not in {"", "identity"}:
+                raise DownloadError("Source content encoding is unsupported")
             try:
-                protocol, status_text, _ = status_line.decode("latin-1").split(" ", 2)
-                status_code = int(status_text)
-            except (ValueError, UnicodeError) as exc:
-                raise DownloadError("Source returned an invalid HTTP status") from exc
-            if protocol not in {"HTTP/1.0", "HTTP/1.1"}:
-                raise DownloadError("Source returned an unsupported HTTP response")
-            headers: dict[str, list[str]] = {}
-            total_headers = 0
-            while True:
-                line = await self._line(reader, limits.idle_timeout)
-                total_headers += len(line)
-                if total_headers > 64 * 1024:
-                    raise DownloadError("Source response headers are too large")
-                if line in {b"\r\n", b"\n"}:
-                    break
-                if not line or b":" not in line or line[:1] in b" \t":
-                    raise DownloadError("Source returned invalid HTTP headers")
-                name, value = line.decode("latin-1").split(":", 1)
-                headers.setdefault(name.strip().lower(), []).append(value.strip())
-            lengths = headers.get("content-length", [])
-            if len(set(lengths)) > 1:
-                raise DownloadError("Source returned conflicting lengths")
-            try:
-                length = int(lengths[0]) if lengths else None
+                length = int(response.headers["content-length"]) if "content-length" in response.headers else None
             except ValueError as exc:
                 raise DownloadError("Source returned an invalid length") from exc
             if length is not None and length < 0:
                 raise DownloadError("Source returned an invalid length")
-            location = headers.get("location", [None])[-1]
-            yield {"status": status_code, "length": length, "location": location}
-            if status_code < 200 or status_code >= 300:
+            yield {"status": response.status_code, "length": length, "location": response.headers.get("location")}
+            if response.status_code < 200 or response.status_code >= 300:
                 return
-            transfer = ",".join(headers.get("transfer-encoding", [])).lower()
-            if transfer and transfer != "chunked":
-                raise DownloadError("Source transfer encoding is unsupported")
-            if transfer == "chunked":
-                while True:
-                    size_line = await self._line(reader, limits.idle_timeout)
-                    try:
-                        size = int(size_line.split(b";", 1)[0].strip(), 16)
-                    except ValueError as exc:
-                        raise DownloadError("Source returned invalid chunk framing") from exc
-                    if size < 0:
-                        raise DownloadError("Source returned invalid chunk framing")
-                    if size == 0:
-                        return
-                    remaining = size
-                    while remaining:
-                        chunk = await asyncio.wait_for(
-                            reader.read(min(remaining, limits.chunk_size)), limits.idle_timeout
-                        )
-                        if not chunk:
-                            raise DownloadError("Source response was truncated")
-                        remaining -= len(chunk)
-                        yield chunk
-                    if await asyncio.wait_for(reader.readexactly(2), limits.idle_timeout) != b"\r\n":
-                        raise DownloadError("Source returned invalid chunk framing")
-            else:
-                remaining = length
-                while remaining is None or remaining > 0:
-                    chunk = await asyncio.wait_for(
-                        reader.read(
-                            limits.chunk_size if remaining is None else min(remaining, limits.chunk_size)
-                        ),
-                        limits.idle_timeout,
-                    )
-                    if not chunk:
-                        break
-                    if remaining is not None:
-                        remaining -= len(chunk)
-                    yield chunk
-                if remaining:
-                    raise DownloadError("Source response was truncated")
-        except asyncio.IncompleteReadError as exc:
-            raise DownloadError("Source response was truncated") from exc
+            async for chunk in response.aiter_raw(chunk_size=limits.chunk_size):
+                yield chunk
+        except httpx.RemoteProtocolError as exc:
+            raise DownloadError("Source returned invalid chunk framing") from exc
+        except httpx.TimeoutException as exc:
+            raise DownloadError("Source download idle timeout") from exc
+        except httpx.HTTPError as exc:
+            raise DownloadError("Source download failed") from exc
         finally:
-            writer.close()
-            try:
-                await writer.wait_closed()
-            except (OSError, ssl.SSLError):
-                pass
+            await response.aclose()
+            await connection.aclose()
 
 
 PermissionCheck = Callable[[str, str], Awaitable[bool]]
@@ -358,6 +336,7 @@ class DownloadService:
         self._executions: dict[str, asyncio.Task] = {}
         self._closing = False
         self._persist_lock = asyncio.Lock()
+        self._admission_lock = asyncio.Lock()
 
     def _safe_job(self, job: dict) -> dict:
         result = dict(job)
@@ -369,6 +348,8 @@ class DownloadService:
         return result
 
     async def start(self) -> None:
+        _reject_symlink_components(self.base, "Download runtime root")
+        _reject_symlink_components(self.share_root, "Share root")
         if self.base.is_symlink():
             raise DownloadError("Download runtime root must not be a symlink")
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -380,17 +361,27 @@ class DownloadService:
         self.staging.mkdir(mode=0o700, exist_ok=True)
         self.staging.chmod(0o700)
         self.share_root.mkdir(parents=True, exist_ok=True)
+        if self.staging.resolve().is_relative_to(self.share_root.resolve()):
+            raise DownloadError("Private staging must be outside the served root")
         if self.metadata.exists():
             if self.metadata.is_symlink() or not self.metadata.is_file():
                 raise DownloadError("Download metadata file is unsafe")
             try:
+                if self.metadata.stat().st_size > 2 * 1024 * 1024:
+                    raise ValueError("size")
                 payload = json.loads(self.metadata.read_text(encoding="utf-8"))
+                if set(payload) != {"schema", "jobs"} or payload["schema"] != 1:
+                    raise ValueError("schema")
                 loaded = payload["jobs"]
                 if not isinstance(loaded, list) or len(loaded) > self.limits.max_jobs:
                     raise ValueError("jobs")
                 for job in loaded:
-                    if not isinstance(job, dict) or not isinstance(job.get("id"), str):
+                    required = {"id", "owner", "state", "target", "source_host", "transferred", "total", "sha256", "error", "created_at", "updated_at", "started_at"}
+                    if not isinstance(job, dict) or set(job) != required or not isinstance(job.get("id"), str):
                         raise ValueError("job")
+                    if job["state"] not in ACTIVE_STATES | TERMINAL_STATES or not isinstance(job["owner"], str) or not isinstance(job["target"], str):
+                        raise ValueError("job")
+                    validate_target_path(job["target"])
                     if job.get("state") in ACTIVE_STATES:
                         job["state"] = "interrupted"
                         job["error"] = "Gateway restarted before completion"
@@ -418,20 +409,30 @@ class DownloadService:
         if self._workers:
             await asyncio.gather(*self._workers, return_exceptions=True)
         self._workers.clear()
+        for job in self.jobs.values():
+            if job["state"] == "queued":
+                job.update(state="interrupted", error="Worker stopped", updated_at=self.clock())
+        await self._persist()
 
     async def join(self) -> None:
         await self._queue.join()
 
     async def _persist(self) -> None:
         async with self._persist_lock:
-            terminal = sorted(self.jobs.values(), key=lambda item: item["created_at"], reverse=True)
-            keep = terminal[: self.limits.max_jobs]
+            ordered = sorted(self.jobs.values(), key=lambda item: item["created_at"], reverse=True)
+            active = [job for job in ordered if job["state"] in ACTIVE_STATES]
+            terminal = [job for job in ordered if job["state"] not in ACTIVE_STATES]
+            keep = active + terminal[: self.limits.max_jobs - len(active)]
             self.jobs = {job["id"]: job for job in keep}
             temporary = self.base / f".jobs.{secrets.token_hex(8)}.tmp"
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             try:
                 content = json.dumps({"schema": 1, "jobs": keep}, ensure_ascii=False, separators=(",", ":")).encode()
-                os.write(descriptor, content)
+                if len(content) > 2 * 1024 * 1024:
+                    raise DownloadError("Download metadata exceeds its storage bound")
+                view = memoryview(content)
+                while view:
+                    view = view[os.write(descriptor, view) :]
                 os.fsync(descriptor)
             finally:
                 os.close(descriptor)
@@ -450,16 +451,17 @@ class DownloadService:
 
     async def create(self, owner: str, url: str, target: str, permission: PermissionCheck) -> dict:
         parts = validate_target_path(target)
-        resolved = await resolve_public_target(url, resolver=self.resolver)
-        if sum(job["state"] in ACTIVE_STATES for job in self.jobs.values()) >= self.limits.max_pending:
-            raise DownloadError("Download queue is full")
-        if self._conflicts(parts):
-            raise DownloadError("Target namespace conflicts with an active job")
-        if not await permission(owner, target):
-            raise DownloadError("Dufs denied upload permission for this target")
-        now = self.clock()
-        identifier = secrets.token_urlsafe(18)
-        job = {
+        resolved = await resolve_public_target(url, resolver=self.resolver, timeout=self.limits.connect_timeout)
+        async with self._admission_lock:
+            if sum(job["state"] in ACTIVE_STATES for job in self.jobs.values()) >= self.limits.max_pending:
+                raise DownloadError("Download queue is full")
+            if self._conflicts(parts):
+                raise DownloadError("Target namespace conflicts with an active job")
+            if not await permission(owner, target):
+                raise DownloadError("Dufs denied upload permission for this target")
+            now = self.clock()
+            identifier = secrets.token_urlsafe(18)
+            job = {
             "id": identifier,
             "owner": owner,
             "state": "queued",
@@ -472,14 +474,14 @@ class DownloadService:
             "created_at": now,
             "updated_at": now,
             "started_at": None,
-        }
-        self.jobs[identifier] = job
-        self._private[identifier] = (url, permission)
-        self._cancel[identifier] = asyncio.Event()
-        self._locks[identifier] = asyncio.Lock()
-        await self._persist()
-        self._ensure_workers()
-        await self._queue.put(identifier)
+            }
+            self.jobs[identifier] = job
+            self._private[identifier] = (url, permission)
+            self._cancel[identifier] = asyncio.Event()
+            self._locks[identifier] = asyncio.Lock()
+            await self._persist()
+            self._ensure_workers()
+            self._queue.put_nowait(identifier)
         return self._safe_job(job)
 
     def list(self, owner: str) -> list[dict]:
@@ -522,6 +524,10 @@ class DownloadService:
                     await execution
             finally:
                 self._executions.pop(identifier, None)
+                if self.jobs.get(identifier, {}).get("state") in TERMINAL_STATES:
+                    self._private.pop(identifier, None)
+                    self._cancel.pop(identifier, None)
+                    self._locks.pop(identifier, None)
                 self._queue.task_done()
 
     async def _run(self, identifier: str) -> None:
@@ -541,7 +547,7 @@ class DownloadService:
             with stage.open("xb") as handle:
                 stage.chmod(0o600)
                 while True:
-                    target = await resolve_public_target(current_url, resolver=self.resolver)
+                    target = await resolve_public_target(current_url, resolver=self.resolver, timeout=self.limits.connect_timeout)
                     header = None
                     redirected = False
                     async for item in self.source.stream(target, self.limits, cancel):
@@ -608,8 +614,11 @@ class DownloadService:
             else:
                 job.update(state="interrupted", error="Worker stopped", updated_at=self.clock())
                 await self._persist()
-        except (DownloadError, OSError, asyncio.TimeoutError) as exc:
+        except (DownloadError, OSError, asyncio.TimeoutError, ValueError, UnicodeError) as exc:
             job.update(state="failed", error=str(exc)[:512], updated_at=self.clock())
+            await self._persist()
+        except Exception:
+            job.update(state="failed", error="Download failed safely", updated_at=self.clock())
             await self._persist()
         finally:
             stage.unlink(missing_ok=True)

@@ -9,6 +9,8 @@
 | 新机器远端 `put`、`tree` 与 `url` | active ChatEnv `chatshare` profile 中的 Dufs 写入账号；通过 HTTPS 或 loopback HTTP |
 | 已知具体文件 GET/HEAD/Range | 匿名客户端；保留跨站 PNG 嵌入 |
 | 目录 HTML/JSON、搜索、WebDAV 枚举、归档 | 网关浏览器会话或 Dufs 原生 Basic/Digest |
+| 明确分享目录及子目录的只读列表 | 持有 256-bit 目录 bearer capability 的访客 |
+| URL 下载任务和目录分享管理 | ChatLogin 浏览器会话所有者 + CSRF；Dufs 精确路径写权限复核 |
 | HTTP/WebDAV 上传/PUT | 持有共享 Dufs HTTP Auth 凭据的客户端 |
 | HTTP 删除 | 默认不可用 |
 | 清理、过期、逐文件撤销 | 当前未实现 |
@@ -41,6 +43,13 @@
 - `put` 拒绝绝对目标、`.`、`..`、空组件和根目录逃逸。
 - 本机发布使用同文件系统临时文件和原子替换；未指定 `--overwrite` 时拒绝覆盖。远端发布先做认证 HEAD 预检并使用分块 PUT，但 Dufs 未证实提供跨独立写入者的原子 create-only 条件写入，不能把预检宣称为全局并发保护。
 - Dufs 的 `allow-symlink` 与 `allow-delete` 默认关闭。
+- URL 下载先写入 `ChatSharePaths.base/downloads/staging` 私有 `0600` 文件，校验长度、20 GiB 上限和 SHA-256 后才用 fd-relative、无覆盖的同文件系统 hardlink 原子发布；父目录与最终目标不得是 symlink。部署必须让暂存和分享根位于同一文件系统。
+
+## URL 下载与目录 capability
+
+- 每个 URL 跳转都只允许默认端口的 HTTP/HTTPS，无 URL 凭据、控制字符或 fragment；解析出的所有地址都必须是公网地址。连接固定到已验证 IP，同时保留原 Host 与 HTTPS SNI/证书身份；不读取代理环境变量，也不会把 ChatShare Cookie/Authorization 发给来源站。
+- 完整签名 URL 和写入凭据只存在内存；状态和响应只包含安全来源 hostname。重启把未完成任务标为 `interrupted` 并删除其私有 partial，不会使用持久凭据静默续传。
+- 目录 token 是访问权限，不是普通可公开索引的 ID。公开页面只渲染 Dufs 返回的受限目录条目；目录链接保留在 token 路径，文件链接回到原 URI。撤销不改变具体文件原有匿名读取语义。
 
 ## 明确不提供
 
